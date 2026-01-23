@@ -1,0 +1,9 @@
+# lister les fichier qui ne doivent pas se retrouver sur mon repo git
+
+node_modules/
+
+.env
+# quand tu ecris .env.* ca dit d'ignorer tous les fichiers qui commencent par .env
+.env.*
+
+logs/
