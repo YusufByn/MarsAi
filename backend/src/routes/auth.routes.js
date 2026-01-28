@@ -1,14 +1,11 @@
-const express = require('express');
+import express from 'express';
+import * as authController from '../controllers/auth.controller.js';
+import validate from '../middlewares/validator/validate.js';
+import { juryRegisterSchema, juryLoginSchema } from '../utils/schemas.js';
+
 const router = express.Router();
 
-const authController = require('../controllers/auth.controller');
+router.post('/register', validate(juryRegisterSchema), authController.register);
+router.post('/login', validate(juryLoginSchema), authController.login);
 
-const validate = require('../middlewares/validator/validate');
-
-const { juryRegisterShema, juryLoginShema } = require('../utils/schemas');
-
-router.post('/api/auth/register', validate(juryRegisterShema), authController.register);
-
-router.post('/api/auth/login', validate(juryLoginShema), authController.login);
-
-module.exports = router;
+export default router;

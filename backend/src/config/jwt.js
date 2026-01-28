@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { env } from './env.js'; // On utilise ton fichier de config centralisé
+import { env } from './env.js';
 
 export const jwtConfig = {
     generateToken: (user) => {
@@ -15,7 +15,7 @@ export const jwtConfig = {
         try {
             return jwt.verify(token, env.jwtSecret);
         } catch (error) {
-            return null; 
+            return null;
         }
     }
 };
