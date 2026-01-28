@@ -8,6 +8,7 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
+import testRoutes from './routes/test.routes.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // les routes
+app.use('/api', testRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err);
