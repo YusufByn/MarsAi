@@ -3,15 +3,23 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import JuryDetails from './pages/user/JuryDetails';
 import AllJury from './pages/user/AllJury';
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/jury" element={<AllJury />} />
-        <Route path="/jury/profil/:id" element={<JuryDetails />} />
-      </Routes>
+      <div className="min-h-screen bg-black flex flex-col">
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/jury" element={<AllJury />} />
+            <Route path="/jury/profil/:id" element={<JuryDetails />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </BrowserRouter>
   );
 }
