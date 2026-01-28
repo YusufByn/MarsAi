@@ -113,7 +113,7 @@ const createUploadMiddleware = (type) => {
 
     // Limites de taille selon le type
     const limits = {
-        video: 500 * 1024 * 1024,  // 500 MB
+        video: 200 * 1024 * 1024,  // 200 MB
         cover: 15 * 1024 * 1024,   // 15 MB
         still: 5 * 1024 * 1024,    // 5 MB
         sub: 2 * 1024 * 1024       // 2 MB
