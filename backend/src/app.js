@@ -8,6 +8,7 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
+import uploadRoutes from './routes/upload.routes.js';
 import juryRoutes from './routes/jury.routes.js';
 import newsletterRoutes from './routes/newsletter.routes.js';
 import testRoutes from './routes/test.routes.js';
@@ -35,6 +36,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // les routes
+app.use('/api/upload', uploadRoutes);
+
 app.use('/api/jury', juryRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api', testRoutes);
