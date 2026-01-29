@@ -143,59 +143,6 @@ const createVideo = async (req, res) => {
 };
 
 /**
- * Ajouter une URL YouTube à une vidéo existante
- * @route PUT /api/upload/videos/:id/youtube-url
- */
-const addYoutubeUrl = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { youtube_url } = req.body;
-        
-        // Validation
-        if (!youtube_url) {
-            return res.status(400).json({
-                success: false,
-                error: 'URL YouTube manquante',
-                field: 'youtube_url'
-            });
-        }
-        
-        // Vérifier que la vidéo existe
-        const [videos] = await pool.execute(
-            'SELECT id FROM video WHERE id = ?',
-            [id]
-        );
-        
-        if (videos.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'Vidéo non trouvée'
-            });
-        }
-        
-        // Mettre à jour l'URL YouTube
-        await pool.execute(
-            'UPDATE video SET youtube_url = ? WHERE id = ?',
-            [youtube_url, id]
-        );
-        
-        // Récupérer la vidéo mise à jour
-        const [updatedVideos] = await pool.execute(
-            'SELECT * FROM video WHERE id = ?',
-            [id]
-        );
-        
-        return res.status(200).json({
-            success: true,
-            video: updatedVideos[0]
-        });
-        
-    } catch (error) {
-        return handleError(res, error);
-    }
-};
-
-/**
  * Ajouter des contributeurs à une vidéo
  * @route POST /api/upload/videos/:id/contributors
  */
@@ -345,7 +292,6 @@ const addSocialMedia = async (req, res) => {
 // Export des fonctions
 module.exports = {
     createVideo,
-    addYoutubeUrl,
     addContributors,
     addSocialMedia
 };
