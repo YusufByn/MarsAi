@@ -279,3 +279,4 @@ curl http://localhost:4000/api/newsletter/campaign/preview \
 ---
 
 ## 🎬 **MarsAI Newsletter Admin** - Prêt à l'emploi ! 🚀
+

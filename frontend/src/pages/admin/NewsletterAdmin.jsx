@@ -57,14 +57,14 @@ const NewsletterAdmin = () => {
   const [formData, setFormData] = useState({
     subject: '',
     message: '',
-    recipients: []
+    recipients: ['newsletter'], // Toujours newsletter par défaut
+    sendMode: 'immediate', // immediate | scheduled
+    scheduledDate: '',
+    scheduledTime: ''
   });
 
   const [recipientCounts, setRecipientCounts] = useState({
     newsletter: 0,
-    realisateurs: 0,
-    selectionneurs: 0,
-    jury: 0,
     total: 0
   });
 
@@ -72,20 +72,16 @@ const NewsletterAdmin = () => {
   const [message, setMessage] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Récupérer le nombre de destinataires en temps réel
+  // Récupérer le nombre de destinataires (uniquement newsletter)
   useEffect(() => {
-    if (formData.recipients.length > 0) {
-      fetchRecipientCounts();
-    } else {
-      setRecipientCounts(prev => ({ ...prev, total: 0 }));
-    }
-  }, [formData.recipients]);
+    fetchRecipientCounts();
+  }, []);
 
   const fetchRecipientCounts = async () => {
     try {
-      const response = await newsletterService.previewRecipients(formData.recipients);
+      const response = await newsletterService.previewRecipients(['newsletter']);
       setRecipientCounts({
-        ...response.data.breakdown,
+        newsletter: response.data.breakdown.newsletter,
         total: response.data.total
       });
     } catch (error) {
@@ -94,30 +90,28 @@ const NewsletterAdmin = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleRecipientToggle = (type) => {
-    setFormData(prev => ({
-      ...prev,
-      recipients: prev.recipients.includes(type)
-        ? prev.recipients.filter(r => r !== type)
-        : [...prev.recipients, type]
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!formData.subject || !formData.message || formData.recipients.length === 0) {
+    if (!formData.subject || !formData.message) {
       setStatus('error');
-      setMessage('Veuillez remplir tous les champs et sélectionner au moins un destinataire');
+      setMessage('Veuillez remplir tous les champs');
       return;
     }
+
+    if (formData.sendMode === 'scheduled' && (!formData.scheduledDate || !formData.scheduledTime)) {
+      setStatus('error');
+      setMessage('Veuillez sélectionner une date et une heure pour l\'envoi programmé');
+      return;
+    }
+
     setShowConfirmModal(true);
   };
 
@@ -134,9 +128,19 @@ const NewsletterAdmin = () => {
       );
 
       setStatus('success');
-      setMessage(`${response.message} (${response.data.successful}/${response.data.totalSent} envoyés)`);
+      setMessage(formData.sendMode === 'scheduled' 
+        ? `Envoi programmé avec succès pour le ${formData.scheduledDate} à ${formData.scheduledTime}`
+        : `${response.message} (${response.data.successful}/${response.data.totalSent} envoyés)`
+      );
       
-      setFormData({ subject: '', message: '', recipients: [] });
+      setFormData({ 
+        subject: '', 
+        message: '', 
+        recipients: ['newsletter'],
+        sendMode: 'immediate',
+        scheduledDate: '',
+        scheduledTime: ''
+      });
       setTimeout(() => { setStatus('idle'); setMessage(''); }, 10000);
     } catch (error) {
       setStatus('error');
@@ -154,7 +158,7 @@ const NewsletterAdmin = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Header */}
-        <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-4 backdrop-blur-sm">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -168,7 +172,7 @@ const NewsletterAdmin = () => {
           <div className="flex gap-8">
             <div className="text-right">
                 <span className="block text-3xl font-bold text-white">{recipientCounts.total}</span>
-                <span className="text-xs text-gray-500 uppercase tracking-widest">Cible Actuelle</span>
+                <span className="text-xs text-gray-500 uppercase tracking-widest">Abonnés Newsletter</span>
             </div>
             <div className="w-px h-12 bg-white/10"></div>
             <div className="text-right">
@@ -180,78 +184,130 @@ const NewsletterAdmin = () => {
 
         <div className="grid lg:grid-cols-12 gap-12">
             
-            {/* Colonne Gauche : Formulaire */}
+            {/* Colonne Gauche : Formulaire Unique */}
             <div className="lg:col-span-7 space-y-8">
+                
                 <form onSubmit={handleSubmit} className="space-y-8">
                     
-                    {/* Sujet */}
-                    <div className="glass-card p-1 rounded-2xl border border-white/10 focus-within:border-mars-primary/50 transition-colors">
-                        <input
-                            type="text"
-                            name="subject"
-                            value={formData.subject}
-                            onChange={handleInputChange}
-                            placeholder="Sujet de la campagne..."
-                            className="w-full bg-transparent border-none px-6 py-4 text-xl font-bold placeholder:text-gray-600 focus:outline-none focus:ring-0 text-white"
-                            disabled={status === 'loading'}
-                        />
-                    </div>
+                    <div className="space-y-8 animate-fade-in">
+                        {/* Sujet */}
+                        <div className="glass-card p-1 rounded-2xl border border-white/10 focus-within:border-mars-primary/50 transition-colors">
+                            <input
+                                type="text"
+                                name="subject"
+                                value={formData.subject}
+                                onChange={handleInputChange}
+                                placeholder="Sujet de la campagne..."
+                                className="w-full bg-transparent border-none px-6 py-4 text-xl font-bold placeholder:text-gray-600 focus:outline-none focus:ring-0 text-white"
+                                disabled={status === 'loading'}
+                            />
+                        </div>
 
-                    {/* Message */}
-                    <div className="glass-card p-1 rounded-3xl border border-white/10 focus-within:border-mars-primary/50 transition-colors h-[400px]">
-                        <textarea
-                            name="message"
-                            value={formData.message}
-                            onChange={handleInputChange}
-                            placeholder="Rédigez votre message ici..."
-                            className="w-full h-full bg-transparent border-none px-6 py-6 text-base leading-relaxed placeholder:text-gray-700 focus:outline-none focus:ring-0 text-gray-200 resize-none font-light custom-scrollbar"
-                            disabled={status === 'loading'}
-                        />
-                    </div>
+                        {/* Message */}
+                        <div className="glass-card p-1 rounded-3xl border border-white/10 focus-within:border-mars-primary/50 transition-colors h-[350px]">
+                            <textarea
+                                name="message"
+                                value={formData.message}
+                                onChange={handleInputChange}
+                                placeholder="Rédigez votre message ici..."
+                                className="w-full h-full bg-transparent border-none px-6 py-6 text-base leading-relaxed placeholder:text-gray-700 focus:outline-none focus:ring-0 text-gray-200 resize-none font-light custom-scrollbar"
+                                disabled={status === 'loading'}
+                            />
+                        </div>
 
-                    {/* Destinataires */}
-                    <div>
-                        <h3 className="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-6">Ciblage de l'audience</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            {[
-                                { id: 'newsletter', label: 'Newsletter', desc: 'Abonnés publics', count: recipientCounts.newsletter },
-                                { id: 'realisateurs', label: 'Réalisateurs', desc: 'Films soumis', count: recipientCounts.realisateurs },
-                                { id: 'selectionneurs', label: 'Sélectionneurs', desc: 'Staff Admin', count: recipientCounts.selectionneurs },
-                                { id: 'jury', label: 'Jury', desc: 'Membres officiels', count: recipientCounts.jury }
-                            ].map((item) => (
-                                <div 
-                                    key={item.id}
-                                    onClick={() => handleRecipientToggle(item.id)}
-                                    className={`
-                                        cursor-pointer group relative overflow-hidden rounded-xl p-5 border transition-all duration-300
-                                        ${formData.recipients.includes(item.id) 
-                                            ? 'bg-mars-primary/20 border-mars-primary text-white shadow-[0_0_30px_rgba(139,92,246,0.2)]' 
-                                            : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:border-white/20'}
-                                    `}
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className={`font-bold uppercase tracking-wider text-sm ${formData.recipients.includes(item.id) ? 'text-white' : 'text-gray-500'}`}>{item.label}</span>
-                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.recipients.includes(item.id) ? 'border-mars-primary bg-mars-primary' : 'border-gray-600'}`}>
-                                            {formData.recipients.includes(item.id) && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                        {/* Paramétrage & Cible (Intégré) */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            
+                            {/* Section Programmation */}
+                            <div className="glass-card p-6 rounded-2xl border border-white/10 space-y-4">
+                                <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-500 uppercase">Paramètres d'envoi</h3>
+                                
+                                <div className="space-y-3">
+                                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData.sendMode === 'immediate' ? 'border-mars-primary/50 bg-mars-primary/5' : 'border-white/5 bg-white/5'}`}>
+                                        <input 
+                                            type="radio" 
+                                            name="sendMode" 
+                                            value="immediate"
+                                            checked={formData.sendMode === 'immediate'}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 accent-mars-primary"
+                                        />
+                                        <span className="text-sm font-medium">Immédiat</span>
+                                    </label>
+
+                                    <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData.sendMode === 'scheduled' ? 'border-mars-primary/50 bg-mars-primary/5' : 'border-white/5 bg-white/5'}`}>
+                                        <input 
+                                            type="radio" 
+                                            name="sendMode" 
+                                            value="scheduled"
+                                            checked={formData.sendMode === 'scheduled'}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 accent-mars-primary"
+                                        />
+                                        <span className="text-sm font-medium">Programmé</span>
+                                    </label>
+
+                                    {formData.sendMode === 'scheduled' && (
+                                        <div className="space-y-3 pt-2 animate-fade-in">
+                                            <input 
+                                                type="date"
+                                                name="scheduledDate"
+                                                value={formData.scheduledDate}
+                                                onChange={handleInputChange}
+                                                min={new Date().toISOString().split('T')[0]}
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                                            />
+                                            <input 
+                                                type="time"
+                                                name="scheduledTime"
+                                                value={formData.scheduledTime}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Section Cible Unique */}
+                            <div className="glass-card p-6 rounded-2xl border border-white/10 space-y-4">
+                                <h3 className="text-[10px] font-bold tracking-[0.2em] text-gray-500 uppercase">Cible de l'audience</h3>
+                                
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-4 bg-mars-primary/10 border border-mars-primary/20 rounded-xl">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-white uppercase tracking-wider">Newsletter</span>
+                                            <span className="text-[10px] text-mars-primary font-bold uppercase tracking-widest">Public Actif</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="block text-2xl font-black text-white leading-none">{recipientCounts.newsletter}</span>
+                                            <span className="text-[10px] text-gray-500 uppercase tracking-tighter">Destinataires</span>
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-end">
-                                        <span className="text-xs opacity-60">{item.desc}</span>
-                                        <span className="text-2xl font-black">{item.count || 0}</span>
+                                    
+                                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                                        <p className="text-[10px] text-gray-500 leading-relaxed italic text-center">
+                                            L'envoi sera transmis à l'ensemble de la base de données newsletter active.
+                                        </p>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
                         </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-6 pt-8 border-t border-white/10">
+                    <div className="flex items-center gap-6 pt-4">
                         <button
                             type="submit"
                             disabled={status === 'loading' || recipientCounts.total === 0}
                             className="flex-1 bg-gradient-to-r from-mars-primary to-mars-secondary h-14 rounded-xl font-bold tracking-[0.2em] uppercase hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_40px_rgba(139,92,246,0.4)] hover:shadow-[0_0_60px_rgba(139,92,246,0.6)]"
                         >
-                            {status === 'loading' ? 'Transmission...' : 'Envoyer la Campagne'}
+                            {status === 'loading' 
+                                ? 'Transmission...' 
+                                : formData.sendMode === 'scheduled' 
+                                    ? '🕑 Programmer' 
+                                    : 'Envoyer la Campagne'
+                            }
                         </button>
                     </div>
 
@@ -261,7 +317,7 @@ const NewsletterAdmin = () => {
                             <div className={`w-2 h-2 rounded-full ${status === 'success' ? 'bg-green-500' : 'bg-red-500'}`}></div>
                             <p className="text-sm font-medium">{message}</p>
                         </div>
-                    )}
+                     )}
 
                 </form>
             </div>
@@ -282,20 +338,16 @@ const NewsletterAdmin = () => {
             <div className="glass-card rounded-[2rem] p-10 border border-white/20 max-w-lg w-full animate-fade-in relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-mars-primary to-mars-secondary"></div>
               
-              <h2 className="text-3xl font-black mb-2 uppercase italic">Confirmation</h2>
+              <h2 className="text-3xl font-black mb-2 uppercase italic">
+                {formData.sendMode === 'scheduled' ? 'Programmation' : 'Confirmation'}
+              </h2>
               <p className="text-gray-400 mb-8 text-lg font-light">
-                Vous allez toucher <span className="text-white font-bold">{recipientCounts.total} personnes</span>.
+                {formData.sendMode === 'scheduled' 
+                    ? `Envoi prévu pour le ${formData.scheduledDate} à ${formData.scheduledTime}`
+                    : `Vous allez toucher ${recipientCounts.total} abonnés newsletter.`
+                }
               </p>
               
-              <div className="space-y-3 mb-10">
-                {formData.recipients.map(type => (
-                    <div key={type} className="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/5">
-                      <span className="capitalize font-medium text-gray-300">{type}</span>
-                      <span className="text-mars-primary font-bold text-xl">{recipientCounts[type]}</span>
-                    </div>
-                ))}
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setShowConfirmModal(false)}
