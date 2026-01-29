@@ -1,5 +1,6 @@
 import newsletterModel from '../models/newsletter.model.js';
 import { sendWelcomeEmail } from '../services/emailService.js';
+import { pool } from '../db/index.js';
 
 const newsletterController = {
   /**
@@ -142,6 +143,94 @@ const newsletterController = {
     } catch (error) {
       console.error('Erreur lors du comptage:', error);
       next(error);
+    }
+  },
+
+  /**
+   * Aperçu du nombre de destinataires par type (admin only)
+   */
+  async previewRecipients(req, res, next) {
+    try {
+      const { recipients } = req.body;
+
+      if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Veuillez sélectionner au moins un type de destinataire'
+        });
+      }
+
+      const counts = await newsletterModel.countRecipientsByType(recipients);
+      const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          total,
+          breakdown: counts
+        }
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'aperçu des destinataires:', error);
+      next(error);
+    }
+  },
+
+  /**
+   * Envoyer une campagne newsletter (admin only)
+   */
+  async sendCampaign(req, res, next) {
+    const connection = await pool.getConnection();
+    
+    try {
+      const { subject, message, recipients } = req.body;
+
+      // Vérifier la limite d'envoi (2 par jour)
+      const campaignsToday = await newsletterModel.countCampaignsToday();
+      if (campaignsToday >= 2) {
+        return res.status(429).json({
+          success: false,
+          message: 'Limite d\'envoi atteinte : maximum 2 newsletters par jour'
+        });
+      }
+
+      // Récupérer tous les emails uniques
+      const emails = await newsletterModel.getUniqueEmailsForTypes(recipients);
+
+      if (emails.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Aucun destinataire trouvé pour les types sélectionnés'
+        });
+      }
+
+      // Commencer la transaction
+      await connection.beginTransaction();
+
+      // Envoyer les emails en masse
+      const { sendBulkEmail } = await import('../services/emailService.js');
+      const results = await sendBulkEmail(emails, subject, message);
+
+      // Valider la transaction
+      await connection.commit();
+
+      res.status(200).json({
+        success: true,
+        message: `Campagne envoyée avec succès à ${results.successful} destinataires`,
+        data: {
+          totalSent: results.total,
+          successful: results.successful,
+          failed: results.failed,
+          recipients: await newsletterModel.countRecipientsByType(recipients)
+        }
+      });
+    } catch (error) {
+      // Annuler la transaction en cas d'erreur
+      await connection.rollback();
+      console.error('Erreur lors de l\'envoi de la campagne:', error);
+      next(error);
+    } finally {
+      connection.release();
     }
   }
 };

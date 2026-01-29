@@ -68,4 +68,54 @@ export const newsletterService = {
       throw error;
     }
   },
+
+  /**
+   * Aperçu du nombre de destinataires par type (admin)
+   */
+  async previewRecipients(recipients) {
+    try {
+      const response = await fetch(`${API_URL}/campaign/preview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ recipients }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Une erreur est survenue');
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Envoyer une campagne newsletter (admin)
+   */
+  async sendCampaign(subject, message, recipients) {
+    try {
+      const response = await fetch(`${API_URL}/campaign/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ subject, message, recipients }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Une erreur est survenue');
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };

@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import newsletterController from '../controllers/newsletter.controller.js';
-import { validateSubscribe, validateUnsubscribe } from '../validators/newsletter.validator.js';
+import { 
+  validateSubscribe, 
+  validateUnsubscribe, 
+  validateSendCampaign, 
+  validatePreviewRecipients 
+} from '../validators/newsletter.validator.js';
 
 const router = Router();
 
@@ -32,5 +37,21 @@ router.get('/count', newsletterController.getCount);
  * @todo    Ajouter middleware d'authentification superadmin
  */
 router.get('/', newsletterController.getAllActive);
+
+/**
+ * @route   POST /api/newsletter/campaign/preview
+ * @desc    Aperçu du nombre de destinataires par type
+ * @access  Admin + Superadmin
+ * @todo    Ajouter middleware d'authentification admin
+ */
+router.post('/campaign/preview', validatePreviewRecipients, newsletterController.previewRecipients);
+
+/**
+ * @route   POST /api/newsletter/campaign/send
+ * @desc    Envoyer une campagne newsletter
+ * @access  Admin + Superadmin
+ * @todo    Ajouter middleware d'authentification admin
+ */
+router.post('/campaign/send', validateSendCampaign, newsletterController.sendCampaign);
 
 export default router;
