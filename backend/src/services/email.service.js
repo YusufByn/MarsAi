@@ -223,17 +223,17 @@ export const sendWelcomeEmail = async (email) => {
     const mailOptions = {
       from: `"MarsAI Festival" <${env.email.user}>`,
       to: email,
-      subject: '🎬 Bienvenue sur MarsAI - Le Festival du Cinéma Génératif',
+      subject: 'Welcome to MarsAI - The Generative Cinema Festival',
       html: generateWelcomeEmailHTML(email),
-      text: `Bienvenue sur MarsAI !\n\nMerci d'avoir rejoint notre communauté. Vous recevrez désormais en avant-première les actualités, annonces exclusives et insights du festival MarsAI.\n\nDécouvrez le festival : ${env.websiteUrl || 'http://localhost:5173'}\n\n© 2026 MarsAI Protocol`
+      text: `Welcome to MarsAI !\n\nThank you for joining our community. You will now receive early access to news, exclusive announcements and insights from the MarsAI festival.\n\nDiscover the festival : ${env.websiteUrl || 'http://localhost:5173'}\n\n© 2026 MarsAI Protocol`
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email de bienvenue envoyé:', info.messageId);
+    console.log('Welcome email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Erreur lors de l\'envoi de l\'email:', error);
-    throw new Error('Impossible d\'envoyer l\'email de confirmation');
+    console.error('Error sending email:', error);
+    throw new Error('Unable to send confirmation email');
   }
 };
 
@@ -443,7 +443,7 @@ export const sendCustomEmail = async (email, subject, message) => {
     const info = await transporter.sendMail(mailOptions);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Erreur lors de l\'envoi de l\'email:', error);
+    console.error('Error sending email:', error);
     return { success: false, error: error.message };
   }
 };

@@ -5,12 +5,15 @@ import { jwtConfig } from '../config/jwt.js';
 // --- REGISTER ---
 export const register = async (req, res) => {
     try {
-        console.log("📝 Register - Données reçues :", req.body);
+        
         const { email, password, role, firstName, lastName } = req.body;
 
         const existingUser = await userModel.getUserByEmail(email);
         if (existingUser) {
-            return res.status(409).json({ message: "Cet email est déjà utilisé." });
+            return res.status(409).json({ 
+                success: false,
+                message: "Email already used" 
+            });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -24,43 +27,59 @@ export const register = async (req, res) => {
             lastName 
         });
 
-        console.log("✅ Register - Succès :", newUser);
-        res.status(201).json({ message: "Utilisateur créé", user: newUser });
+        console.log("Register - Success :", newUser);
+        res.status(201).json({ 
+            success: true,
+            message: "User created", 
+            user: newUser 
+        });
 
     } catch (err) {
-        console.error("❌ Erreur Register :", err);
-        res.status(500).json({ message: "Erreur lors de l'inscription" });
+        console.error("Error Register :", err);
+        res.status(500).json({ 
+            success: false,
+            message: "Error during registration" 
+        });
     }
 };
 
 export const login = async (req, res) => {
     try {
-        console.log("🔑 Login - Tentative pour :", req.body.email);
+        console.log("Login - Attempt for email:", req.body.email);
         const { email, password } = req.body;
         
         const user = await userModel.getUserByEmail(email);
         
         if (!user) {
-            console.log("❌ Login - Utilisateur introuvable en DB");
-            return res.status(401).json({ message: "Identifiants incorrects" });
+            console.log("Login - User not found in DB");
+            return res.status(401).json({ 
+                success: false,
+                message: "Credentials incorrect" 
+            });
         }
 
-        console.log("🔍 INSPECTION USER DB :", user);
+        console.log("INSPECTION USER DB :", user);
 
         const hashInDb = user.password_hash || user.password;
 
         if (!hashInDb) {
-            console.error("⛔ ERREUR CRITIQUE : Aucun mot de passe trouvé dans l'objet user !");
+            console.error(" ERREUR CRITIQUE : Aucun mot de passe trouvé dans l'objet user !");
             console.error("Les clés disponibles sont :", Object.keys(user));
-            return res.status(500).json({ message: "Erreur interne: Mot de passe introuvable" });
+            return res.status(500).json({ 
+                success: false,
+                message: "Internal error: Password not found in user object" 
+            });
         }
 
         const isValid = await bcrypt.compare(password, hashInDb);
         
         if (!isValid) {
-            console.log("❌ Login - Mot de passe incorrect");
+            console.log("Login - Mot de passe incorrect");
             await userModel.incrementLoginAttempts(email);
-            return res.status(401).json({ message: "Identifiants incorrects" });
+            return res.status(401).json({ 
+                message: "Password incorrect",
+                success: false
+            });
         }
 
         await userModel.resetLoginAttempts(email);
@@ -69,11 +88,19 @@ export const login = async (req, res) => {
 
         const token = jwtConfig.generateToken(userSafe);
 
-        console.log("✅ Login - Succès !");
-        res.status(200).json({ message: "Succès", token: token, user: userSafe });
+        console.log("Login - Success !");
+        res.status(200).json({ 
+            message: "Success", 
+            success: true,
+            token: token, 
+            user: userSafe 
+        });
 
     } catch (err) {
-        console.error("❌ Erreur Login :", err);
-        res.status(500).json({ message: "Erreur serveur" });
+        console.error("Erreur Login :", err);
+        res.status(500).json({ 
+            success: false,
+            message: "Server error" 
+        });
     }
 };

@@ -5,7 +5,7 @@ import {
   validateUnsubscribe, 
   validateSendCampaign, 
   validatePreviewRecipients 
-} from '../validators/newsletter.validator.js';
+} from '../middlewares/validator/newsletter.validator.js';
 
 const router = Router();
 

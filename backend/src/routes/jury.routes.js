@@ -1,6 +1,6 @@
 import express from 'express';
 import { juryController } from '../controllers/jury.controller.js';
-import { validateCreate, validateUpdate } from '../validators/jury.validator.js';
+import { validateCreate, validateUpdate } from '../middlewares/validator/jury.validator.js';
 
 const router = express.Router();
 

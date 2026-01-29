@@ -1,5 +1,5 @@
 import newsletterModel from '../models/newsletter.model.js';
-import { sendWelcomeEmail } from '../services/emailService.js';
+import { sendWelcomeEmail } from '../services/email.service.js';
 import { pool } from '../db/index.js';
 
 const newsletterController = {
@@ -17,7 +17,7 @@ const newsletterController = {
       if (existingSubscription && !existingSubscription.unsubscribed_at) {
         return res.status(409).json({
           success: false,
-          message: 'Cet email est déjà inscrit à la newsletter'
+          message: 'This email is already subscribed to the newsletter'
         });
       }
 
@@ -29,13 +29,13 @@ const newsletterController = {
         try {
           await sendWelcomeEmail(email);
         } catch (emailError) {
-          console.error('Erreur envoi email:', emailError);
+          console.error('Error sending email:', emailError);
           // On continue même si l'email échoue
         }
 
         return res.status(200).json({
           success: true,
-          message: 'Réinscription réussie ! Bienvenue de nouveau parmi nous.',
+          message: 'Re-subscription successful! Welcome back among us.',
           data: { email }
         });
       }
@@ -47,23 +47,23 @@ const newsletterController = {
       try {
         await sendWelcomeEmail(email);
       } catch (emailError) {
-        console.error('Erreur envoi email:', emailError);
+        console.error('Error sending email:', emailError);
         // On continue même si l'email échoue
       }
 
       res.status(201).json({
         success: true,
-        message: 'Inscription réussie ! Un email de confirmation vous a été envoyé.',
+        message: 'Subscription successful! A confirmation email has been sent to you.',
         data: newSubscription
       });
     } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
+      console.error('Error during subscription:', error);
       
-      // Gérer les erreurs MySQL spécifiques
+      // Handle MySQL specific errors
       if (error.code === 'ER_DUP_ENTRY') {
         return res.status(409).json({
           success: false,
-          message: 'Cet email est déjà inscrit'
+          message: 'This email is already subscribed'
         });
       }
 
@@ -83,14 +83,14 @@ const newsletterController = {
       if (!existingSubscription) {
         return res.status(404).json({
           success: false,
-          message: 'Cet email n\'est pas inscrit à la newsletter'
+          message: 'This email is not subscribed to the newsletter'
         });
       }
 
       if (existingSubscription.unsubscribed_at) {
         return res.status(400).json({
           success: false,
-          message: 'Cet email est déjà désabonné'
+          message: 'This email is already unsubscribed'
         });
       }
 
@@ -98,11 +98,11 @@ const newsletterController = {
 
       res.status(200).json({
         success: true,
-        message: 'Désinscription réussie. Vous ne recevrez plus nos emails.',
+        message: 'Unsubscription successful. You will no longer receive our emails.',
         data: { email }
       });
     } catch (error) {
-      console.error('Erreur lors du désabonnement:', error);
+      console.error('Error during unsubscription:', error);
       next(error);
     }
   },
@@ -117,14 +117,14 @@ const newsletterController = {
 
       res.status(200).json({
         success: true,
-        message: 'Liste des abonnés récupérée avec succès',
+        message: 'List of active subscribers retrieved successfully',
         data: {
           count,
           subscribers
         }
       });
     } catch (error) {
-      console.error('Erreur lors de la récupération des abonnés:', error);
+      console.error('Error during retrieval of subscribers:', error);
       next(error);
     }
   },
@@ -141,7 +141,7 @@ const newsletterController = {
         data: { count }
       });
     } catch (error) {
-      console.error('Erreur lors du comptage:', error);
+      console.error('Error during counting:', error);
       next(error);
     }
   },
@@ -156,7 +156,7 @@ const newsletterController = {
       if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'Veuillez sélectionner au moins un type de destinataire'
+          message: 'Please select at least one recipient type'
         });
       }
 
@@ -171,7 +171,7 @@ const newsletterController = {
         }
       });
     } catch (error) {
-      console.error('Erreur lors de l\'aperçu des destinataires:', error);
+      console.error('Error during preview of recipients:', error);
       next(error);
     }
   },
@@ -190,7 +190,7 @@ const newsletterController = {
       if (campaignsToday >= 500) {
         return res.status(429).json({
           success: false,
-          message: 'Limite d\'envoi atteinte : maximum 2 newsletters par jour'
+          message: 'Sending limit reached: maximum 2 newsletters per day'
         });
       }
 
@@ -200,7 +200,7 @@ const newsletterController = {
       if (emails.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'Aucun destinataire trouvé pour les types sélectionnés'
+          message: 'No recipients found for the selected types'
         });
       }
 
@@ -208,7 +208,7 @@ const newsletterController = {
       await connection.beginTransaction();
 
       // Envoyer les emails en masse
-      const { sendBulkEmail } = await import('../services/emailService.js');
+      const { sendBulkEmail } = await import('../services/email.service.js');
       const results = await sendBulkEmail(emails, subject, message);
 
       // Valider la transaction
@@ -216,7 +216,7 @@ const newsletterController = {
 
       res.status(200).json({
         success: true,
-        message: `Campagne envoyée avec succès à ${results.successful} destinataires`,
+        message: `Campaign sent successfully to ${results.successful} recipients`,
         data: {
           totalSent: results.total,
           successful: results.successful,
@@ -227,7 +227,7 @@ const newsletterController = {
     } catch (error) {
       // Annuler la transaction en cas d'erreur
       await connection.rollback();
-      console.error('Erreur lors de l\'envoi de la campagne:', error);
+      console.error('Error during campaign sending:', error);
       next(error);
     } finally {
       connection.release();

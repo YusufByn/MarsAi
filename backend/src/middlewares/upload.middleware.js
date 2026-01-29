@@ -1,19 +1,19 @@
 // middleware/upload.js
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const VALID_TYPES = ['video', 'cover', 'still', 'sub'];
 
 /**
  * Crée un middleware d'upload sécurisé pour un type spécifique
- * @param {string} type - Type de fichier (video, cover, still, sub)
+ * @param {string} type - File type (video, cover, still, sub)
  * @returns {Array} Tableau de middlewares [setType, multerMiddleware]
  */
 const createUploadMiddleware = (type) => {
     // Valider le type à la création
     if (!VALID_TYPES.includes(type)) {
-        throw new Error(`Type d'upload invalide: ${type}. Types autorisés: ${VALID_TYPES.join(', ')}`);
+        throw new Error(`Invalid upload type: ${type}. Allowed types: ${VALID_TYPES.join(', ')}`);
     }
     
     // Middleware pour définir le type dans req
@@ -78,7 +78,7 @@ const createUploadMiddleware = (type) => {
                         break;
                         
                     default:
-                        throw new Error(`Type de fichier non géré: ${type}`);
+                        throw new Error(`File type not handled: ${type}`);
                 }
                 
                 cb(null, filename);
@@ -104,7 +104,7 @@ const createUploadMiddleware = (type) => {
             if (isValidMime || isSrtFile) {
                 cb(null, true);
             } else {
-                cb(new Error(`Format non autorisé pour ${type}: ${file.mimetype}`), false);
+                cb(new Error(`Unauthorized format for ${type}: ${file.mimetype}`), false);
             }
         } catch (error) {
             cb(error, false);
@@ -141,9 +141,9 @@ const createUploadMiddleware = (type) => {
  * Export des middlewares pré-configurés par type
  * Usage: upload.video, upload.cover, upload.still, upload.sub
  */
-module.exports = {
+export default {
     video: createUploadMiddleware('video'),
     cover: createUploadMiddleware('cover'),
     still: createUploadMiddleware('still'),
     sub: createUploadMiddleware('sub')
-};
+}

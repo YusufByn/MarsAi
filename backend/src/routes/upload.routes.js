@@ -1,12 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const upload = require('../middlewares/upload');
-const videoController = require('../controllers/videoController');
+import { Router} from 'express';
+import videoController from '../controllers/videoController.js';
+import  upload  from '../middlewares/upload.middleware.js';
+
+const router = Router();
 // const uploadController = require('../controllers/uploadController');
 
 router.post('/videos', videoController.createVideo);
 
-// router.put('/videos/:id/upload-video', ...upload.video, uploadController.uploadVideoFile);
+// router.put('/videos/:id/upload-video', ...upload.video, uploadController.uploadVideoFile);:
 
 // router.put('/videos/:id/upload-cover', ...upload.cover, uploadController.uploadCover);
 
@@ -18,4 +19,4 @@ router.post('/videos/:id/contributors', videoController.addContributors);
 
 router.post('/videos/:id/social-media', videoController.addSocialMedia);
 
-module.exports = router;
+export default router;

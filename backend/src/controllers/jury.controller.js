@@ -29,7 +29,7 @@ export const juryController = {
       if (!jury) {
         return res.status(404).json({
           success: false,
-          message: 'Jury non trouvé'
+          message: 'Jury not found',
         });
       }
 
@@ -61,7 +61,7 @@ export const juryController = {
 
       res.status(201).json({
         success: true,
-        message: 'Jury créé avec succès',
+        message: 'Jury created successfully',
         data: newJury
       });
     } catch (error) {
@@ -88,7 +88,7 @@ export const juryController = {
       if (!updated) {
         return res.status(404).json({
           success: false,
-          message: 'Jury non trouvé'
+          message: 'Jury not found'
         });
       }
 
@@ -96,7 +96,7 @@ export const juryController = {
 
       res.json({
         success: true,
-        message: 'Jury mis à jour avec succès',
+        message: 'Jury updated successfully',
         data: updatedJury
       });
     } catch (error) {
@@ -116,13 +116,13 @@ export const juryController = {
       if (!deleted) {
         return res.status(404).json({
           success: false,
-          message: 'Jury non trouvé'
+          message: 'Jury not found'
         });
       }
 
       res.json({
         success: true,
-        message: 'Jury supprimé avec succès'
+        message: 'Jury deleted successfully'
       });
     } catch (error) {
       next(error);

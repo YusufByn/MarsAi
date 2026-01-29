@@ -4,7 +4,7 @@ const validate = (schema) => (req, res, next) => {
     next();
   } catch (err) {
     return res.status(400).json({ 
-      message: "Données invalides",
+      message: "Invalid data",
       errors: err.errors 
     });
   }

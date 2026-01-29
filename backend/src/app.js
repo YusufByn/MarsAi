@@ -8,7 +8,6 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
-import { jwtConfig } from './config/jwt.js';
 import authRoutes from './routes/auth.routes.js'
 import uploadRoutes from './routes/upload.routes.js';
 import juryRoutes from './routes/jury.routes.js';

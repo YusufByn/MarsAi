@@ -1,5 +1,5 @@
 // videoController.js
-const { pool } = require('../db/index.js');
+import { pool } from '../db/index.js';
 
 /**
  * Fonction helper pour gérer les erreurs
@@ -290,7 +290,7 @@ const addSocialMedia = async (req, res) => {
 };
 
 // Export des fonctions
-module.exports = {
+export default {
     createVideo,
     addContributors,
     addSocialMedia

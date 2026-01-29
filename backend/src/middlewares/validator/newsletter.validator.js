@@ -3,10 +3,10 @@ import { z } from 'zod';
 // Schéma pour l'inscription à la newsletter
 const subscribeSchema = z.object({
   email: z
-    .string({ required_error: 'L\'email est requis' })
-    .email('Format d\'email invalide')
-    .min(5, 'L\'email doit contenir au moins 5 caractères')
-    .max(255, 'L\'email ne doit pas dépasser 255 caractères')
+    .string({ required_error: 'Email is required' })
+    .email('Invalid email format')
+    .min(5, 'Email must contain at least 5 characters')
+    .max(255, 'Email must not exceed 255 characters')
     .transform(val => val.toLowerCase().trim())
 });
 
@@ -20,7 +20,7 @@ export const validateSubscribe = (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         success: false,
-        message: 'Validation échouée',
+        message: 'Validation failed',
         errors: error.errors?.map(err => ({
           field: err.path?.[0] || 'unknown',
           message: err.message
@@ -34,31 +34,31 @@ export const validateSubscribe = (req, res, next) => {
 // Schéma pour le désabonnement
 const unsubscribeSchema = z.object({
   email: z
-    .string({ required_error: 'L\'email est requis' })
-    .email('Format d\'email invalide')
+    .string({ required_error: 'Email is required' })
+    .email('Invalid email format')
     .transform(val => val.toLowerCase().trim())
 });
 
 // Schéma pour l'envoi de campagne
 const sendCampaignSchema = z.object({
   subject: z
-    .string({ required_error: 'Le sujet est requis' })
-    .min(5, 'Le sujet doit contenir au moins 5 caractères')
-    .max(255, 'Le sujet ne doit pas dépasser 255 caractères'),
+    .string({ required_error: 'Subject is required' })
+    .min(5, 'Subject must contain at least 5 characters')
+    .max(255, 'Subject must not exceed 255 characters'),
   message: z
-    .string({ required_error: 'Le message est requis' })
-    .min(20, 'Le message doit contenir au moins 20 caractères')
-    .max(10000, 'Le message ne doit pas dépasser 10 000 caractères'),
+    .string({ required_error: 'Message is required' })
+    .min(20, 'Message must contain at least 20 characters')
+    .max(10000, 'Message must not exceed 10 000 characters'),
   recipients: z
     .array(z.enum(['newsletter', 'realisateurs', 'selectionneurs', 'jury']))
-    .min(1, 'Veuillez sélectionner au moins un type de destinataire')
+    .min(1, 'Please select at least one recipient type')
 });
 
 // Schéma pour l'aperçu des destinataires
 const previewRecipientsSchema = z.object({
   recipients: z
     .array(z.enum(['newsletter', 'realisateurs', 'selectionneurs', 'jury']))
-    .min(1, 'Veuillez sélectionner au moins un type de destinataire')
+    .min(1, 'Please select at least one recipient type')
 });
 
 // Middleware de validation pour le désabonnement
@@ -71,7 +71,7 @@ export const validateUnsubscribe = (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         success: false,
-        message: 'Validation échouée',
+        message: 'Validation failed',
         errors: error.errors?.map(err => ({
           field: err.path?.[0] || 'unknown',
           message: err.message
@@ -92,7 +92,7 @@ export const validateSendCampaign = (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         success: false,
-        message: 'Validation échouée',
+        message: 'Validation failed',
         errors: error.errors?.map(err => ({
           field: err.path?.[0] || 'unknown',
           message: err.message
@@ -113,7 +113,7 @@ export const validatePreviewRecipients = (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         success: false,
-        message: 'Validation échouée',
+        message: 'Validation failed',
         errors: error.errors?.map(err => ({
           field: err.path?.[0] || 'unknown',
           message: err.message
