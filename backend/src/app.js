@@ -8,7 +8,8 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
-
+import { jwtConfig } from './config/jwt.js';
+import authRoutes from './routes/auth.routes.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,21 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 // Remonter d'un niveau depuis src/ pour accéder à uploads/
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-
-
-// auth routes
-
-app.use('/auth/register', (req, res) => {
-    res.json({ message: 'Route d\'inscription' });
-});
-
-app.use('/auth/login', (req, res) => {
-    res.json({ message: 'Route de connexion' });
-});
-
-// gestion des erreurs
-
-
+app.use('/api/auth', authRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err);

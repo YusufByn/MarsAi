@@ -1,6 +1,6 @@
 import pool from '../config/db.js';
 
-export async function registerUser({ email, passwordHash, role, firstName, lastName }) {
+export async function registerUser({ email, passwordHash, firstName, lastName }) {
 
     const connection = await pool.getConnection();
 
@@ -9,8 +9,8 @@ export async function registerUser({ email, passwordHash, role, firstName, lastN
         await connection.beginTransaction();
 
         const [result] = await connection.execute(
-            'INSERT INTO user (email, password_hash, role, name, lastname) VALUES (?, ?, ?, ?, ?)',
-            [email, passwordHash, role, firstName, lastName]
+            'INSERT INTO user (email, password_hash, name, lastname) VALUES (?, ?, ?, ?)',
+            [email, passwordHash, firstName, lastName]
         );
 
         await connection.commit();
@@ -18,7 +18,6 @@ export async function registerUser({ email, passwordHash, role, firstName, lastN
         return {
             id: result.insertId,
             email,
-            role,
             firstName,
             lastName
         };
