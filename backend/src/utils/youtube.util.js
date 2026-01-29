@@ -7,30 +7,35 @@ function extractVideoId(url) {
 
     // je verifie si l'url est une url courte
     const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    // si shortmatch existe, et que le 1er index = l'id, alors on return l'id
     if (shortMatch?.[1]){
         return shortMatch[1];
     }
 
     // je verifie si l'url est une url de watch
     const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    // si watchmatch existe, et que le 1er index = l'id, alors on return l'id
     if (watchMatch?.[1]){
         return watchMatch[1];
     }
 
     // je verifie si l'url est une url de embed
     const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+    // si embedmatch existe, et que le 1er index = l'id, alors on return l'id
     if (embedMatch?.[1]){
         return embedMatch[1];
     }
 
     // je verifie si l'url est une url de shorts
     const shortsMatch = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
+    // si shortsmatch existe, et que le 1er index = l'id, alors on return l'id
     if (shortsMatch?.[1]){
         return shortsMatch[1];
     }
 
     // je verifie si l'url est une url de v
     const vMatch = url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/);
+    // si vmatch existe, et que le 1er index = l'id, alors on return l'id
     if (vMatch?.[1]){
         return vMatch[1];
     }
