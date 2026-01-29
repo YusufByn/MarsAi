@@ -9,6 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
 import juryRoutes from './routes/jury.routes.js';
+import newsletterRoutes from './routes/newsletter.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // les routes
 app.use('/api/jury', juryRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err);
