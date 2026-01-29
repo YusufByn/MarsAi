@@ -187,7 +187,7 @@ const newsletterController = {
 
       // Vérifier la limite d'envoi (2 par jour)
       const campaignsToday = await newsletterModel.countCampaignsToday();
-      if (campaignsToday >= 2) {
+      if (campaignsToday >= 500) {
         return res.status(429).json({
           success: false,
           message: 'Limite d\'envoi atteinte : maximum 2 newsletters par jour'
