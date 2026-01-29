@@ -47,42 +47,5 @@ function validateYoutubeVideo(url) {
     return /^[a-zA-Z0-9_-]{11}$/.test(videoId);
 }
 
-// fonction pour parser/convertir la durée d'une vidéo youtube je mets un param url
-function parseDuration(url) {
-    // je verifie si l'url est valide et si c'est une string
-    if (url === null) {
-        // si l'url est null, je renvoie null
-        return null;
-    }
-
-    // je verifie si l'url est un nombre
-    if (typeof url === 'number') {
-        // si l'url est un nombre, je renvoie l'url
-        return url;
-    }
-
-    // je verifie si l'url est une string
-    if (typeof url !== 'string') {
-        // si l'url n'est pas une string, je renvoie null
-        return null;
-    }
-
-    // je verifie si l'url est une string et si elle contient la durée de la vidéo
-    const match = url.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
-    // si pas de durée trouvée, on renvoie null
-    if (!match) {
-        return null;
-    }
- 
-    // parse les heures, minutes et secondes
-    const hours = match[1] ? parseInt(match[1]) : 0;
-    const minutes = match[2] ? parseInt(match[2]) : 0;
-    const seconds = match[3] ? parseInt(match[3]) : 0;
-    
-    // on return la durée en secondes
-    return hours * 3600 + minutes * 60 + seconds;
-
-}
-
 // j'exporte les fonctions
-export default { extractVideoId, validateYoutubeVideo, parseDuration };
+export default { extractVideoId, validateYoutubeVideo };
