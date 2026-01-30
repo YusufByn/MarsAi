@@ -13,6 +13,9 @@ import uploadRoutes from './routes/upload.routes.js';
 import juryRoutes from './routes/jury.routes.js';
 import newsletterRoutes from './routes/newsletter.routes.js';
 import testRoutes from './routes/test.routes.js';
+import memoRoutes from './routes/memo.routes.js';
+import ratingRoutes from './routes/rating.routes.js';
+import videoRoutes from './routes/video.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +42,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/jury', juryRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/memo', memoRoutes);
+app.use('/api/rating', ratingRoutes);
+app.use('/api/videos', videoRoutes);
 app.use('/api', testRoutes);
 
 app.use((err, req, res, next) => {

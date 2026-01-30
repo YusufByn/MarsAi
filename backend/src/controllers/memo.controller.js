@@ -1,0 +1,46 @@
+import { memoModel } from '../models/memo.model.js';
+
+export const memoController = {
+  async getOne(req, res, next) {
+    try {
+      const { userId, videoId } = req.params;
+      const memo = await memoModel.getByUserAndVideo(userId, videoId);
+
+      if (!memo) {
+        return res.status(404).json({
+          success: false,
+          message: 'Memo not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        data: memo,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async upsert(req, res, next) {
+    try {
+      const { user_id, video_id, statut, playlist, comment } = req.body;
+
+      const memo = await memoModel.upsertMemo({
+        userId: user_id,
+        videoId: video_id,
+        statut,
+        playlist,
+        comment,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Memo saved',
+        data: memo,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+};
