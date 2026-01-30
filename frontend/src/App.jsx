@@ -5,6 +5,8 @@ import JuryDetails from './pages/user/JuryDetails';
 import AllJury from './pages/user/AllJury';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import Player from './pages/playerVideo/player';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 
@@ -20,6 +22,8 @@ function App() {
             <Route path="/jury/profil/:id" element={<JuryDetails />} />
             <Route path="/admin/newsletter" element={<NewsletterAdmin />} />
             <Route path="/video/player" element={<Player />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Routes>
         </main>
         <Footer />
