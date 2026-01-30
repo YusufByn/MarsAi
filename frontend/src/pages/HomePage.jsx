@@ -105,7 +105,7 @@ const HomePage = () => {
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-12">
-            <button className="mars-button-primary">
+            <button className="mars-button-primary"  onClick={() => navigate('/formsubmission')}>
               SOUMETTRE MON FILM
             </button>
             
