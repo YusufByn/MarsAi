@@ -6,6 +6,8 @@ import {
   validateSendCampaign, 
   validatePreviewRecipients 
 } from '../middlewares/validator/newsletter.validator.js';
+import { checkAuth } from '../middlewares/auth.middleware.js';
+import { requireRole } from '../middlewares/requireRole.middleware.js';
 
 const router = Router();
 
@@ -36,7 +38,7 @@ router.get('/count', newsletterController.getCount);
  * @access  Admin (à protéger plus tard avec middleware auth)
  * @todo    Ajouter middleware d'authentification superadmin
  */
-router.get('/', newsletterController.getAllActive);
+router.get('/', checkAuth, requireRole('admin', 'superadmin'), newsletterController.getAllActive);
 
 /**
  * @route   POST /api/newsletter/campaign/preview
@@ -44,7 +46,7 @@ router.get('/', newsletterController.getAllActive);
  * @access  Admin + Superadmin
  * @todo    Ajouter middleware d'authentification admin
  */
-router.post('/campaign/preview', validatePreviewRecipients, newsletterController.previewRecipients);
+router.post('/campaign/preview', checkAuth, requireRole('admin', 'superadmin'), validatePreviewRecipients, newsletterController.previewRecipients);
 
 /**
  * @route   POST /api/newsletter/campaign/send
@@ -52,6 +54,6 @@ router.post('/campaign/preview', validatePreviewRecipients, newsletterController
  * @access  Admin + Superadmin
  * @todo    Ajouter middleware d'authentification admin
  */
-router.post('/campaign/send', validateSendCampaign, newsletterController.sendCampaign);
+router.post('/campaign/send', checkAuth, requireRole('admin', 'superadmin'), validateSendCampaign, newsletterController.sendCampaign);
 
 export default router;
