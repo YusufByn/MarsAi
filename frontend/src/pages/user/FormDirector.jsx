@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ParticipationSubmission1 from '../../components/Form/ParticipationSubmission1';
+import ParticipationSubmission1 from '../../components/Form/ParticipationSubmission1.jsx';
 
 const FormDirector = () => {
   const navigate = useNavigate();
