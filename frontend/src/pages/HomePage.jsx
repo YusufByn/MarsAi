@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Countdown = () => {
   const [timeLeft, setTimeLeft] = useState({
@@ -79,6 +80,7 @@ const Countdown = () => {
 };
 
 const HomePage = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-mars-primary selection:text-white overflow-x-hidden">
       
