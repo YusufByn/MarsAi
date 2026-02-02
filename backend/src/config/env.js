@@ -30,5 +30,11 @@ export const env = {
         user: process.env.EMAIL_USER,
         password: process.env.EMAIL_PASSWORD
     },
-    websiteUrl: process.env.WEBSITE_URL ?? 'http://localhost:5173'
+    websiteUrl: process.env.WEBSITE_URL ?? 'http://localhost:5173',
+    youtube: {
+        clientId: process.env.YT_CLIENT_ID,
+        clientSecret: process.env.YT_CLIENT_SECRET,
+        redirectUrl: process.env.YT_REDIRECT_URL,
+        refreshToken: process.env.YT_REFRESH_TOKEN
+    }
 }
