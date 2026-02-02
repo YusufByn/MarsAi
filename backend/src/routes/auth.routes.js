@@ -5,6 +5,8 @@ import { juryRegisterSchema, juryLoginSchema } from '../utils/schemas.js';
 
 const router = express.Router();
 
+
+
 router.post('/register', validate(juryRegisterSchema), authController.register);
 router.post('/login', validate(juryLoginSchema), authController.login);
 
