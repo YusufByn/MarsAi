@@ -1,7 +1,7 @@
 import { pool } from '../db/index.js';
 
 export const videoModel = {
-<<<<<<< HEAD
+
   async findAll({ limit = 10 }) {
     const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 50) : 10;
     const [rows] = await pool.execute(
