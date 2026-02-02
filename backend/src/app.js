@@ -16,6 +16,7 @@ import testRoutes from './routes/test.routes.js';
 import memoRoutes from './routes/memo.routes.js';
 import ratingRoutes from './routes/rating.routes.js';
 import videoRoutes from './routes/video.routes.js';
+import youtubeRoutes from './routes/youtube.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,6 +47,7 @@ app.use('/api/memo', memoRoutes);
 app.use('/api/rating', ratingRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api', testRoutes);
+app.use('/api/youtube', youtubeRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err);
