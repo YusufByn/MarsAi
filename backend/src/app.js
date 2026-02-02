@@ -27,7 +27,7 @@ const app = express();
 
 // config de l'app
 app.use(helmet());
-app.use(rateLimit({ windowMs: 15*60*1000, max: 100 }));
+// app.use(rateLimit({ windowMs: 15*60*1000, max: 5000 })); // rate limite pour eviter les boucle côté cms
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
@@ -36,7 +36,7 @@ app.use(compression());
 app.use(express.urlencoded({ extended: true }));
 
 // routes cms
-app.use('/api/cms/', countdownRoutes);
+app.use('/api', countdownRoutes);
 
 // servir les fichiers statiques (vidéos uploadées)
 // Remonter d'un niveau depuis src/ pour accéder à uploads/

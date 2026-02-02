@@ -1,9 +1,9 @@
 import express from 'express';
-import { getCountdown } from '../../controllers/cms/countdown.controller.js';
+import { getHomepage } from '../../controllers/cms/countdown.controller.js';
 
 const router = express.Router();
 
-// Route publique pour récupérer le countdown
-router.get('/countdown', getCountdown);
+// Route publique pour récupérer les données de la homepage
+router.get('/homepage', getHomepage);
 
 export default router;
