@@ -1,6 +1,6 @@
-import { validateYoutubeVideo } from "../utils/youtube.util.js";
+import validateYoutubeVideo from "../utils/youtube.util.js";
 
-export async function validateYoutubeUrl(req, res) {    
+export default async function validateYoutubeUrl(req, res) {    
 
     const { youtube_url } = req.body;
     // condition pour verifier qu'une url youtube est valide

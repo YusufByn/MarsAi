@@ -63,8 +63,7 @@ export const login = async (req, res) => {
         const hashInDb = user.password_hash || user.password;
 
         if (!hashInDb) {
-            console.error(" ERREUR CRITIQUE : Aucun mot de passe trouvé dans l'objet user !");
-            console.error("Les clés disponibles sont :", Object.keys(user));
+            console.error("Critical error: No password found in user object!");
             return res.status(500).json({ 
                 success: false,
                 message: "Internal error: Password not found in user object" 

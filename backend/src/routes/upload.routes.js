@@ -1,11 +1,23 @@
 import { Router} from 'express';
-import videoController from '../controllers/videoController.js';
+// import videoController from '../controllers/videoController.js';
+import videoController from '../controllers/video.controller.js';
+// import uploadController from '../controllers/upload.controller.js';
 import  upload  from '../middlewares/upload.middleware.js';
 
 const router = Router();
 // const uploadController = require('../controllers/uploadController');
 
-router.post('/videos', videoController.createVideo);
+// router.post(
+//     '/videos',
+//     ...upload.video,
+//     (req, res, next) => {
+//       if (req.file) req.body.video_file_name = req.file.filename;
+//       next();
+//     },
+//     videoController.create
+//   );
+
+// router.post('/videos', videoController.createVideo);
 
 // router.put('/videos/:id/upload-video', ...upload.video, uploadController.uploadVideoFile);:
 
@@ -15,8 +27,8 @@ router.post('/videos', videoController.createVideo);
 
 // router.put('/videos/:id/upload-subtitles', ...upload.sub, uploadController.uploadSubtitles);
 
-router.post('/videos/:id/contributors', videoController.addContributors);
+// router.post('/videos/:id/contributors', videoController.addContributors);
 
-router.post('/videos/:id/social-media', videoController.addSocialMedia);
+// router.post('/videos/:id/social-media', videoController.addSocialMedia);
 
 export default router;
