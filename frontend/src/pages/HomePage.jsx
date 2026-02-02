@@ -1,82 +1,5 @@
-import React, { useState, useEffect } from 'react';
-
-const Countdown = () => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
-
-  useEffect(() => {
-    const targetDate = new Date('2026-06-20T00:00:00');
-
-    const timer = setInterval(() => {
-      const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
-
-      if (difference <= 0) {
-        clearInterval(timer);
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60)
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center gap-6 mb-16">
-      <div className="flex items-center gap-3 text-xs md:text-sm font-black tracking-[0.5em] text-mars-primary uppercase">
-        <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-mars-primary"></div>
-        <span className="animate-pulse">Impact prévu</span>
-        <div className="w-12 h-[1px] bg-gradient-to-l from-transparent to-mars-primary"></div>
-      </div>
-      
-      <div className="flex gap-4 md:gap-8 items-center">
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
-            {String(timeLeft.days).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">Jours</span>
-        </div>
-        
-        <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
-        
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
-            {String(timeLeft.hours).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">Heures</span>
-        </div>
-
-        <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
-
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
-            {String(timeLeft.minutes).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">Minutes</span>
-        </div>
-
-        <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
-
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter mars-text-gradient leading-none">
-            {String(timeLeft.seconds).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">Secondes</span>
-        </div>
-      </div>
-    </div>
-  );
-};
+import React from 'react';
+import Countdown from '../components/Countdown';
 
 const HomePage = () => {
   return (
@@ -97,9 +20,7 @@ const HomePage = () => {
           <h1 className="text-8xl md:text-[12rem] font-black tracking-tighter mb-4 leading-[0.8] italic uppercase">
             MARS<span className="mars-text-gradient">AI</span>
           </h1>
-
           <Countdown />
-          
           <p className="text-xl md:text-2xl text-white/40 font-light mb-16 tracking-wide max-w-2xl">
             L'apogée du cinéma génératif. Repoussez les limites de la narration numérique.
           </p>

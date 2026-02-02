@@ -16,6 +16,7 @@ import testRoutes from './routes/test.routes.js';
 import memoRoutes from './routes/memo.routes.js';
 import ratingRoutes from './routes/rating.routes.js';
 import videoRoutes from './routes/video.routes.js';
+import countdownRoutes from './routes/cms/countdown.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,9 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(compression());
 app.use(express.urlencoded({ extended: true }));
+
+// routes cms
+app.use('/api/cms/', countdownRoutes);
 
 // servir les fichiers statiques (vidéos uploadées)
 // Remonter d'un niveau depuis src/ pour accéder à uploads/

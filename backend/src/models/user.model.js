@@ -18,8 +18,9 @@ export async function registerUser({ email, passwordHash, firstName, lastName })
         return {
             id: result.insertId,
             email,
+            passwordHash,
             firstName,
-            lastName
+            lastName,
         };
 
     } catch (error) {
