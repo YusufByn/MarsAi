@@ -29,3 +29,34 @@ export default {
   },
   plugins: [],
 }
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  theme: {
+    extend: {
+      spacing: {
+        'safe': 'env(safe-area-inset-bottom)',
+      },
+    },
+  },
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+    function({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        },
+        '.pb-safe': {
+          paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+        },
+      });
+    },
+  ],
+}

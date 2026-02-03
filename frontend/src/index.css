@@ -106,3 +106,18 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #333333;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fix pour iOS Safari */
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Éviter le zoom sur double-tap iOS */
+* {
+  touch-action: manipulation;
+}
