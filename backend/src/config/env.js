@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // lister et verifier les infos necessaire
-const required = ['DB_HOST', 'DB_USER', 'DB_NAME', 'JWT_SECRET', 'EMAIL_HOST', 'EMAIL_USER', 'EMAIL_PASSWORD'];
+const required = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME', 'JWT_SECRET', 'EMAIL_HOST', 'EMAIL_USER', 'EMAIL_PASSWORD'];
 for (const key of required) {
     if(!process.env[key]){
         throw new Error(`${key}: manquant dans le fichier d'environnement`)

@@ -14,7 +14,7 @@ const Countdown = () => {
 
     const fetchHomepage = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/homepage`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cms/homepage`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
