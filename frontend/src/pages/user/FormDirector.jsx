@@ -8,11 +8,9 @@ import ParticipationVideoUpload from '../../components/Form/ParticipationVideoUp
 
 const FormDirector = () => {
 const navigate = useNavigate();
+const [etape, setEtape] = useState(1);
 
-const [currentStep, setCurrentStep] = useState("PPD");
-  function name(params) {
-    
-  }
+  
 
   return (
     <div className="flex justify-center pt-32 ">
@@ -20,7 +18,7 @@ const [currentStep, setCurrentStep] = useState("PPD");
             <div>
               {etape === 1 && (
               <div id="PPD">
-                <ParticipationPersonnalData setEtape={setEtape} />
+                <ParticipationPersonnalData setEtape={setEtape}/>
               </div>
               )}
               {etape === 2 && (

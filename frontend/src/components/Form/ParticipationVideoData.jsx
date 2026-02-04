@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ParticipationVideoData = () => {
+const ParticipationVideoData = ({setEtape}) => {
   const navigate = useNavigate();
 
   return (
-    <div className="border border-white w-250 bg-[#1B1F29] rounded-xl p-2 text-center">
+    <div className="border border-white bg-[#1B1F29] rounded-xl p-2 text-center">
       <h2 className="p-2">Video Data</h2>
         <div className="text-center flex flex-raw space-betweenb justify-center gap-2">
           
@@ -18,108 +18,103 @@ const ParticipationVideoData = () => {
           <div className="border rounded-xl w-5">
             3
           </div>
-          <div className="border rounded-xl w-5">
-            4
-          </div>
         </div>
           <section className="FormContainer">
-            <form action="" method="post" className=" justify-center">
+            <form action="" method="post" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center m-5 gap-5 ">
 
-            {/* Civility */}
-              <div className="flex flex-row m-5 p-1 gap-5">
-                <div className="">
-                  <select name="Gender" id="Gender" className="bg-black/50 border rounded-xl p-2">
-                    <option value="Male" className="bg-sky-500/50">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                  <div >
-                  <input className="bg-black/50 border rounded-xl p-1 w-95"
+                  <div>
+                  <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
                     type="text"
-                    name="FirstName"
-                    id="FirstName"
-                    label="FirstName"
-                    placeholder="First Name"
+                    name="Title"
+                    id="Title"
+                    label="Title"
+                    placeholder="Title"
                     />
                   </div>
                   <div>
-                  <input className="bg-black/50 border rounded-xl p-1 w-95"
+                  <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
                     type="text"
-                    name="LastName"
-                    id="LastName"
-                    placeholder="Last Name"
+                    name="Title EN"
+                    id="Title EN"
+                    label="Title EN"
+                    placeholder="Title EN"
                     />
                   </div>
-                </div>
-
-              <div className="flex flex-row">
-                {/* Email & Birthday */}
-                <div className="flex flex-row m-5 p-1 gap-5">
                   <div>
-                  <input className="bg-black/50 border rounded-xl p-1 w-65"
-                    type="email"
-                    name="email"
-                    id="email"
-                    placeholder="email"
+                  <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
+                    type="text"
+                    name="Language"
+                    id="Language"
+                    label="Language"
+                    placeholder="Language"
+                    />
+                  </div>
+                  <div>
+                  <textarea className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
+                    type="text"
+                    name="Synopsis"
+                    id="Synopsis"
+                    label="Synopsis"
+                    placeholder="Synopsis"
+                    />
+                  </div>
+                  <div>
+                  <textarea className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
+                    type="text"
+                    name="Synopsis EN"
+                    id="Synopsis EN"
+                    label="Synopsis EN"
+                    placeholder="Synopsis EN"
+                    />
+                  </div>
+                  <div>
+                  <textarea className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
+                    type="text"
+                    name="Tech Resume"
+                    id="Tech Resume"
+                    label="Tech Resume"
+                    placeholder="Tech Resume"
                     />
                   </div>
                   <div >
-                    <input className="bg-black/50 border rounded-xl p-1"
-                      type="date"
-                      name="birthday"
-                      id="birthday"
+                  <textarea className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
+                    type="text"
+                    name="Creative Resume"
+                    id="Tech Resume"
+                    label="Tech Resume"
+                    placeholder="Creative Resume"
+                    />
+                  </div>
+                    <div className="p-2 g-2 m-2 w-60">
+                    <input className="bg-black/50 border rounded-xl m-5 p-2 gap-5"
+                      type="radio"
+                      name="Classification"
+                      id="Classification"
+                      label="Classification"
                       />
-                  </div>
-                </div>
-
-                {/* Phones */}
-                <div className="flex flex-row place-content-between m-5 p-1 gap-5">
-                  <div>
-                  <input className="bg-black/50 border rounded-xl p-1 w-40"
-                    type="tel"
-                    name="PhoneNumber"
-                    id="PhoneNumber"
-                    placeholder="Phone Number"
-                    />
-                  </div>
-                  <div>
-                  <input className="bg-black/50 border rounded-xl p-1 w-40"
-                    type="tel"
-                    name="MobileNumber"
-                    id="MobileNumber"
-                    placeholder="Mobile Number"
-                    />
-                  </div>
-                </div>
-              </div>
-
-                {/* Adress */}
-                <div className="flex flex-col m-5 p-1 gap-5">
-                  <div>
-                  <input className="bg-black/50 border rounded-xl p-1 w-230"
+                      Hybride
+                    <input className="bg-black/50 border rounded-xl m-5 p-2 gap-5"
+                      type="radio"
+                      name="Classification"
+                      id="Classification"
+                      label="Classification"
+                      />
+                      Full AI
+                    </div>
+                  <div className="Tag PlaceHolder bg-black/50 border rounded-xl p-2 gap-5 w-60">
+                    <input
                     type="text"
-                    name="adress"
-                    placeholder="Adress"
-                    id="adress"
+                    name="Tag"
+                    id="Tag"
+                    placeholder="Tags (PLACE HOLDER)"
                     />
                   </div>
 
-                {/* Acquisition source */}
-                  <div>
-                  <input className="bg-black/50 border rounded-xl p-1 w-230"
-                    type="text"
-                    name="acquisition_source"
-                    id="acquisition_source"
-                    placeholder="How did you hear about us?"
-                    />
-                  </div>
-                </div>
 
                   <div className="m-5 p-1 gap-5  ">
-                  <button onClick={() => navigate({PVU})}
+                  <button onClick={() => setEtape(3)}
                     type="submit"
-                    className="bg-linear-65 from-purple-500 to-pink-500 border rounded-xl p-1 m-1  ">
+                    className="bg-linear-65 from-purple-500 to-pink-500 border rounded-xl p-1 m-1 w-25 ">
                     Next
                   </button>
                   </div>
