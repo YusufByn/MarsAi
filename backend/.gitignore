@@ -4,7 +4,7 @@ node_modules/
 
 .env
 # quand tu ecris .env.* ca dit d'ignorer tous les fichiers qui commencent par .env
-.env.*
+.env.local
 
 logs/
 uploads/
