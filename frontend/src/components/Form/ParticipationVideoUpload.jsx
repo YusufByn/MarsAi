@@ -152,7 +152,7 @@ const ParticipationVideoUpload = () => {
                     id="rights_accepted"
                     className="" />
                   </div>
-                  <div className="CopyRight">
+                  <div className="CopyRight border rounded-xl border-red">
                     <span>
                       *By submitting this video, you confirm that you hold all necessary rights to the content provided and authorize MarsAI to broadcast,
                       reproduce, and use this video, in whole or in part, in its communications media, without limitation in terms of duration or territory.
@@ -163,7 +163,7 @@ const ParticipationVideoUpload = () => {
                   <div className="m-1 p-1 gap-5  ">
                   <button
                     type="submit"
-                    className="bg-linear-65 from-purple-500 to-pink-500 border rounded-xl p-1 m-1 w-25 ">
+                    className="bg-linear-65 from-purple-700 to-pink-500 border rounded-xl p-2 w-25">
                     Submit
                   </button>
                   </div>

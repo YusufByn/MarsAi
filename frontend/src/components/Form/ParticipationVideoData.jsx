@@ -110,11 +110,14 @@ const ParticipationVideoData = ({setEtape}) => {
                     />
                   </div>
 
-
-                  <div className="m-5 p-1 gap-5  ">
+                  <div>
+                  </div>
+                  <div>
+                  </div>
+                  <div className="m-5 p-1 gap-5 place-self-centered">
                   <button onClick={() => setEtape(3)}
                     type="submit"
-                    className="bg-linear-65 from-purple-500 to-pink-500 border rounded-xl p-1 m-1 w-25 ">
+                    className="bg-linear-65 from-purple-500 to-pink-500 border rounded-xl p-2 w-25">
                     Next
                   </button>
                   </div>
