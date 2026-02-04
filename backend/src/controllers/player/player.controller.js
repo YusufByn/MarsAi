@@ -309,6 +309,96 @@ const PlayerVideoController = {
       return (num / 1000).toFixed(1) + 'K';
     }
     return num.toString();
+  },
+
+  /**
+   * Envoyer un email au créateur de la vidéo
+   * POST /api/player/send-email
+   * Body: { video_id, user_id, message }
+   */
+  async sendEmailToCreator(req, res) {
+    try {
+      const { video_id, user_id, message } = req.body;
+
+      if (!video_id || !user_id || !message) {
+        return res.status(400).json({
+          success: false,
+          message: 'Paramètres manquants (video_id, user_id, message requis)'
+        });
+      }
+
+      // TODO: Implémenter l'envoi d'email réel
+      // Pour l'instant, on simule juste le succès
+      console.log('📧 Email à envoyer:');
+      console.log('   Video ID:', video_id);
+      console.log('   User ID:', user_id);
+      console.log('   Message:', message);
+
+      // Simuler un délai d'envoi
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      res.json({
+        success: true,
+        message: 'Email envoyé avec succès',
+        data: {
+          video_id,
+          user_id,
+          sent_at: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erreur sendEmailToCreator:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de l\'envoi de l\'email',
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * Ajouter/Retirer une vidéo de la playlist
+   * POST /api/player/playlist
+   * Body: { video_id, user_id, playlist: true/false }
+   */
+  async togglePlaylist(req, res) {
+    try {
+      const { video_id, user_id, playlist } = req.body;
+
+      if (!video_id || !user_id || playlist === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: 'Paramètres manquants (video_id, user_id, playlist requis)'
+        });
+      }
+
+      // TODO: Mettre à jour la base de données (table selector_memo)
+      // UPDATE selector_memo SET playlist = ? WHERE video_id = ? AND user_id = ?
+      console.log('📋 Playlist update:');
+      console.log('   Video ID:', video_id);
+      console.log('   User ID:', user_id);
+      console.log('   Add to playlist:', playlist ? 'OUI' : 'NON');
+
+      res.json({
+        success: true,
+        message: playlist ? 'Vidéo ajoutée à la playlist' : 'Vidéo retirée de la playlist',
+        data: {
+          video_id,
+          user_id,
+          playlist,
+          updated_at: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Erreur togglePlaylist:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la mise à jour de la playlist',
+        error: error.message
+      });
+    }
   }
 };
 

@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import RatingSelector from './selectorOption/ratingSelector';
-import SelectorMemo from './selectorOption/selectorMemo';
+import ActionButtons from './selectorOption/ActionButtons';
+import RatingModal from './selectorOption/RatingModal';
+import QuickNotePanel from './selectorOption/QuickNotePanel';
+import EmailPanel from './selectorOption/EmailPanel';
+import KeyboardShortcuts from './selectorOption/KeyboardShortcuts';
 import { playerService } from '../../services/playerService';
 
 const Player = () => {
@@ -8,7 +11,11 @@ const Player = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const [showControls, setShowControls] = useState(false);
+  
+  // États pour les modals/panels
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showNotePanel, setShowNotePanel] = useState(false);
+  const [showEmailPanel, setShowEmailPanel] = useState(false);
   
   // États pour rating et memo
   const [ratings, setRatings] = useState({});
@@ -20,6 +27,8 @@ const Player = () => {
   const videosRef = useRef({});
   const touchStartY = useRef(0);
   const observerRef = useRef(null);
+  const tabCountRef = useRef(0);
+  const tabTimerRef = useRef(null);
   const userId = 1; // À remplacer par l'ID utilisateur réel
 
   // URL du backend
@@ -111,6 +120,85 @@ const Player = () => {
 
     fetchVideos();
   }, [API_URL, userId]);
+
+  // Gestion des raccourcis clavier
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignorer si un modal/panel est ouvert ou si on tape dans un input/textarea
+      if (
+        showRatingModal || 
+        showNotePanel || 
+        showEmailPanel ||
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      switch(e.key.toLowerCase()) {
+        case 'y': // Y = Oui
+        case 'o': // O = Oui (pour clavier FR)
+          e.preventDefault();
+          handleStatusClick('yes');
+          break;
+
+        case 'delete':
+        case 'backspace': // Suppr/Effacer = Non
+          e.preventDefault();
+          handleStatusClick('no');
+          break;
+
+        case 'arrowright': // Flèche droite = À discuter
+          e.preventDefault();
+          handleStatusClick('discuss');
+          break;
+
+        case 'tab': // Compteur de Tab
+          e.preventDefault();
+          tabCountRef.current += 1;
+          
+          // Reset après 1 seconde
+          if (tabTimerRef.current) {
+            clearTimeout(tabTimerRef.current);
+          }
+          tabTimerRef.current = setTimeout(() => {
+            tabCountRef.current = 0;
+          }, 1000);
+          break;
+
+        case 'enter':
+          e.preventDefault();
+          // 1 Tab + Enter = Note rapide
+          if (tabCountRef.current === 1) {
+            setShowNotePanel(true);
+            tabCountRef.current = 0;
+          } 
+          // 2 Tabs + Enter = Email
+          else if (tabCountRef.current === 2) {
+            setShowEmailPanel(true);
+            tabCountRef.current = 0;
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (tabTimerRef.current) {
+        clearTimeout(tabTimerRef.current);
+      }
+    };
+  }, [showRatingModal, showNotePanel, showEmailPanel, videos, currentIndex]);
+
+  // Reset tab count quand on change de vidéo
+  useEffect(() => {
+    tabCountRef.current = 0;
+  }, [currentIndex]);
 
   // Intersection Observer pour détecter quelle vidéo est visible
   useEffect(() => {
@@ -216,27 +304,26 @@ const Player = () => {
     });
   };
 
-  // Gestion du rating
-  const handleRatingChange = async (videoId, newRating) => {
-    setRatings(prev => ({ ...prev, [videoId]: newRating }));
-    
-    try {
-      await playerService.saveRating({
-        user_id: userId,
-        video_id: videoId,
-        rating: newRating,
-      });
-      console.log('✅ Rating sauvegardé:', newRating);
-    } catch (error) {
-      console.error('❌ Erreur sauvegarde rating:', error);
-    }
-  };
+  // Gestion du clic sur les boutons de statut
+  const handleStatusClick = async (newStatus) => {
+    const videoId = videos[currentIndex]?.id;
+    if (!videoId) return;
 
-  // Gestion du status
-  const handleStatusChange = async (videoId, newStatus) => {
+    // Si "Oui" est cliqué, ouvrir le modal de notation
+    if (newStatus === 'yes') {
+      setShowRatingModal(true);
+      return;
+    }
+
+    // Sinon, sauvegarder directement le statut
     setStatuses(prev => ({ ...prev, [videoId]: newStatus }));
     
     try {
+      // Si "À discuter", ajouter à la playlist
+      if (newStatus === 'discuss') {
+        await playerService.togglePlaylist(videoId, userId, true);
+      }
+      
       await playerService.saveMemo({
         user_id: userId,
         video_id: videoId,
@@ -249,27 +336,80 @@ const Player = () => {
     }
   };
 
-  // Gestion du memo
-  const handleMemoChange = (videoId, newMemo) => {
-    setMemos(prev => ({ ...prev, [videoId]: newMemo }));
+  // Sauvegarder la notation depuis le modal
+  const handleSaveRating = async (rating) => {
+    const videoId = videos[currentIndex]?.id;
+    if (!videoId) return;
+
+    setSaving(true);
+    try {
+      // Sauvegarder le rating
+      await playerService.saveRating({
+        user_id: userId,
+        video_id: videoId,
+        rating: rating,
+      });
+
+      // Sauvegarder le statut "yes"
+      await playerService.saveMemo({
+        user_id: userId,
+        video_id: videoId,
+        statut: 'yes',
+        comment: memos[videoId] || '',
+      });
+
+      // Mettre à jour les états locaux
+      setRatings(prev => ({ ...prev, [videoId]: rating }));
+      setStatuses(prev => ({ ...prev, [videoId]: 'yes' }));
+
+      console.log('✅ Notation sauvegardée:', rating);
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde notation:', error);
+      throw error;
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSaveMemo = async (videoId) => {
-    setSaving(true);
+  // Sauvegarder la note rapide
+  const handleSaveQuickNote = async (note) => {
+    const videoId = videos[currentIndex]?.id;
+    if (!videoId) return;
+
     try {
       await playerService.saveMemo({
         user_id: userId,
         video_id: videoId,
         statut: statuses[videoId] || 'no',
-        comment: memos[videoId] || '',
+        comment: note,
       });
-      console.log('✅ Memo sauvegardé');
+
+      setMemos(prev => ({ ...prev, [videoId]: note }));
+      console.log('✅ Note rapide sauvegardée');
     } catch (error) {
-      console.error('❌ Erreur sauvegarde memo:', error);
-    } finally {
-      setSaving(false);
+      console.error('❌ Erreur sauvegarde note:', error);
+      throw error;
     }
   };
+
+  // Envoyer un email au réalisateur
+  const handleSendEmail = async (message) => {
+    const videoId = videos[currentIndex]?.id;
+    if (!videoId) return;
+
+    try {
+      await playerService.sendEmailToCreator({
+        video_id: videoId,
+        user_id: userId,
+        message: message,
+      });
+      console.log('✅ Email envoyé');
+    } catch (error) {
+      console.error('❌ Erreur envoi email:', error);
+      throw error;
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -360,79 +500,32 @@ const Player = () => {
             </div>
           </div>
 
-          {/* Bouton pour afficher les contrôles (rating/memo) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowControls(!showControls);
-            }}
-            className="action-btn absolute right-3 top-20 w-14 h-14 rounded-full bg-purple-600/90 backdrop-blur-md flex items-center justify-center pointer-events-auto active:scale-90 transition-transform z-50 shadow-lg hover:bg-purple-700"
-          >
-            <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-4h4v4zm0-6H8V7h4v4zm6 6h-4v-4h4v4zm0-6h-4V7h4v4z"/>
-            </svg>
-          </button>
 
-          {/* Panneau de contrôles (Rating + Memo) */}
-          {showControls && currentIndex === index && (
-            <div 
-              className="controls-panel absolute right-3 top-36 w-80 max-h-[60vh] overflow-y-auto bg-black/90 backdrop-blur-xl rounded-3xl border border-purple-500/30 p-4 pointer-events-auto z-50 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-white font-semibold">Évaluation</h4>
-                <button
-                  onClick={() => setShowControls(false)}
-                  className="text-white/60 hover:text-white"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                  </svg>
-                </button>
-              </div>
-
-              {/* Rating Selector */}
-              <div className="mb-6">
-                <RatingSelector
-                  initialRating={ratings[video.id] || 0}
-                  initialStatus={statuses[video.id] || 'no'}
-                  onRatingChange={(rating) => handleRatingChange(video.id, rating)}
-                  onStatusChange={(status) => handleStatusChange(video.id, status)}
-                />
-              </div>
-
-              {/* Selector Memo */}
-              <div className="mb-4">
-                <SelectorMemo
-                  initialMemo={memos[video.id] || ''}
-                  onMemoChange={(memo) => handleMemoChange(video.id, memo)}
-                />
-              </div>
-
-              {/* Bouton de sauvegarde */}
-              <button
-                onClick={() => handleSaveMemo(video.id)}
-                disabled={saving}
-                className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
-              >
-                {saving ? 'Sauvegarde...' : 'Enregistrer le memo'}
-              </button>
-            </div>
-          )}
-
-          {/* Indicateur de progression */}
-          <div className="absolute top-4 left-4 right-20 flex items-center justify-between z-10">
+          {/* Indicateur de progression et statut */}
+          <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
             <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full">
               <span className="text-white text-xs font-semibold">
                 {index + 1} / {videos.length}
               </span>
             </div>
-            {!showControls && (
-              <div className="px-3 py-1.5 bg-purple-600/70 backdrop-blur-md rounded-full flex items-center gap-2 animate-pulse">
-                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                <span className="text-white text-xs font-semibold">Noter la vidéo</span>
+            
+            {/* Badge statut de la vidéo */}
+            {statuses[video.id] && statuses[video.id] !== 'no' && (
+              <div className={`px-3 py-1.5 backdrop-blur-md rounded-full flex items-center gap-2 ${
+                statuses[video.id] === 'yes' ? 'bg-green-500/70' :
+                statuses[video.id] === 'discuss' ? 'bg-amber-500/70' :
+                'bg-red-500/70'
+              }`}>
+                <span className="text-white text-xs font-semibold">
+                  {statuses[video.id] === 'yes' ? 'Selectionne' :
+                   statuses[video.id] === 'discuss' ? 'A revoir' :
+                   'Non retenu'}
+                </span>
+                {ratings[video.id] > 0 && statuses[video.id] === 'yes' && (
+                  <span className="text-white text-xs font-bold">
+                    {ratings[video.id]}/10
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -450,6 +543,64 @@ const Player = () => {
           </div>
         </div>
       ))}
+
+      {/* Boutons d'action flottants style Tinder */}
+      {videos.length > 0 && (
+        <>
+          <ActionButtons
+            currentStatus={statuses[videos[currentIndex]?.id] || 'no'}
+            rating={ratings[videos[currentIndex]?.id] || 0}
+            onStatusClick={handleStatusClick}
+            onNoteClick={() => setShowNotePanel(true)}
+            onEmailClick={() => setShowEmailPanel(true)}
+          />
+          
+          {/* Aide raccourcis clavier */}
+          <KeyboardShortcuts />
+        </>
+      )}
+
+      {/* Modal de notation */}
+      {videos.length > 0 && (
+        <RatingModal
+          isOpen={showRatingModal}
+          onClose={() => setShowRatingModal(false)}
+          videoData={{
+            title: videos[currentIndex]?.title,
+            author: videos[currentIndex]?.author,
+          }}
+          initialRating={ratings[videos[currentIndex]?.id] || 0}
+          onSave={handleSaveRating}
+        />
+      )}
+
+      {/* Panel note rapide */}
+      {videos.length > 0 && (
+        <QuickNotePanel
+          isOpen={showNotePanel}
+          onClose={() => setShowNotePanel(false)}
+          videoData={{
+            title: videos[currentIndex]?.title,
+            author: videos[currentIndex]?.author,
+          }}
+          initialNote={memos[videos[currentIndex]?.id] || ''}
+          onSave={handleSaveQuickNote}
+        />
+      )}
+
+      {/* Panel email */}
+      {videos.length > 0 && (
+        <EmailPanel
+          isOpen={showEmailPanel}
+          onClose={() => setShowEmailPanel(false)}
+          videoData={{
+            title: videos[currentIndex]?.title,
+            author: videos[currentIndex]?.author,
+            email: videos[currentIndex]?.email,
+          }}
+          onSend={handleSendEmail}
+        />
+      )}
     </div>
   );
 };

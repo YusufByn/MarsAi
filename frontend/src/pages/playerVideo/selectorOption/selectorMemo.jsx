@@ -1,5 +1,3 @@
-// ici il y aura tout le code concernant la gestion des options de sélection des jurys
-// c'est à dire le vote, le dislike, le bookmark, le commentaire, etc.
 import React, { useState } from 'react';
 
 const SelectorMemo = ({ initialMemo = '', onMemoChange }) => {
@@ -14,23 +12,23 @@ const SelectorMemo = ({ initialMemo = '', onMemoChange }) => {
     };
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <div>
-                <h2 className="text-sm font-semibold text-white">Memo du selector</h2>
-                <p className="text-xs text-gray-500">
-                    Notes internes, visibles uniquement par l&apos;équipe.
+                <label className="block text-sm font-semibold text-white mb-1">
+                    Note rapide
+                </label>
+                <p className="text-xs text-gray-400">
+                    Visible uniquement par vous
                 </p>
             </div>
             <textarea
                 value={memo}
                 onChange={handleChange}
-                placeholder="Ajoute un memo rapide sur cette video..."
-                className="w-full min-h-[120px] bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-mars-primary/40"
+                placeholder="Observations sur cette video..."
+                rows={3}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
             />
-            <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{memo.length} caracteres</span>
-                <span>Memo non sauvegarde</span>
-            </div>
+            <p className="text-xs text-gray-500 text-right">{memo.length} caracteres</p>
         </div>
     );
 };
