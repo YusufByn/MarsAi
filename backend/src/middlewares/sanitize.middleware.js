@@ -1,4 +1,4 @@
-import { sanitizeString } from "../../utils/secure/sanitize.util.js";
+import { sanitizeString } from "../utils/secure/sanitize.util.js";
 
 
 // middleware pour sanitize les données entrantes, à utiliser dans les routes ou on recoit des données en string 
