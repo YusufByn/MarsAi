@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isValidPhoneNumber } from "libphonenumber-js";
 
 const ParticipationPersonnalData = ({setEtape}) => {
   const navigate = useNavigate();

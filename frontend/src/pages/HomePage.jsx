@@ -4,12 +4,9 @@ import Countdown from '../components/Countdown';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
-<<<<<<< HEAD
-  const navigate = useNavigate();
-=======
+
   const { t } = useTranslation();
 
->>>>>>> 1e4d3a5efc72105af440c686d6b5c97d8a88e78f
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-mars-primary selection:text-white overflow-x-hidden">
 
@@ -34,13 +31,8 @@ const HomePage = () => {
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-12">
-<<<<<<< HEAD
-            <button className="mars-button-primary"  onClick={() => navigate('/formsubmission')}>
-              SOUMETTRE MON FILM
-=======
             <button className="mars-button-primary">
               {t('home.submitFilm')}
->>>>>>> 1e4d3a5efc72105af440c686d6b5c97d8a88e78f
             </button>
 
             <button className="mars-button-outline">
