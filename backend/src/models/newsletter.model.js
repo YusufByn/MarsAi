@@ -5,7 +5,7 @@ const newsletterModel = {
    * Chercher un email dans la newsletter
    */
   async findByEmail(email) {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       'SELECT * FROM newsletter WHERE email = ?',
       [email]
     );
@@ -16,7 +16,7 @@ const newsletterModel = {
    * Créer une nouvelle inscription
    */
   async create(email) {
-    const [result] = await pool.query(
+    const [result] = await pool.execute(
       'INSERT INTO newsletter (email) VALUES (?)',
       [email]
     );
@@ -27,7 +27,7 @@ const newsletterModel = {
    * Réabonner un email (remettre unsubscribed_at à NULL)
    */
   async resubscribe(email) {
-    const [result] = await pool.query(
+    const [result] = await pool.execute(
       'UPDATE newsletter SET unsubscribed_at = NULL WHERE email = ?',
       [email]
     );
@@ -38,7 +38,7 @@ const newsletterModel = {
    * Désabonner un email
    */
   async unsubscribe(email) {
-    const [result] = await pool.query(
+    const [result] = await pool.execute(
       'UPDATE newsletter SET unsubscribed_at = CURRENT_TIMESTAMP WHERE email = ?',
       [email]
     );
@@ -49,7 +49,7 @@ const newsletterModel = {
    * Récupérer tous les abonnés actifs (non désabonnés)
    */
   async findAllActive() {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       'SELECT * FROM newsletter WHERE unsubscribed_at IS NULL ORDER BY subscribed_at DESC'
     );
     return rows;
@@ -59,7 +59,7 @@ const newsletterModel = {
    * Compter les abonnés actifs
    */
   async countActive() {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       'SELECT COUNT(*) as count FROM newsletter WHERE unsubscribed_at IS NULL'
     );
     return rows[0].count;
@@ -88,7 +88,7 @@ const newsletterModel = {
         return [];
     }
 
-    const [rows] = await pool.query(query);
+    const [rows] = await pool.execute(query);
     return rows.map(row => row.email);
   },
 

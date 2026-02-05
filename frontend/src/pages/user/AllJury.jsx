@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { juryService } from '../../services/juryService';
 
 const AllJury = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [jurys, setJurys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,7 +29,7 @@ const AllJury = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white font-light tracking-[0.3em] animate-pulse uppercase">Initialisation du Jury...</div>
+        <div className="text-white font-light tracking-[0.3em] animate-pulse uppercase">{t('jury.loading')}</div>
       </div>
     );
   }
@@ -35,13 +37,13 @@ const AllJury = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6">
-        <h1 className="text-4xl font-black text-white mb-4 italic tracking-tighter">ERREUR</h1>
+        <h1 className="text-4xl font-black text-white mb-4 italic tracking-tighter">{t('jury.error')}</h1>
         <p className="text-white/40 mb-8 font-light">{error}</p>
         <button
           onClick={() => navigate('/')}
           className="mars-button-outline"
         >
-          RETOUR À L'ACCUEIL
+          {t('jury.backHome')}
         </button>
       </div>
     );
@@ -49,31 +51,31 @@ const AllJury = () => {
 
   return (
     <div className="min-h-screen bg-black text-white pt-32 pb-20">
-      
+
       {/* Background Glows */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-mars-primary/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
       <div className="relative z-10 max-w-[1440px] mx-auto px-6">
-        
+
         {/* Header Section */}
         <header className="mb-20">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 mb-6 backdrop-blur-md">
             <div className="w-1.5 h-1.5 rounded-full bg-mars-primary animate-pulse"></div>
-            <span className="text-[10px] tracking-[0.3em] uppercase text-white/60 font-bold">Édition Festival 2026</span>
+            <span className="text-[10px] tracking-[0.3em] uppercase text-white/60 font-bold">{t('jury.badge')}</span>
           </div>
 
           <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-4 italic uppercase leading-[0.8]">
-            LES <span className="mars-text-gradient">JURYS</span>
+            THE <span className="mars-text-gradient">JURY</span>
           </h1>
           <p className="text-xl text-white/40 font-light max-w-2xl leading-relaxed">
-            Rencontrez les visionnaires du septième art qui sélectionneront les chefs-d'œuvre de la narration générative de cette année.
+            {t('jury.description')}
           </p>
         </header>
 
         {/* Grid des Jurys Style Music Player */}
         {jurys.length === 0 ? (
           <div className="text-center py-40 glass-card rounded-[3rem]">
-            <p className="text-white/20 text-xl font-light tracking-widest uppercase">Aucun jury n'a encore rejoint l'aventure.</p>
+            <p className="text-white/20 text-xl font-light tracking-widest uppercase">{t('jury.empty')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-10">
@@ -116,8 +118,8 @@ const AllJury = () => {
                 <div className="absolute bottom-10 left-10 right-10">
                   <div className="glass-card py-5 px-8 rounded-3xl flex items-center justify-between border-white/20 backdrop-blur-2xl transition-all duration-500 group-hover:bg-white/10">
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-bold tracking-[0.3em] text-mars-primary uppercase mb-1">Cérémonie 2026</span>
-                      <span className="text-xs font-medium text-white/80">Jury International</span>
+                      <span className="text-[9px] font-bold tracking-[0.3em] text-mars-primary uppercase mb-1">{t('jury.ceremony')}</span>
+                      <span className="text-xs font-medium text-white/80">{t('jury.international')}</span>
                     </div>
                     <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center bg-white/5 group-hover:bg-mars-primary group-hover:border-transparent transition-all duration-500">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

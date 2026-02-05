@@ -6,6 +6,8 @@ const ratingSchema = z.object({
   rating: z.coerce.number().min(0).max(10),
 });
 
+// Middleware de validation pour le rating
+// 
 export const validateRatingUpsert = (req, res, next) => {
   try {
     const validated = ratingSchema.parse(req.body);

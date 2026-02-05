@@ -1,6 +1,6 @@
 import express from 'express';
 import { juryController } from '../controllers/jury.controller.js';
-import { validateCreate, validateUpdate } from '../middlewares/validator/jury.validator.js';
+import { validateCreate, validateUpdate } from '../../../shared/validators/jury.validator.js';
 import { checkAuth } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/requireRole.middleware.js';
 

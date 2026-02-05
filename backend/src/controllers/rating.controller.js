@@ -1,7 +1,10 @@
 import { ratingModel } from '../models/rating.model.js';
 
+// CRUD de base pour ajouter un rating
+
 export const ratingController = {
   async getOne(req, res, next) {
+    // recup le rating de l'utilisateur pour la video
     try {
       const { userId, videoId } = req.params;
       const rating = await ratingModel.getByUserAndVideo(userId, videoId);
@@ -22,6 +25,7 @@ export const ratingController = {
     }
   },
 
+  // ici c'est la qu'on va enregistrer le rating de l'utilisateur pour la video
   async upsert(req, res, next) {
     try {
       const { user_id, video_id, rating } = req.body;

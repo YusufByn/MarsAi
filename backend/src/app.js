@@ -17,7 +17,7 @@ const app = express();
 
 // middleware pour sécuriser l'application
 app.use(helmet());
-// app.use(rateLimit({ windowMs: 15*60*1000, max: 5000 })); // rate limite pour eviter les boucle côté cms
+// app.use(rateLimit({ windowMs: 15*60*1_000, max: 5000 })); // rate limite pour eviter les boucle côté cms
 
 // middleware pour gérer les CORS
 app.use(cors());
@@ -32,10 +32,18 @@ app.use(compression());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
 // toutes les routes
 app.use('/api', routes);
+
+// Log des routes montées (dev seulement)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('✅ Routes API montées sous /api');
+  console.log('   - /api/player/videos');
+  console.log('   - /api/player/videos/:id');
+  console.log('   - /api/player/stream/:filename');
+}
 
 // middleware pour gérer les erreurs
 app.use((err, req, res, next) => {
