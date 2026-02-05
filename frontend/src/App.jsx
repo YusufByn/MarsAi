@@ -25,6 +25,7 @@ function App() {
             <Route path="/video/player" element={<Player />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/formsubmission" element={<FormDirector />} />
           </Routes>
         </main>
         <Footer />

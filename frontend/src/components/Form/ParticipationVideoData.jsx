@@ -5,7 +5,7 @@ const ParticipationVideoData = ({setEtape}) => {
   const navigate = useNavigate();
 
   return (
-    <div className="border border-white bg-[#1B1F29] rounded-xl p-2 text-center">
+    <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center">
       <h2 className="p-2">Video Data</h2>
         <div className="text-center flex flex-raw space-betweenb justify-center gap-2">
           

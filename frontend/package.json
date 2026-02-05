@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
+    "libphonenumber-js": "^1.12.36",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-phone-number-input": "^3.4.14",
     "react-router-dom": "^7.12.0"
   },
   "devDependencies": {

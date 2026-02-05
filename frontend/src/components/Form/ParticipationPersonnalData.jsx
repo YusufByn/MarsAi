@@ -1,15 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 const ParticipationPersonnalData = ({setEtape}) => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    Gender: '',
+    FirstName: '',
+    LastName: '',
+    email: '',
+    birthday: '',
+    country: '',
+    phoneNumber: '',
+    mobileNumber: '',
+    acquisitionSource: '',
+  });
+
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  // validation de l'email
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // validation des numéros de téléphone
+  const validatePhone = (phoneNumber) => {
+    const isValid =  isValidPhoneNumber(phoneNumber);
+  };
 
   return (
-    <div className="border border-white bg-[#1B1F29] rounded-xl p-2 text-center ">
+    <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center ">
       <h2 className="p-2">Personnal Data</h2>
         <div className="text-center flex flex-raw space-between justify-center gap-2">
           
-          <div className="border rounded-xl w-5  bg-purple-500/100">
+          <div className="border rounded-xl w-5  bg-purple-500">
             1
           </div>
           <div className="border rounded-xl w-5">
@@ -20,23 +47,29 @@ const ParticipationPersonnalData = ({setEtape}) => {
           </div>
         </div>
           <section className="FormContainer">
-            <form action="" method="post" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center m-5 gap-5">
+            <form method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
 
             {/* Civility */}
-                <div className="">
-                  <select name="Gender" id="Gender" className="bg-black/50 border rounded-xl p-2 w-60">
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                <div className="gender ">
+                  <select name="gender"
+                  id="gender"
+                  value={formData.gender}
+                  // onChange={handleChange}
+                  className="bg-black/50 border rounded-xl p-2 w-60"
+                  >
+                   <option value="">Select your gender</option>
+                   <option value="women">Women</option>
+                   <option value="man">Man</option>
+                   <option value="other">Other</option>
                   </select>
                 </div>
 
                   <div >
                   <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
                     type="text"
-                    name="FirstName"
-                    id="FirstName"
-                    label="FirstName"
+                    name="firstName"
+                    id="firstName"
+                    label="firstName"
                     placeholder="First Name"
                     />
                   </div>
@@ -44,8 +77,8 @@ const ParticipationPersonnalData = ({setEtape}) => {
                   <div>
                   <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
                     type="text"
-                    name="LastName"
-                    id="LastName"
+                    name="lastName"
+                    id="lastName"
                     placeholder="Last Name"
                     />
                   </div>
@@ -72,8 +105,8 @@ const ParticipationPersonnalData = ({setEtape}) => {
                   <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
                     type="text"
                     name="Country"
-                    id="Country"
-                    label="Country"
+                    id="country"
+                    label="country"
                     placeholder="Country"
                     />
                   </div>
@@ -82,8 +115,8 @@ const ParticipationPersonnalData = ({setEtape}) => {
                   <div>
                   <input className="bg-black/50 border rounded-xl p-2 w-60"
                     type="tel"
-                    name="PhoneNumber"
-                    id="PhoneNumber"
+                    name="phoneNumber"
+                    id="phoneNumber"
                     placeholder="Phone Number"
                     />
                   </div>
@@ -91,8 +124,8 @@ const ParticipationPersonnalData = ({setEtape}) => {
                   <div>
                   <input className="bg-black/50 border rounded-xl p-2 w-60"
                     type="tel"
-                    name="MobileNumber"
-                    id="MobileNumber"
+                    name="mobileNumber"
+                    id="mobileNumber"
                     placeholder="Mobile Number"
                     />
                   </div>
@@ -111,8 +144,8 @@ const ParticipationPersonnalData = ({setEtape}) => {
                   <div>
                   <input className="bg-black/50 border rounded-xl p-2 w-60"
                     type="text"
-                    name="acquisition_source"
-                    id="acquisition_source"
+                    name="acquisitionSource"
+                    id="acquisitionSource"
                     placeholder="How did you hear about us?"
                     />
                   </div>

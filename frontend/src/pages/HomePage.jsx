@@ -1,5 +1,6 @@
 import React from 'react';
 import Countdown from '../components/Countdown';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
   const navigate = useNavigate();
