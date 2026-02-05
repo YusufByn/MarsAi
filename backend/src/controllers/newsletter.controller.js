@@ -1,5 +1,5 @@
 import newsletterModel from '../models/newsletter.model.js';
-import { sendWelcomeEmail } from '../services/email.service.js';
+import { sendWelcomeEmail } from '../models/email.model.js';
 import { pool } from '../db/index.js';
 
 const newsletterController = {
@@ -208,7 +208,7 @@ const newsletterController = {
       await connection.beginTransaction();
 
       // Envoyer les emails en masse
-      const { sendBulkEmail } = await import('../services/email.service.js');
+      const { sendBulkEmail } = await import('../models/email.model.js');
       const results = await sendBulkEmail(emails, subject, message);
 
       // Valider la transaction
