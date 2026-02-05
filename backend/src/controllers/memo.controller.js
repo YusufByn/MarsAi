@@ -1,5 +1,8 @@
 import { memoModel } from '../models/memo.model.js';
 
+// CRUD de base pour ajouter un memo
+
+// ici c'est la qu'on va recup le memo de l'utilisateur pour la video
 export const memoController = {
   async getOne(req, res, next) {
     try {
@@ -22,6 +25,7 @@ export const memoController = {
     }
   },
 
+  // ici c'est la qu'on va enregistrer le memo de l'utilisateur pour la video
   async upsert(req, res, next) {
     try {
       const { user_id, video_id, statut, playlist, comment } = req.body;

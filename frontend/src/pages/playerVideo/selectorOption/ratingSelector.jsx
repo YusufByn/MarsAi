@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const RatingSelector = ({
     initialStatus = 'no',
     onStatusChange,
     onYesClick,
 }) => {
+    const { t } = useTranslation();
     const [statut, setStatut] = useState(initialStatus);
 
     const handleStatusChange = (nextStatus) => {
@@ -31,7 +33,7 @@ const RatingSelector = ({
                         : 'bg-white/5 text-gray-300 border-white/10 hover:border-red-500/40 hover:bg-red-500/10'
                 }`}
             >
-                Non selectionne
+                {t('ratingSelector.notSelected')}
             </button>
 
             {/* Bouton À DISCUTER */}
@@ -44,7 +46,7 @@ const RatingSelector = ({
                         : 'bg-white/5 text-gray-300 border-white/10 hover:border-amber-500/40 hover:bg-amber-500/10'
                 }`}
             >
-                A discuter
+                {t('ratingSelector.discuss')}
             </button>
 
             {/* Bouton OUI */}
@@ -57,7 +59,7 @@ const RatingSelector = ({
                         : 'bg-white/5 text-gray-300 border-white/10 hover:border-green-500/40 hover:bg-green-500/10'
                 }`}
             >
-                Oui - Noter
+                {t('ratingSelector.yesRate')}
             </button>
         </div>
     );

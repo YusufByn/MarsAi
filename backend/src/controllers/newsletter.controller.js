@@ -10,6 +10,8 @@ const newsletterController = {
     try {
       const { email } = req.body;
 
+      // gestion des erreurs
+
       // Vérifier si l'email existe déjà
       const existingSubscription = await newsletterModel.findByEmail(email);
 
@@ -132,6 +134,9 @@ const newsletterController = {
   /**
    * Compter les abonnés actifs (public)
    */
+
+  // calcule du nombre de newsletter abonnés
+
   async getCount(req, res, next) {
     try {
       const count = await newsletterModel.countActive();
@@ -145,6 +150,9 @@ const newsletterController = {
       next(error);
     }
   },
+
+
+  //Selection des différent destinataires pour l'envoi de la newsletter
 
   /**
    * Aperçu du nombre de destinataires par type (admin only)
@@ -205,6 +213,7 @@ const newsletterController = {
       }
 
       // Commencer la transaction
+      // beginTransaction pour la gestion des envois d'email en masse, le beginTransaction est une methode SQL pour envoyer que quand on a charger toutes les infos
       await connection.beginTransaction();
 
       // Envoyer les emails en masse

@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Schéma pour le memo
+// playlistSchema pour la gestion de la playlist "a discutter "
+
 const playlistSchema = z.preprocess(
   (value) => {
     if (value === undefined) return undefined;
@@ -9,6 +12,7 @@ const playlistSchema = z.preprocess(
   z.number().int().min(0).max(1)
 );
 
+// memoSchema pour la gestion du memo
 const memoSchema = z
   .object({
     user_id: z.coerce.number().int().positive(),
@@ -27,6 +31,8 @@ const memoSchema = z
     }
   );
 
+  // Middleware de validation pour le memo
+  // 
 export const validateMemoUpsert = (req, res, next) => {
   try {
     const validated = memoSchema.parse(req.body);

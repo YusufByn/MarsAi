@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 // Schéma pour l'inscription à la newsletter
+
+// subscribeSchema pour la gestion de l'inscription à la newsletter
 const subscribeSchema = z.object({
   email: z
     .string({ required_error: 'Email is required' })

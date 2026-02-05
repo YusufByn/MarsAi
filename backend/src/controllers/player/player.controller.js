@@ -9,8 +9,8 @@ const __dirname = path.dirname(__filename);
 const PlayerVideoController = {
   
   /**
-   * Récupérer la liste des vidéos du dossier upload
-   * GET /api/player/videos
+   * Récupérer la liste des vidéos dans le dossier upload
+   * via la route GET /api/player/videos
    */
   async getVideos(req, res) {
     console.log(' getVideos appelé - URL:', req.url);
@@ -20,7 +20,7 @@ const PlayerVideoController = {
       // __dirname = backend/src/controllers/player/
       // ../../upload = backend/src/upload/
       let uploadDir = path.join(__dirname, '../../upload');
-      console.log('📁 Chemin upload calculé:', uploadDir);
+      console.log('Chemin upload calculé:', uploadDir);
       
       // Vérifier que le dossier existe
       let dirExists = false;
@@ -55,59 +55,61 @@ const PlayerVideoController = {
         });
       }
 
-      // Lire tous les fichiers du dossier
+      // on recup tout les fichiers du dossier upload
       const files = await fs.readdir(uploadDir);
       console.log('📂 Fichiers trouvés:', files.length);
       
-      // Filtrer uniquement les fichiers vidéo (mp4, webm, ogg, mov)
+      // filtre pour les fichiers video
       const videoFiles = files.filter(file => 
         /\.(mp4|webm|ogg|mov)$/i.test(file)
       );
 
-      // Trier par nom (vid1, vid2, etc.)
+      // parseInt pour recup le nom des fichiers video
       videoFiles.sort((a, b) => {
         const numA = parseInt(a.match(/\d+/)?.[0] || 0);
         const numB = parseInt(b.match(/\d+/)?.[0] || 0);
         return numA - numB;
       });
 
-      // Créer les objets vidéo avec des données mockées
+      // test de creation d'object video pour le rechargement de la page
       const videos = await Promise.all(
         videoFiles.map(async (file, index) => {
           const filePath = path.join(uploadDir, file);
           const stats = await fs.stat(filePath);
           
           return {
-            id: String(index + 1),
+            // this. permet de faire appel a la fonction de creation des données mockées
+            // les données mockées sont des données fictives pour le test
+            id: String(index + 1), // on met l'id de la video
             filename: file,
-            video_url: `/upload/${file}`, // Chemin pour accéder à la vidéo via le serveur statique
-            title: this.generateTitle(index + 1),
-            description: this.generateDescription(index + 1),
-            author: this.generateAuthor(index + 1),
-            authorAvatar: null,
-            tags: this.generateTags(index + 1),
-            thumbnail: null,
+            video_url: `/upload/${file}`, // on met le chemin de la video pour le rechargement de la page
+            title: this.generateTitle(index + 1), // on met le titre de la video
+            description: this.generateDescription(index + 1), // on met la description de la video
+            author: this.generateAuthor(index + 1), // on met l'auteur de la video
+            authorAvatar: null, // on met l'avatar de l'auteur de la video
+            tags: this.generateTags(index + 1), // on met les tags de la video
+            thumbnail: null, // on met l'image de la video
             duration: 0, // Pourrait être calculé avec ffprobe si besoin
-            likes: this.generateRandomCount(100, 10000),
-            comments: this.generateRandomCount(10, 1000),
-            views: this.generateRandomCount(1000, 100000),
-            size: stats.size,
-            createdAt: stats.birthtime
+            likes: this.generateRandomCount(100, 10000), // on met le nombre de likes de la video
+            comments: this.generateRandomCount(10, 1000), // on met le nombre de comments de la video
+            views: this.generateRandomCount(1000, 100000), // on met le nombre de views de la video
+            size: stats.size, // on met la taille de la video
+            createdAt: stats.birthtime // on met la date de creation de la video
           };
         })
       );
-
-      console.log('✅ Vidéos préparées:', videos.length);
+      // code jetable en attendant la logique d'upload de video
+      console.log('Vidéos préparées:', videos.length);
       videos.forEach(v => console.log(`   - ${v.filename} -> ${v.video_url}`));
       res.json({
         success: true,
         data: videos,
         total: videos.length
       });
-      console.log('✅ Réponse envoyée');
+      console.log('Réponse envoyée');
 
     } catch (error) {
-      console.error('❌ Erreur getVideos:', error);
+      console.error('Erreur getVideos:', error);
       console.error('Stack:', error.stack);
       if (!res.headersSent) {
         res.status(500).json({
@@ -123,6 +125,8 @@ const PlayerVideoController = {
    * Récupérer une vidéo spécifique par son ID (index)
    * GET /api/player/videos/:id
    */
+
+  // code pour preparer la page video detail
   async getVideoById(req, res) {
     try {
       const { id } = req.params;
@@ -187,6 +191,9 @@ const PlayerVideoController = {
    * Stream de vidéo avec support du range (lecture progressive)
    * GET /api/player/stream/:filename
    */
+
+  // code pour streamer la video
+  // test pour la lecture du de la video
   async streamVideo(req, res) {
     try {
       const { filename } = req.params;
@@ -247,55 +254,57 @@ const PlayerVideoController = {
   },
 
   // Méthodes utilitaires pour générer des données mockées
+  // code jetable avec info de video en dur pour le test
 
   generateTitle(index) {
     const titles = [
-      "Voyage incroyable en Islande 🌋",
-      "Tutoriel cuisine rapide 🍳",
-      "Danse du moment - Tendance 💃",
-      "Paysage magnifique au coucher du soleil 🌅",
-      "Astuce de vie quotidienne 💡",
-      "Moment drôle avec mon chat 🐱"
+      "Mdrr yusuf is a fat pig",
+      "orteil a victor",
+      "Ariel nous casse les burnes",
+      "l'alchimiste me fais taffer a perte",
+      "faut que je pense a appeler ma grand mere",
+      "j'ai trop la flemme d'aller courir"
     ];
     return titles[index - 1] || `Vidéo ${index}`;
   },
 
   generateDescription(index) {
     const descriptions = [
-      "Découvrez les paysages époustouflants de l'Islande !",
-      "Une recette facile et rapide à réaliser chez vous",
-      "La nouvelle chorégraphie qui fait le buzz",
-      "Un moment magique capturé au bon moment",
-      "Cette astuce va vous changer la vie",
-      "Mon chat fait encore des siennes 😂"
+      "ce gros con la",
+      "c'est quoi cette horreur frr",
+      "Apresje capte 3,2k jme serait vanter aussi",
+      "apres azy le cortado c'ets le haut niveau",
+      "Nanie je t'aime",
+      "av mon gros corp jvais avoir si mal frr"
     ];
     return descriptions[index - 1] || `Description de la vidéo ${index}`;
   },
 
   generateAuthor(index) {
     const authors = [
-      "TravelWithMe",
-      "ChefEnHerbe",
-      "DanceQueen",
-      "NatureLovers",
-      "LifeHacks",
-      "CatLover"
+      "yusuf",
+      "victor",
+      "alchimiste",
+      "grand mere",
+      "j'ai trop la flemme",
+      "Course de merde"
     ];
     return authors[index - 1] || `User${index}`;
   },
 
   generateTags(index) {
     const allTags = [
-      ["voyage", "islande", "nature"],
-      ["cuisine", "recette", "rapide"],
-      ["danse", "tendance", "challenge"],
-      ["paysage", "sunset", "beautiful"],
-      ["astuce", "lifehack", "diy"],
-      ["chat", "funny", "animals"]
+      ["Claude", "Perplexity", "chatgpt"],
+      ["Sonnet", "Gemini 3", "Deepseek"],
+      ["Opus", "codex", "Claude"],
+      ["Opus", "codex", "Claude"],
+      ["Claude", "Perplexity", "chatgpt"],
+      ["Claude", "Perplexity", "chatgpt"],
+      ["Claude", "Perplexity", "chatgpt"],
     ];
     return allTags[index - 1] || ["video"];
   },
-
+  // code jetable avec info de video en dur pour le test
   generateRandomCount(min, max) {
     const count = Math.floor(Math.random() * (max - min + 1)) + min;
     return this.formatCount(count);
@@ -316,6 +325,8 @@ const PlayerVideoController = {
    * POST /api/player/send-email
    * Body: { video_id, user_id, message }
    */
+
+  // mise en place de l'envoi d'email au créateur de la video
   async sendEmailToCreator(req, res) {
     try {
       const { video_id, user_id, message } = req.body;
@@ -329,7 +340,7 @@ const PlayerVideoController = {
 
       // TODO: Implémenter l'envoi d'email réel
       // Pour l'instant, on simule juste le succès
-      console.log('📧 Email à envoyer:');
+      console.log('Email à envoyer:');
       console.log('   Video ID:', video_id);
       console.log('   User ID:', user_id);
       console.log('   Message:', message);
@@ -348,7 +359,7 @@ const PlayerVideoController = {
       });
 
     } catch (error) {
-      console.error('❌ Erreur sendEmailToCreator:', error);
+      console.error(' Erreur sendEmailToCreator:', error);
       res.status(500).json({
         success: false,
         message: 'Erreur lors de l\'envoi de l\'email',
@@ -373,9 +384,11 @@ const PlayerVideoController = {
         });
       }
 
+      //ici c'est tout les trucs a prevoir et a faire
+
       // TODO: Mettre à jour la base de données (table selector_memo)
       // UPDATE selector_memo SET playlist = ? WHERE video_id = ? AND user_id = ?
-      console.log('📋 Playlist update:');
+      console.log(' Playlist update:');
       console.log('   Video ID:', video_id);
       console.log('   User ID:', user_id);
       console.log('   Add to playlist:', playlist ? 'OUI' : 'NON');
@@ -392,7 +405,7 @@ const PlayerVideoController = {
       });
 
     } catch (error) {
-      console.error('❌ Erreur togglePlaylist:', error);
+      console.error(' Erreur togglePlaylist:', error);
       res.status(500).json({
         success: false,
         message: 'Erreur lors de la mise à jour de la playlist',

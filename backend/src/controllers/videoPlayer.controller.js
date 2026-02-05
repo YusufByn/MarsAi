@@ -1,5 +1,8 @@
 import { videoModel } from '../models/video.model.js';
 
+// CRUD de base pour ajouter un video
+//Code doublons pour la creation de la video, a determiner si on garde ou non
+
 const buildVideoPayload = (video) => {
   if (!video) return null;
   const fullName = [video.realisator_name, video.realisator_lastname]

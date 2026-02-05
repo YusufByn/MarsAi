@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const SelectorMemo = ({ initialMemo = '', onMemoChange }) => {
+    const { t } = useTranslation();
     const [memo, setMemo] = useState(initialMemo);
 
     const handleChange = (event) => {
@@ -15,20 +17,20 @@ const SelectorMemo = ({ initialMemo = '', onMemoChange }) => {
         <div className="space-y-2">
             <div>
                 <label className="block text-sm font-semibold text-white mb-1">
-                    Note rapide
+                    {t('selectorMemo.title')}
                 </label>
                 <p className="text-xs text-gray-400">
-                    Visible uniquement par vous
+                    {t('selectorMemo.visibleOnly')}
                 </p>
             </div>
             <textarea
                 value={memo}
                 onChange={handleChange}
-                placeholder="Observations sur cette video..."
+                placeholder={t('selectorMemo.placeholder')}
                 rows={3}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
             />
-            <p className="text-xs text-gray-500 text-right">{memo.length} caracteres</p>
+            <p className="text-xs text-gray-500 text-right">{memo.length} {t('selectorMemo.characters')}</p>
         </div>
     );
 };
