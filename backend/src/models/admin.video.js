@@ -1,51 +1,68 @@
 import pool from '../config/db.js';
 
-export const AdminVideo = {
-    async listVideos({ page = 1, limit = 10, status, search }) {
-        const offset = (page - 1) * limit;
+export const videoModel = {
+
+    async findAll({ limit = 10, offset = 0, search = '', status = '' }) {
         let query = `
-            SELECT f.*, u.firstName, u.lastName 
-            FROM films f 
-            LEFT JOIN user u ON f.user_id = u.id 
+            SELECT 
+                id, 
+                title, 
+                cover as poster_url, 
+                realisator_name, 
+                realisator_lastname,
+                status, 
+                created_at,
+                country,
+                duration,
+                tech_resume    
+            FROM video 
             WHERE 1=1
         `;
+        
         const params = [];
 
         if (status) {
-            query += ' AND f.status = ?';
+            query += ' AND status = ?';
             params.push(status);
         }
 
         if (search) {
-            query += ' AND (f.title LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ?)';
+            query += ' AND (title LIKE ? OR realisator_name LIKE ? OR realisator_lastname LIKE ?)';
             const term = `%${search}%`;
             params.push(term, term, term);
         }
 
-        query += ' ORDER BY f.created_at DESC LIMIT ? OFFSET ?';
+        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), parseInt(offset));
 
         const [rows] = await pool.execute(query, params);
         
-        const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM films');
+        const formattedRows = rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            poster_url: row.poster_url,
+            director_name: `${row.realisator_name || ''} ${row.realisator_lastname || ''}`.trim(),
+            status: row.status,
+            created_at: row.created_at,
+            country: row.country,
+            duration: row.duration,
+            ai_tools: row.tech_resume ? row.tech_resume.split(',').map(t => t.trim()) : []
+        }));
+        const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM video');
         
-        return { films: rows, total: countResult[0].total };
+        return { videos: formattedRows, total: countResult[0].total };
     },
 
-    async updateStatus(filmId, status) {
+    async updateStatus(id, status) {
         const [result] = await pool.execute(
-            'UPDATE films SET status = ? WHERE id = ?',
-            [status, filmId]
+            'UPDATE video SET status = ? WHERE id = ?', 
+            [status, id]
         );
         return result.affectedRows > 0;
     },
 
-    async assignVideo(filmId, userId) {
-
-        const [result] = await pool.execute(
-            'INSERT INTO votes (film_id, user_id, assigned_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE assigned_at = NOW()',
-            [filmId, userId]
-        );
-        return result;
+    async delete(id) {
+        const [result] = await pool.execute('DELETE FROM video WHERE id = ?', [id]);
+        return result.affectedRows > 0;
     }
 };
