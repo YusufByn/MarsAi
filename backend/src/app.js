@@ -17,7 +17,7 @@ const app = express();
 
 // middleware pour sécuriser l'application
 app.use(helmet());
-// app.use(rateLimit({ windowMs: 15*60*1000, max: 5000 })); // rate limite pour eviter les boucle côté cms
+// app.use(rateLimit({ windowMs: 15*60*1_000, max: 5000 })); // rate limite pour eviter les boucle côté cms
 
 // middleware pour gérer les CORS
 app.use(cors());

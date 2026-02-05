@@ -3,7 +3,7 @@ import { uploadVideoToYoutube } from '../services/youtube.service.js';
 // fonction pour uploader une video sur YouTube
 export const uploadToYoutube = async (req, res) => {
   try {
-    // obtenir les metadata de la video, qui sont dans le body de la requête
+    // body dla request 
     const { filePath, title, description, privacyStatus, tags, categoryId } = req.body;
 
     // si pas de filePath, retourner un message d'erreur
