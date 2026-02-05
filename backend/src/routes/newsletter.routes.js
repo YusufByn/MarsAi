@@ -6,52 +6,26 @@ import {
   validateSendCampaign, 
   validatePreviewRecipients 
 } from '../middlewares/validator/newsletter.validator.js';
+import { checkAuth } from '../middlewares/auth.middleware.js';
+import { requireRole } from '../middlewares/requireRole.middleware.js';
 
 const router = Router();
 
-/**
- * @route   POST /api/newsletter/subscribe
- * @desc    S'inscrire à la newsletter
- * @access  Public
- */
+// route publiques 
+// route pour s'abonner à la newsletter
 router.post('/subscribe', validateSubscribe, newsletterController.subscribe);
-
-/**
- * @route   POST /api/newsletter/unsubscribe
- * @desc    Se désabonner de la newsletter
- * @access  Public
- */
+// route pour se désabonner de la newsletter
 router.post('/unsubscribe', validateUnsubscribe, newsletterController.unsubscribe);
-
-/**
- * @route   GET /api/newsletter/count
- * @desc    Compter les abonnés actifs
- * @access  Public
- */
+// route pour compter les abonnés actifs
 router.get('/count', newsletterController.getCount);
 
-/**
- * @route   GET /api/newsletter
- * @desc    Récupérer tous les abonnés actifs
- * @access  Admin (à protéger plus tard avec middleware auth)
- * @todo    Ajouter middleware d'authentification superadmin
- */
-router.get('/', newsletterController.getAllActive);
+// routes protégées
 
-/**
- * @route   POST /api/newsletter/campaign/preview
- * @desc    Aperçu du nombre de destinataires par type
- * @access  Admin + Superadmin
- * @todo    Ajouter middleware d'authentification admin
- */
-router.post('/campaign/preview', validatePreviewRecipients, newsletterController.previewRecipients);
-
-/**
- * @route   POST /api/newsletter/campaign/send
- * @desc    Envoyer une campagne newsletter
- * @access  Admin + Superadmin
- * @todo    Ajouter middleware d'authentification admin
- */
-router.post('/campaign/send', validateSendCampaign, newsletterController.sendCampaign);
+// route pour récupérer tous les abonnées actifs
+router.get('/', checkAuth, requireRole('admin', 'superadmin'), newsletterController.getAllActive);
+// route pour prévisualiser le nombre de destinataires par type
+router.post('/campaign/preview', checkAuth, requireRole('admin', 'superadmin'), validatePreviewRecipients, newsletterController.previewRecipients);
+// route pour envoyer une campagne newsletter
+router.post('/campaign/send', checkAuth, requireRole('admin', 'superadmin'), validateSendCampaign, newsletterController.sendCampaign);
 
 export default router;

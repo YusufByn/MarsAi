@@ -8,47 +8,46 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
-import authRoutes from './routes/auth.routes.js'
-import uploadRoutes from './routes/upload.routes.js';
-import juryRoutes from './routes/jury.routes.js';
-import newsletterRoutes from './routes/newsletter.routes.js';
-import testRoutes from './routes/test.routes.js';
+import routes from './routes/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 const app = express();
 
-
-// config de l'app
+// middleware pour sécuriser l'application
 app.use(helmet());
-app.use(rateLimit({ windowMs: 15*60*1000, max: 100 }));
+// app.use(rateLimit({ windowMs: 15*60*1000, max: 5000 })); // rate limite pour eviter les boucle côté cms
+
+// middleware pour gérer les CORS
 app.use(cors());
+// middleware pour parser le corps des requêtes
 app.use(express.json());
+// middleware pour parser les cookies
 app.use(cookieParser());
 app.use(morgan('dev'));
+// middleware pour compresser les réponses
 app.use(compression());
+// middleware pour parser les requêtes URL encodées
 app.use(express.urlencoded({ extended: true }));
 
-// servir les fichiers statiques (vidéos uploadées)
-// Remonter d'un niveau depuis src/ pour accéder à uploads/
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/jury', juryRoutes);
-app.use('/api/newsletter', newsletterRoutes);
-app.use('/api', testRoutes);
+// toutes les routes
+app.use('/api', routes);
 
+// middleware pour gérer les erreurs
 app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).json({
-        message: 'Erreur interne du serveur',
-        error: err.message
-    });
-})
+  console.error(err);
+  res.status(500).json({
+    message: 'Internal server error',
+    error: err.message,
+    success: false
+  });
+});
 
+// middleware pour gérer les routes non trouvées
 app.use(notFoundMiddleware);
 
 export default app;
