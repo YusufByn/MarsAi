@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-const EmailPanel = ({ 
-    isOpen, 
-    onClose, 
+const EmailPanel = ({
+    isOpen,
+    onClose,
     videoData,
-    onSend 
+    onSend
 }) => {
+    const { t } = useTranslation();
     const [message, setMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
 
     const handleSend = async () => {
         if (!message.trim()) {
-            alert('Veuillez ecrire un message');
+            alert(t('emailPanel.alertNoMessage'));
             return;
         }
 
@@ -22,7 +24,7 @@ const EmailPanel = ({
             onClose();
         } catch (error) {
             console.error('Erreur envoi email:', error);
-            alert('Erreur lors de l\'envoi de l\'email');
+            alert(t('emailPanel.alertSendError'));
         } finally {
             setIsSending(false);
         }
@@ -31,7 +33,7 @@ const EmailPanel = ({
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={onClose}
         >
@@ -39,15 +41,15 @@ const EmailPanel = ({
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
             {/* Panel */}
-            <div 
+            <div
                 className="relative w-full sm:max-w-lg bg-gradient-to-b from-gray-900 to-black border-t sm:border border-blue-500/30 sm:rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="sticky top-0 bg-gray-900/95 backdrop-blur-lg border-b border-white/10 p-4 flex items-center justify-between z-10">
                     <div>
-                        <h3 className="text-white font-bold text-lg">Message au realisateur</h3>
-                        <p className="text-gray-400 text-xs mt-0.5">Email envoye directement</p>
+                        <h3 className="text-white font-bold text-lg">{t('emailPanel.title')}</h3>
+                        <p className="text-gray-400 text-xs mt-0.5">{t('emailPanel.sentDirectly')}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -63,23 +65,23 @@ const EmailPanel = ({
                 <div className="p-4 sm:p-6 space-y-4">
                     {/* Info vidéo */}
                     <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-white font-semibold text-sm">{videoData?.title || 'Sans titre'}</p>
+                        <p className="text-white font-semibold text-sm">{videoData?.title || t('emailPanel.noTitle')}</p>
                         {videoData?.author && (
-                            <p className="text-gray-400 text-xs mt-1">Par {videoData.author}</p>
+                            <p className="text-gray-400 text-xs mt-1">{t('emailPanel.by', { author: videoData.author })}</p>
                         )}
                     </div>
 
                     {/* Email destinataire */}
                     <div className="space-y-2">
                         <label className="block text-white font-semibold text-sm">
-                            Destinataire
+                            {t('emailPanel.recipient')}
                         </label>
                         <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-lg">
                             <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                             <span className="text-white text-sm">
-                                {videoData?.email || 'Email non renseigne'}
+                                {videoData?.email || t('emailPanel.noEmail')}
                             </span>
                         </div>
                     </div>
@@ -87,17 +89,17 @@ const EmailPanel = ({
                     {/* Message */}
                     <div className="space-y-2">
                         <label className="block text-white font-semibold text-sm">
-                            Votre message <span className="text-red-400">*</span>
+                            {t('emailPanel.yourMessage')} <span className="text-red-400">*</span>
                         </label>
                         <textarea
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Bonjour,&#10;&#10;Nous avons visionne votre video et souhaitons vous feliciter...&#10;&#10;Cordialement"
+                            placeholder={t('emailPanel.placeholder')}
                             rows={10}
                             autoFocus
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
                         />
-                        <p className="text-xs text-gray-500 text-right">{message.length} caracteres</p>
+                        <p className="text-xs text-gray-500 text-right">{message.length} {t('emailPanel.characters')}</p>
                     </div>
 
                     {/* Warning */}
@@ -106,7 +108,7 @@ const EmailPanel = ({
                             <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <p className="text-xs text-blue-300">
-                            Cet email sera envoye immediatement et ne pourra pas etre annule.
+                            {t('emailPanel.warning')}
                         </p>
                     </div>
                 </div>
@@ -118,7 +120,7 @@ const EmailPanel = ({
                         disabled={isSending}
                         className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
                     >
-                        Annuler
+                        {t('emailPanel.cancel')}
                     </button>
                     <button
                         onClick={handleSend}
@@ -131,14 +133,14 @@ const EmailPanel = ({
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Envoi...
+                                {t('emailPanel.sending')}
                             </>
                         ) : (
                             <>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                 </svg>
-                                Envoyer
+                                {t('emailPanel.send')}
                             </>
                         )}
                     </button>

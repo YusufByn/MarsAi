@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
-const QuickNotePanel = ({ 
-    isOpen, 
-    onClose, 
+const QuickNotePanel = ({
+    isOpen,
+    onClose,
     videoData,
     initialNote = '',
-    onSave 
+    onSave
 }) => {
+    const { t } = useTranslation();
     const [note, setNote] = useState(initialNote);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -29,7 +31,7 @@ const QuickNotePanel = ({
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={onClose}
         >
@@ -37,15 +39,15 @@ const QuickNotePanel = ({
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
             {/* Panel */}
-            <div 
+            <div
                 className="relative w-full sm:max-w-lg bg-gradient-to-b from-gray-900 to-black border-t sm:border border-purple-500/30 sm:rounded-2xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="sticky top-0 bg-gray-900/95 backdrop-blur-lg border-b border-white/10 p-4 flex items-center justify-between z-10">
                     <div>
-                        <h3 className="text-white font-bold text-lg">Note rapide</h3>
-                        <p className="text-gray-400 text-xs mt-0.5">Visible uniquement par vous</p>
+                        <h3 className="text-white font-bold text-lg">{t('quickNote.title')}</h3>
+                        <p className="text-gray-400 text-xs mt-0.5">{t('quickNote.visibleOnly')}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -61,9 +63,9 @@ const QuickNotePanel = ({
                 <div className="p-4 sm:p-6 space-y-4">
                     {/* Info vidéo */}
                     <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-white font-semibold text-sm">{videoData?.title || 'Sans titre'}</p>
+                        <p className="text-white font-semibold text-sm">{videoData?.title || t('quickNote.noTitle')}</p>
                         {videoData?.author && (
-                            <p className="text-gray-400 text-xs mt-1">Par {videoData.author}</p>
+                            <p className="text-gray-400 text-xs mt-1">{t('quickNote.by', { author: videoData.author })}</p>
                         )}
                     </div>
 
@@ -72,14 +74,14 @@ const QuickNotePanel = ({
                         <textarea
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
-                            placeholder="Vos observations sur cette video..."
+                            placeholder={t('quickNote.placeholder')}
                             rows={8}
                             autoFocus
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                         />
                         <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span>{note.length} caracteres</span>
-                            <span>Sauvegarde automatique</span>
+                            <span>{note.length} {t('quickNote.characters')}</span>
+                            <span>{t('quickNote.autoSave')}</span>
                         </div>
                     </div>
                 </div>
@@ -91,14 +93,14 @@ const QuickNotePanel = ({
                         disabled={isSaving}
                         className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
                     >
-                        Annuler
+                        {t('quickNote.cancel')}
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
                         className="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
                     >
-                        {isSaving ? 'Sauvegarde...' : 'Enregistrer'}
+                        {isSaving ? t('quickNote.saving') : t('quickNote.save')}
                     </button>
                 </div>
             </div>

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
-const RatingModal = ({ 
-    isOpen, 
-    onClose, 
+const RatingModal = ({
+    isOpen,
+    onClose,
     videoData,
     initialRating = 0,
-    onSave 
+    onSave
 }) => {
+    const { t } = useTranslation();
     const [rating, setRating] = useState(initialRating);
     const [hoverRating, setHoverRating] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
@@ -19,7 +21,7 @@ const RatingModal = ({
 
     const handleSave = async () => {
         if (rating === 0) {
-            alert('Veuillez attribuer une note avant de valider');
+            alert(t('ratingModal.alertNoRating'));
             return;
         }
 
@@ -37,7 +39,7 @@ const RatingModal = ({
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={onClose}
         >
@@ -45,13 +47,13 @@ const RatingModal = ({
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
             {/* Modal */}
-            <div 
+            <div
                 className="relative w-full sm:max-w-lg bg-gradient-to-b from-gray-900 to-black border-t sm:border border-purple-500/30 sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="sticky top-0 bg-gray-900/95 backdrop-blur-lg border-b border-white/10 p-4 flex items-center justify-between z-10">
-                    <h3 className="text-white font-bold text-lg">Noter la video</h3>
+                    <h3 className="text-white font-bold text-lg">{t('ratingModal.title')}</h3>
                     <button
                         onClick={onClose}
                         className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
@@ -66,16 +68,16 @@ const RatingModal = ({
                 <div className="p-4 sm:p-6 space-y-6">
                     {/* Info vidéo */}
                     <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-white font-semibold text-sm">{videoData?.title || 'Sans titre'}</p>
+                        <p className="text-white font-semibold text-sm">{videoData?.title || t('ratingModal.noTitle')}</p>
                         {videoData?.author && (
-                            <p className="text-gray-400 text-xs mt-1">Par {videoData.author}</p>
+                            <p className="text-gray-400 text-xs mt-1">{t('ratingModal.by', { author: videoData.author })}</p>
                         )}
                     </div>
 
                     {/* Notation 1-10 */}
                     <div className="space-y-4">
                         <label className="block text-white font-semibold text-base text-center">
-                            Attribuez une note <span className="text-red-400">*</span>
+                            {t('ratingModal.assignRating')} <span className="text-red-400">*</span>
                         </label>
                         <div className="flex items-center justify-between gap-1 sm:gap-2">
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
@@ -86,8 +88,8 @@ const RatingModal = ({
                                     onMouseEnter={() => setHoverRating(star)}
                                     onMouseLeave={() => setHoverRating(0)}
                                     className={`flex-1 aspect-square max-w-[45px] rounded-xl flex items-center justify-center text-base sm:text-xl font-bold transition-all ${
-                                        activeRating >= star 
-                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 scale-110' 
+                                        activeRating >= star
+                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 scale-110'
                                             : 'bg-white/10 text-gray-500 hover:bg-white/20 hover:scale-105'
                                     }`}
                                 >
@@ -99,7 +101,7 @@ const RatingModal = ({
                             {rating > 0 ? (
                                 <span className="text-purple-400 font-bold text-xl">{rating}/10</span>
                             ) : (
-                                <span className="text-gray-500">Selectionnez une note de 1 a 10</span>
+                                <span className="text-gray-500">{t('ratingModal.selectRating')}</span>
                             )}
                         </p>
                     </div>
@@ -110,7 +112,7 @@ const RatingModal = ({
                             <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <p className="text-xs text-purple-300">
-                            Cette note servira a classer les videos pour la selection finale. Utilisez les autres boutons pour ajouter une note rapide ou envoyer un email.
+                            {t('ratingModal.ratingInfo')}
                         </p>
                     </div>
                 </div>
@@ -122,14 +124,14 @@ const RatingModal = ({
                         disabled={isSaving}
                         className="flex-1 py-3 px-4 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
                     >
-                        Annuler
+                        {t('ratingModal.cancel')}
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={isSaving || rating === 0}
                         className="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
                     >
-                        {isSaving ? 'Sauvegarde...' : 'Valider'}
+                        {isSaving ? t('ratingModal.saving') : t('ratingModal.validate')}
                     </button>
                 </div>
             </div>

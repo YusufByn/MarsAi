@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import ActionButtons from './selectorOption/ActionButtons';
 import RatingModal from './selectorOption/RatingModal';
 import QuickNotePanel from './selectorOption/QuickNotePanel';
@@ -7,22 +8,23 @@ import KeyboardShortcuts from './selectorOption/KeyboardShortcuts';
 import { playerService } from '../../services/playerService';
 
 const Player = () => {
+  const { t } = useTranslation();
   const [videos, setVideos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  
+
   // États pour les modals/panels
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showNotePanel, setShowNotePanel] = useState(false);
   const [showEmailPanel, setShowEmailPanel] = useState(false);
-  
+
   // États pour rating et memo
   const [ratings, setRatings] = useState({});
   const [memos, setMemos] = useState({});
   const [statuses, setStatuses] = useState({});
   const [saving, setSaving] = useState(false);
-  
+
   const containerRef = useRef(null);
   const videosRef = useRef({});
   const touchStartY = useRef(0);
@@ -58,7 +60,6 @@ const Player = () => {
             ratingsData[video.id] = Number(ratingResponse.data.rating);
           }
         } catch (err) {
-          console.log(`Pas de données pour vidéo ${video.id}`);
           statusesData[video.id] = 'no';
         }
       }
@@ -75,44 +76,37 @@ const Player = () => {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        console.log('🔄 Chargement des vidéos depuis:', `${API_URL}/api/player/videos`);
         const response = await fetch(`${API_URL}/api/player/videos`);
-        
+
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('❌ Erreur HTTP:', response.status, errorText);
+          console.error('Erreur HTTP:', response.status, errorText);
           throw new Error(`Erreur HTTP: ${response.status}`);
         }
-        
+
         const result = await response.json();
-        console.log('📦 Données reçues:', result);
         const videos = result.data || result;
-        
+
         // Construire l'URL complète pour chaque vidéo
         const videosWithFullUrl = Array.isArray(videos) ? videos.map(video => ({
           ...video,
-          video_url: video.video_url 
-            ? `${API_URL}${video.video_url}` 
-            : video.filename 
+          video_url: video.video_url
+            ? `${API_URL}${video.video_url}`
+            : video.filename
               ? `${API_URL}/upload/${video.filename}`
               : null
         })) : [];
-        
-        console.log('✅ Vidéos chargées:', videosWithFullUrl.length);
-        videosWithFullUrl.forEach((v, i) => {
-          console.log(`  ${i + 1}. ${v.title} - ${v.video_url}`);
-        });
-        
+
         setVideos(videosWithFullUrl);
-        
+
         // Charger les ratings et memos pour chaque vidéo
         if (videosWithFullUrl.length > 0) {
           await loadRatingsAndMemos(videosWithFullUrl);
         }
-        
+
         setIsLoading(false);
       } catch (error) {
-        console.error('❌ Erreur chargement vidéos:', error);
+        console.error('Erreur chargement vidéos:', error);
         setIsLoading(false);
         setVideos([]);
       }
@@ -126,8 +120,8 @@ const Player = () => {
     const handleKeyDown = (e) => {
       // Ignorer si un modal/panel est ouvert ou si on tape dans un input/textarea
       if (
-        showRatingModal || 
-        showNotePanel || 
+        showRatingModal ||
+        showNotePanel ||
         showEmailPanel ||
         e.target.tagName === 'INPUT' ||
         e.target.tagName === 'TEXTAREA'
@@ -156,7 +150,7 @@ const Player = () => {
         case 'tab': // Compteur de Tab
           e.preventDefault();
           tabCountRef.current += 1;
-          
+
           // Reset après 1 seconde
           if (tabTimerRef.current) {
             clearTimeout(tabTimerRef.current);
@@ -172,7 +166,7 @@ const Player = () => {
           if (tabCountRef.current === 1) {
             setShowNotePanel(true);
             tabCountRef.current = 0;
-          } 
+          }
           // 2 Tabs + Enter = Email
           else if (tabCountRef.current === 2) {
             setShowEmailPanel(true);
@@ -295,7 +289,7 @@ const Player = () => {
 
   const handleVideoError = (e, video) => {
     const videoElement = e.target;
-    console.error('❌ Erreur de lecture vidéo:', {
+    console.error('Erreur de lecture vidéo:', {
       video: video.video_file_name || video.filename || video.id,
       src: videoElement.src,
       error: videoElement.error,
@@ -317,22 +311,21 @@ const Player = () => {
 
     // Sinon, sauvegarder directement le statut
     setStatuses(prev => ({ ...prev, [videoId]: newStatus }));
-    
+
     try {
       // Si "À discuter", ajouter à la playlist
       if (newStatus === 'discuss') {
         await playerService.togglePlaylist(videoId, userId, true);
       }
-      
+
       await playerService.saveMemo({
         user_id: userId,
         video_id: videoId,
         statut: newStatus,
         comment: memos[videoId] || '',
       });
-      console.log('✅ Status sauvegardé:', newStatus);
     } catch (error) {
-      console.error('❌ Erreur sauvegarde status:', error);
+      console.error('Erreur sauvegarde status:', error);
     }
   };
 
@@ -361,10 +354,8 @@ const Player = () => {
       // Mettre à jour les états locaux
       setRatings(prev => ({ ...prev, [videoId]: rating }));
       setStatuses(prev => ({ ...prev, [videoId]: 'yes' }));
-
-      console.log('✅ Notation sauvegardée:', rating);
     } catch (error) {
-      console.error('❌ Erreur sauvegarde notation:', error);
+      console.error('Erreur sauvegarde notation:', error);
       throw error;
     } finally {
       setSaving(false);
@@ -385,9 +376,8 @@ const Player = () => {
       });
 
       setMemos(prev => ({ ...prev, [videoId]: note }));
-      console.log('✅ Note rapide sauvegardée');
     } catch (error) {
-      console.error('❌ Erreur sauvegarde note:', error);
+      console.error('Erreur sauvegarde note:', error);
       throw error;
     }
   };
@@ -403,9 +393,8 @@ const Player = () => {
         user_id: userId,
         message: message,
       });
-      console.log('✅ Email envoyé');
     } catch (error) {
-      console.error('❌ Erreur envoi email:', error);
+      console.error('Erreur envoi email:', error);
       throw error;
     }
   };
@@ -422,7 +411,7 @@ const Player = () => {
   if (videos.length === 0) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <p className="text-white text-lg">Aucune vidéo disponible</p>
+        <p className="text-white text-lg">{t('player.noVideos')}</p>
       </div>
     );
   }
@@ -447,7 +436,6 @@ const Player = () => {
             ref={(el) => {
               if (el) {
                 videosRef.current[index] = el;
-                console.log(`🎥 Vidéo ${index + 1} référencée:`, video.video_url);
               }
             }}
             className="absolute inset-0 w-full h-full object-cover"
@@ -456,12 +444,8 @@ const Player = () => {
             loop
             preload={index <= currentIndex + 1 ? 'auto' : 'metadata'}
             crossOrigin="anonymous"
-            onLoadStart={() => console.log(`🔄 Chargement vidéo ${index + 1}:`, video.video_url)}
-            onLoadedData={() => console.log(`✅ Vidéo ${index + 1} chargée`)}
             onEnded={() => handleVideoEnded(index)}
             onError={(e) => handleVideoError(e, video)}
-            onPlay={() => console.log(`▶️ Vidéo ${index + 1} en lecture`)}
-            onPause={() => console.log(`⏸️ Vidéo ${index + 1} en pause`)}
           />
 
           {/* Indicateur pause */}
@@ -508,7 +492,7 @@ const Player = () => {
                 {index + 1} / {videos.length}
               </span>
             </div>
-            
+
             {/* Badge statut de la vidéo */}
             {statuses[video.id] && statuses[video.id] !== 'no' && (
               <div className={`px-3 py-1.5 backdrop-blur-md rounded-full flex items-center gap-2 ${
@@ -517,9 +501,9 @@ const Player = () => {
                 'bg-red-500/70'
               }`}>
                 <span className="text-white text-xs font-semibold">
-                  {statuses[video.id] === 'yes' ? 'Selectionne' :
-                   statuses[video.id] === 'discuss' ? 'A revoir' :
-                   'Non retenu'}
+                  {statuses[video.id] === 'yes' ? t('player.selected') :
+                   statuses[video.id] === 'discuss' ? t('player.toReview') :
+                   t('player.notSelected')}
                 </span>
                 {ratings[video.id] > 0 && statuses[video.id] === 'yes' && (
                   <span className="text-white text-xs font-bold">
@@ -532,12 +516,12 @@ const Player = () => {
 
           {/* Barre de progression vidéo */}
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/20 z-10">
-            <div 
+            <div
               className="h-full bg-white transition-all duration-100"
-              style={{ 
-                width: videosRef.current[index] 
-                  ? `${(videosRef.current[index].currentTime / videosRef.current[index].duration) * 100}%` 
-                  : '0%' 
+              style={{
+                width: videosRef.current[index]
+                  ? `${(videosRef.current[index].currentTime / videosRef.current[index].duration) * 100}%`
+                  : '0%'
               }}
             />
           </div>
@@ -554,7 +538,7 @@ const Player = () => {
             onNoteClick={() => setShowNotePanel(true)}
             onEmailClick={() => setShowEmailPanel(true)}
           />
-          
+
           {/* Aide raccourcis clavier */}
           <KeyboardShortcuts />
         </>

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authService } from '../../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
@@ -23,11 +25,11 @@ const Login = () => {
       localStorage.setItem('auth_token', response.token || '');
       localStorage.setItem('auth_user', JSON.stringify(response.user || {}));
       setStatus('success');
-      setMessage('Connexion reussie');
+      setMessage(t('login.success'));
       navigate('/');
     } catch (error) {
       setStatus('error');
-      setMessage(error.message || 'Erreur de connexion');
+      setMessage(error.message || t('login.error'));
     }
   };
 
@@ -35,8 +37,8 @@ const Login = () => {
     <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
       <div className="max-w-md mx-auto space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Connexion</h1>
-          <p className="text-sm text-gray-400">Acces a ton espace MarsIA</p>
+          <h1 className="text-3xl font-bold">{t('login.title')}</h1>
+          <p className="text-sm text-gray-400">{t('login.subtitle')}</p>
         </div>
 
         <form
@@ -57,7 +59,7 @@ const Login = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs text-gray-400">Mot de passe</label>
+            <label className="text-xs text-gray-400">{t('login.password')}</label>
             <input
               type="password"
               name="password"
@@ -74,7 +76,7 @@ const Login = () => {
             disabled={status === 'loading'}
             className="w-full rounded-xl bg-white text-black py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-200 disabled:opacity-50"
           >
-            {status === 'loading' ? 'Connexion...' : 'Se connecter'}
+            {status === 'loading' ? t('login.logging') : t('login.submit')}
           </button>
 
           {message && (

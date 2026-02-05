@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { juryService } from '../../services/juryService';
 
 const JuryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [jury, setJury] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,32 +29,32 @@ const JuryDetails = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-white font-light tracking-[0.3em] animate-pulse uppercase">Immersion en cours...</div>
+      <div className="text-white font-light tracking-[0.3em] animate-pulse uppercase">{t('juryDetails.loading')}</div>
     </div>
   );
 
   if (error || !jury) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase mb-6">Profil Perdu</h1>
-      <button onClick={() => navigate('/jury')} className="mars-button-outline">RETOUR AUX JURYS</button>
+      <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase mb-6">{t('juryDetails.profileLost')}</h1>
+      <button onClick={() => navigate('/jury')} className="mars-button-outline">{t('juryDetails.backToJury')}</button>
     </div>
   );
 
   return (
     <div className="relative min-h-screen bg-black flex items-center justify-center p-6 lg:p-12 overflow-hidden">
-      
+
       {/* 1. BACKGROUND IMMERSIF (Photo floutée) */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src={jury.illustration} 
-          className="w-full h-full object-cover scale-110 blur-[120px] opacity-30" 
-          alt="blur background" 
+        <img
+          src={jury.illustration}
+          className="w-full h-full object-cover scale-110 blur-[120px] opacity-30"
+          alt="blur background"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-90"></div>
       </div>
 
       {/* 2. BOUTON RETOUR (Positionné par rapport au contenu) */}
-      <button 
+      <button
         onClick={() => navigate('/jury')}
         className="fixed top-32 left-8 lg:left-12 z-[110] glass-card w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/10 transition-all hover:scale-110 group border-white/20"
       >
@@ -63,10 +65,10 @@ const JuryDetails = () => {
 
       {/* 3. LA "FENÊTRE" PRINCIPALE (Style Music Player Window) */}
       <div className="relative z-10 w-full max-w-2xl aspect-[3/4.5] md:aspect-[3/4] lg:aspect-[3/4.2] rounded-[4rem] overflow-hidden shadow-[0_80px_150px_-30px_rgba(0,0,0,1)] border border-white/10 group">
-        
+
         {/* Photo Nette */}
-        <img 
-          src={jury.illustration} 
+        <img
+          src={jury.illustration}
           alt={`${jury.name} ${jury.lastname}`}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110"
         />
@@ -90,9 +92,9 @@ const JuryDetails = () => {
           <div className="glass-card rounded-[3rem] p-8 md:p-12 border-white/20 shadow-2xl backdrop-blur-3xl bg-white/5">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-2 h-2 rounded-full bg-mars-primary animate-pulse shadow-[0_0_10px_rgba(139,92,246,0.8)]"></div>
-              <span className="text-[10px] font-bold tracking-[0.4em] text-white/30 uppercase">MANIFESTE DU JURY</span>
+              <span className="text-[10px] font-bold tracking-[0.4em] text-white/30 uppercase">{t('juryDetails.manifesto')}</span>
             </div>
-            
+
             <div className="max-h-40 md:max-h-56 overflow-y-auto pr-4 custom-scrollbar">
               <p className="text-lg md:text-xl text-white/90 leading-relaxed font-light italic">
                 "{jury.biographie}"
@@ -102,8 +104,8 @@ const JuryDetails = () => {
             {/* Action Bar (Style Controls) */}
             <div className="mt-10 pt-10 border-t border-white/5 flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold tracking-[0.3em] text-mars-primary uppercase mb-1 font-black">CÉRÉMONIE 2026</span>
-                <span className="text-xs text-white/40 font-medium">Grand Jury International — MarsAI Protocol</span>
+                <span className="text-[10px] font-bold tracking-[0.3em] text-mars-primary uppercase mb-1 font-black">{t('juryDetails.ceremony')}</span>
+                <span className="text-xs text-white/40 font-medium">{t('juryDetails.grandJury')}</span>
               </div>
               <div className="flex gap-4">
                 <a href="#" className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-white/30 cursor-pointer transition-all">

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authService } from '../../services/authService';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -26,11 +28,11 @@ const Register = () => {
     try {
       await authService.register(formData);
       setStatus('success');
-      setMessage('Compte cree, tu peux te connecter');
+      setMessage(t('register.success'));
       navigate('/login');
     } catch (error) {
       setStatus('error');
-      setMessage(error.message || 'Erreur lors de la creation du compte');
+      setMessage(error.message || t('register.error'));
     }
   };
 
@@ -38,8 +40,8 @@ const Register = () => {
     <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
       <div className="max-w-md mx-auto space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Inscription</h1>
-          <p className="text-sm text-gray-400">Cree ton compte MarsIA</p>
+          <h1 className="text-3xl font-bold">{t('register.title')}</h1>
+          <p className="text-sm text-gray-400">{t('register.subtitle')}</p>
         </div>
 
         <form
@@ -48,26 +50,26 @@ const Register = () => {
         >
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <label className="text-xs text-gray-400">Prenom</label>
+              <label className="text-xs text-gray-400">{t('register.firstName')}</label>
               <input
                 type="text"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
                 className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-                placeholder="Prenom"
+                placeholder={t('register.firstNamePlaceholder')}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs text-gray-400">Nom</label>
+              <label className="text-xs text-gray-400">{t('register.lastName')}</label>
               <input
                 type="text"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
                 className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-                placeholder="Nom"
+                placeholder={t('register.lastNamePlaceholder')}
                 required
               />
             </div>
@@ -84,7 +86,7 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs text-gray-400">Mot de passe</label>
+              <label className="text-xs text-gray-400">{t('register.password')}</label>
               <input
                 type="password"
                 name="password"
@@ -102,7 +104,7 @@ const Register = () => {
             disabled={status === 'loading'}
             className="w-full rounded-xl bg-white text-black py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-200 disabled:opacity-50"
           >
-            {status === 'loading' ? 'Creation...' : 'Creer mon compte'}
+            {status === 'loading' ? t('register.creating') : t('register.submit')}
           </button>
 
           {message && (
