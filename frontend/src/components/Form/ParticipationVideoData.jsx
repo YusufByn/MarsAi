@@ -20,7 +20,7 @@ const ParticipationVideoData = ({setEtape}) => {
           </div>
         </div>
           <section className="FormContainer">
-            <form action="" method="post" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center m-5 gap-5 ">
+            <form action="" method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5 ">
 
                   <div>
                   <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"

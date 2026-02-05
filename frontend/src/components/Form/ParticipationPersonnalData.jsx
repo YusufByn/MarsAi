@@ -20,17 +20,6 @@ const ParticipationPersonnalData = ({setEtape}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // validation de l'email
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // validation des numéros de téléphone
-  const validatePhone = (phoneNumber) => {
-    const isValid =  isValidPhoneNumber(phoneNumber);
-  };
-
   return (
     <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center ">
       <h2 className="p-2">Personnal Data</h2>
@@ -83,7 +72,7 @@ const ParticipationPersonnalData = ({setEtape}) => {
                     />
                   </div>
 
-                {/* Email & Birthday */}
+                {/* Email */}
                   <div>
                   <input className="bg-black/50 border rounded-xl p-2 w-60"
                     type="email"
@@ -91,14 +80,6 @@ const ParticipationPersonnalData = ({setEtape}) => {
                     id="email"
                     placeholder="email"
                     />
-                  </div>
-
-                  <div >
-                    <input className="bg-black/50 border rounded-xl p-2 gap-5 w-60"
-                      type="date"
-                      name="birthday"
-                      id="birthday"
-                      />
                   </div>
 
                   <div>
@@ -148,6 +129,17 @@ const ParticipationPersonnalData = ({setEtape}) => {
                     id="acquisitionSource"
                     placeholder="How did you hear about us?"
                     />
+                  </div>
+
+                  <div >
+                    Are you 18 years old or older?
+                    <input className="bg-black/50 border rounded-xl p-2 w-10"
+                      type="checkbox"
+                      name="ageVerificator"
+                      id="ageVerificator"
+                      label="ageVerificator"
+                      placeholder="age"
+                      />
                   </div>
                 
                 <div>
