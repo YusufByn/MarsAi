@@ -13,8 +13,12 @@
 // IMPORTS
 // ============================================
 
-// Schémas Zod pour la validation des champs d'authentification
-import { juryRegisterSchema, juryLoginSchema } from '../../../shared/validators/auth.validator.js';
+// Schémas Zod pour la validation des champs du formulaire de participation
+import { 
+    firstNameSchema, 
+    lastNameSchema, 
+    emailSchema 
+} from '../../../shared/validators/form.validator.js';
 
 // Fonction de validation des numéros de téléphone internationaux
 import { isValidPhoneNumber } from 'react-phone-number-input';
@@ -36,8 +40,12 @@ function validateWithZod(schemaField, value) {
         schemaField.parse(value);
         return null; // Validation réussie
     } catch (error) {
-        // Retourne le premier message d'erreur Zod
-        return error.errors[0].message;
+        // Zod utilise 'issues' pour stocker les erreurs
+        if (error.issues && error.issues.length > 0) {
+            return error.issues[0].message;
+        }
+        // Fallback en cas d'erreur inattendue
+        return "Validation error";
     }
 }
 
@@ -64,40 +72,71 @@ function validateGender(value) {
 };
 
 /**
+ * Valide que la valeur contient uniquement des lettres, espaces, tirets et apostrophes
+ * Utilisé pour firstName, lastName, country
+ * 
+ * @param {string} value - La valeur à valider
+ * @param {string} fieldName - Le nom du champ (pour le message d'erreur)
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateNameFormat(value, fieldName) {
+    // Pattern pour lettres (avec accents), espaces, tirets et apostrophes uniquement
+    const namePattern = /^[a-zA-ZÀ-ÿ\s'-]+$/;
+    
+    if (!namePattern.test(value)) {
+        return `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`;
+    }
+    return null;
+};
+
+/**
  * Valide le prénom
- * Utilise le schéma Zod (min 2 caractères, trim automatique)
+ * Utilise le schéma Zod (min 2 caractères, max 50 caractères, trim automatique)
+ * + validation des caractères autorisés
  * 
  * @param {string} value - Le prénom à valider
- * @returns {string|null} - null si valide, sinon message d'erreur Zod
+ * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateFirstName(value) {
-    return validateWithZod(juryRegisterSchema.shape.firstName, value);
+    // Validation Zod (longueur)
+    const zodError = validateWithZod(firstNameSchema, value);
+    if (zodError) return zodError;
+    
+    // Validation des caractères autorisés
+    return validateNameFormat(value, "First name");
 };
 
 /**
  * Valide le nom de famille
- * Utilise le schéma Zod (min 2 caractères, trim automatique)
+ * Utilise le schéma Zod (min 2 caractères, max 50 caractères, trim automatique)
+ * + validation des caractères autorisés
  * 
  * @param {string} value - Le nom à valider
- * @returns {string|null} - null si valide, sinon message d'erreur Zod
+ * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateLastName(value) {
-    return validateWithZod(juryRegisterSchema.shape.lastName, value);
+    // Validation Zod (longueur)
+    const zodError = validateWithZod(lastNameSchema, value);
+    if (zodError) return zodError;
+    
+    // Validation des caractères autorisés
+    return validateNameFormat(value, "Last name");
 };
 
 /**
  * Valide l'adresse email
- * Utilise le schéma Zod (format email, trim, lowercase automatique)
+ * Utilise le schéma Zod (format email, max 100 caractères, trim, lowercase automatique)
  * 
  * @param {string} value - L'email à valider
  * @returns {string|null} - null si valide, sinon message d'erreur Zod
  */
 function validateEmail(value) {
-    return validateWithZod(juryRegisterSchema.shape.email, value);
+    return validateWithZod(emailSchema, value);
 };
 
 /**
  * Valide le pays
+ * Vérifie que le champ est rempli et contient uniquement des caractères valides
  * 
  * @param {string} value - Le pays à valider
  * @returns {string|null} - null si valide, sinon message d'erreur
@@ -106,11 +145,14 @@ function validateCountry(value) {
     if (!value) {
         return "Country is required";        
     }
-    return null; // Validation réussie
+    
+    // Validation des caractères autorisés
+    return validateNameFormat(value, "Country");
 };
 
 /**
  * Valide l'adresse postale
+ * Accepte les lettres, chiffres, espaces, virgules, points, tirets et apostrophes
  * 
  * @param {string} value - L'adresse à valider
  * @returns {string|null} - null si valide, sinon message d'erreur
@@ -124,11 +166,23 @@ function validateAddress(value) {
     else if (value.length < 5) {
         return "Address must be at least 5 characters";        
     }
+    // Vérifie que l'adresse contient uniquement des caractères valides
+    else if (value.length > 200) {
+        return "Address must not exceed 200 characters";
+    }
+    
+    // Pattern pour adresse (lettres, chiffres, virgules, points, tirets, apostrophes)
+    const addressPattern = /^[a-zA-Z0-9À-ÿ\s',.-]+$/;
+    if (!addressPattern.test(value)) {
+        return "Address contains invalid characters";
+    }
+    
     return null; // Validation réussie
 };
 
 /**
  * Valide la source d'acquisition (comment l'utilisateur a entendu parler de nous)
+ * Accepte les lettres, chiffres, espaces et ponctuation basique
  * 
  * @param {string} value - La source d'acquisition
  * @returns {string|null} - null si valide, sinon message d'erreur
@@ -137,6 +191,18 @@ function validateAcquisitionSource(value) {
     if (!value) {
         return "Please tell us how you heard about us";
     }
+    
+    // Vérifie la longueur maximale
+    if (value.length > 100) {
+        return "Response is too long";
+    }
+    
+    // Pattern pour acquisition source (lettres, chiffres, ponctuation basique)
+    const sourcePattern = /^[a-zA-Z0-9À-ÿ\s',.()-]+$/;
+    if (!sourcePattern.test(value)) {
+        return "Invalid characters in response";
+    }
+    
     return null; // Validation réussie
 };
 
@@ -212,6 +278,192 @@ function validateMobileNumber(value) {
 };
 
 // ============================================
+// VALIDATION DES DONNÉES VIDÉO
+// ============================================
+
+/**
+ * Valide le titre de la vidéo
+ * Accepte lettres, chiffres, espaces et ponctuation basique
+ * 
+ * @param {string} value - Le titre à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateTitle(value) {
+    if (!value || value.trim() === '') {
+        return "Title is required";
+    }
+    
+    if (value.length < 2) {
+        return "Title must be at least 2 characters";
+    }
+    
+    if (value.length > 255) {
+        return "Title must not exceed 255 characters";
+    }
+    
+    // Pattern pour titre (lettres, chiffres, ponctuation basique)
+    const titlePattern = /^[a-zA-Z0-9À-ÿ\s',.!?:()-]+$/;
+    if (!titlePattern.test(value)) {
+        return "Title contains invalid characters";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide la langue
+ * Accepte uniquement des lettres
+ * 
+ * @param {string} value - La langue à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateLanguage(value) {
+    if (!value || value.trim() === '') {
+        return "Language is required";
+    }
+    
+    if (value.length < 2) {
+        return "Language must be at least 2 characters";
+    }
+    
+    if (value.length > 50) {
+        return "Language must not exceed 50 characters";
+    }
+    
+    // Pattern pour langue (lettres uniquement)
+    const languagePattern = /^[a-zA-ZÀ-ÿ\s-]+$/;
+    if (!languagePattern.test(value)) {
+        return "Language can only contain letters";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide le synopsis
+ * Accepte lettres, chiffres et toute ponctuation
+ * 
+ * @param {string} value - Le synopsis à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateSynopsis(value) {
+    if (!value || value.trim() === '') {
+        return "Synopsis is required";
+    }
+    
+    if (value.length < 10) {
+        return "Synopsis must be at least 10 characters";
+    }
+    
+    if (value.length > 500) {
+        return "Synopsis must not exceed 500 characters";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide le résumé technique
+ * 
+ * @param {string} value - Le résumé technique à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateTechResume(value) {
+    if (!value || value.trim() === '') {
+        return "Technical resume is required";
+    }
+    
+    if (value.length < 10) {
+        return "Technical resume must be at least 10 characters";
+    }
+    
+    if (value.length > 500) {
+        return "Technical resume must not exceed 500 characters";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide le résumé créatif
+ * 
+ * @param {string} value - Le résumé créatif à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateCreativeResume(value) {
+    if (!value || value.trim() === '') {
+        return "Creative resume is required";
+    }
+    
+    if (value.length < 10) {
+        return "Creative resume must be at least 10 characters";
+    }
+    
+    if (value.length > 500) {
+        return "Creative resume must not exceed 500 characters";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide la classification
+ * 
+ * @param {string} value - La classification ("hybrid" ou "full_ai")
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateClassification(value) {
+    if (!value) {
+        return "Classification is required";
+    }
+    
+    if (!["hybrid", "full_ai"].includes(value)) {
+        return "Invalid classification";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide les tags (format: tableau de strings)
+ * 
+ * @param {Array} value - Tableau de tags à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateTags(value) {
+    // Vérifier que c'est un tableau
+    if (!Array.isArray(value)) {
+        return "Tags must be an array";
+    }
+    
+    // Au moins 1 tag requis
+    if (value.length === 0) {
+        return "At least one tag is required";
+    }
+    
+    // Maximum 10 tags
+    if (value.length > 10) {
+        return "Maximum 10 tags allowed";
+    }
+    
+    // Vérifie que chaque tag contient uniquement des caractères valides
+    const tagPattern = /^[a-zA-Z0-9À-ÿ-]+$/;
+    for (const tag of value) {
+        if (!tagPattern.test(tag)) {
+            return "Tags can only contain letters, numbers, and hyphens";
+        }
+        if (tag.length < 2) {
+            return "Each tag must be at least 2 characters";
+        }
+        if (tag.length > 20) {
+            return "Each tag must not exceed 20 characters";
+        }
+    }
+    
+    return null;
+};
+
+// ============================================
 // EXPORTS
 // ============================================
 
@@ -224,6 +476,7 @@ function validateMobileNumber(value) {
  * - Retour : null si valide, string (message d'erreur) si invalide
  */
 export {
+    // Validation données personnelles
     validateGender,           // Validation du genre (women/man/other)
     validateFirstName,        // Validation du prénom (Zod - min 2 caractères)
     validateLastName,         // Validation du nom (Zod - min 2 caractères)
@@ -233,5 +486,14 @@ export {
     validateAcquisitionSource, // Validation de la source d'acquisition
     validateAgeVerification,  // Validation de l'âge 18+ (checkbox)
     validatePhoneNumber,      // Validation du téléphone fixe (format international)
-    validateMobileNumber      // Validation du mobile (format international)
+    validateMobileNumber,     // Validation du mobile (format international)
+    
+    // Validation données vidéo
+    validateTitle,            // Validation du titre (max 255 caractères)
+    validateLanguage,         // Validation de la langue (lettres uniquement)
+    validateSynopsis,         // Validation du synopsis (max 500 caractères)
+    validateTechResume,       // Validation du résumé technique (max 500 caractères)
+    validateCreativeResume,   // Validation du résumé créatif (max 500 caractères)
+    validateClassification,   // Validation de la classification (hybrid/full_ai)
+    validateTags              // Validation des tags (séparés par virgules)
 };

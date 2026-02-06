@@ -4,20 +4,7 @@ import 'react-phone-number-input/style.css';
 import './PhoneInputStyles.css';
 import { validateGender, validateFirstName, validateLastName, validateEmail, validateCountry, validateAddress, validateAcquisitionSource, validateAgeVerification, validatePhoneNumber, validateMobileNumber } from '../../services/formService';
 
-const ParticipationPersonnalData = ({setEtape}) => {
-  const [formData, setFormData] = useState({
-    gender: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    country: '',
-    phoneNumber: '',
-    mobileNumber: '',
-    address: '',
-    acquisitionSource: '',
-    ageVerificator: false,
-  });
-
+const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -27,10 +14,10 @@ const ParticipationPersonnalData = ({setEtape}) => {
     const { name, value, type, checked } = e.target;
     const fieldValue = type === 'checkbox' ? checked : value;
     
-    setFormData(prev => ({
-      ...prev,
+    setFormDataProp({
+      ...formData,
       [name]: fieldValue
-    }));
+    });
 
     // Validation en temps réel
     validateField(name, fieldValue);
@@ -38,10 +25,10 @@ const ParticipationPersonnalData = ({setEtape}) => {
 
   // Gestion spécifique pour les champs PhoneInput
   const handlePhoneChange = (fieldName, value) => {
-    setFormData(prev => ({
-      ...prev,
+    setFormDataProp({
+      ...formData,
       [fieldName]: value || ''
-    }));
+    });
 
     // Validation en temps réel
     validateField(fieldName, value || '');
