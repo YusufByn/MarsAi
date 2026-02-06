@@ -1,5 +1,5 @@
 import newsletterModel from '../models/newsletter.model.js';
-import { sendWelcomeEmail } from '../models/email.model.js';
+import emailService from '../services/email.service.js';
 import { pool } from '../db/index.js';
 
 const newsletterController = {
@@ -29,7 +29,7 @@ const newsletterController = {
         
         // Envoyer l'email de bienvenue
         try {
-          await sendWelcomeEmail(email);
+          await emailService.sendWelcomeEmail(email);
         } catch (emailError) {
           console.error('Error sending email:', emailError);
           // On continue même si l'email échoue
@@ -47,7 +47,7 @@ const newsletterController = {
 
       // Envoyer l'email de bienvenue
       try {
-        await sendWelcomeEmail(email);
+        await emailService.sendWelcomeEmail(email);
       } catch (emailError) {
         console.error('Error sending email:', emailError);
         // On continue même si l'email échoue
@@ -217,8 +217,7 @@ const newsletterController = {
       await connection.beginTransaction();
 
       // Envoyer les emails en masse
-      const { sendBulkEmail } = await import('../models/email.model.js');
-      const results = await sendBulkEmail(emails, subject, message);
+      const results = await emailService.sendBulkEmail(emails, subject, message);
 
       // Valider la transaction
       await connection.commit();

@@ -1,25 +1,57 @@
-import { upsertTags, normalizeTags } from '../models/tag.model.js';
-import pool from '../config/db.js';
+import { tagModel } from '../models/tag.model.js';
 
-export const createTags = async (req, res) => {
-    try {
-        // body de la request est un tableau de tags
-        const { tags = [] } = req.body;
-        // on normalize les tags
-        const cleanTags = normalizeTags(tags);
-        // on insert les tags qui n'existent pas dans la bdd
-        const newTag = await upsertTags(cleanTags, pool);
+/**
+ * Controller pour la gestion des tags
+ */
 
-        res.status(201).json({
-            success: true,
-            message: 'Tags inserted successfully',
-            data: newTag
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error inserting tags',
-            error: error.message
-        })
+/**
+ * Récupérer tous les tags
+ * Route: GET /api/tags
+ */
+export const getAllTags = async (req, res, next) => {
+  try {
+    const tags = await tagModel.findAll();
+
+    res.status(200).json({
+      success: true,
+      count: tags.length,
+      data: tags
+    });
+  } catch (error) {
+    console.error('[TAG ERROR] Erreur récupération tags:', error);
+    next(error);
+  }
+};
+
+/**
+ * Rechercher des tags
+ * Route: GET /api/tags/search?q=...
+ */
+export const searchTags = async (req, res, next) => {
+  try {
+    const query = req.query.q || '';
+
+    if (!query || query.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'La recherche doit contenir au moins 2 caractères'
+      });
     }
-}
+
+    const tags = await tagModel.search(query);
+
+    res.status(200).json({
+      success: true,
+      count: tags.length,
+      data: tags
+    });
+  } catch (error) {
+    console.error('[TAG ERROR] Erreur recherche tags:', error);
+    next(error);
+  }
+};
+
+export default {
+  getAllTags,
+  searchTags
+};

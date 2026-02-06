@@ -7,6 +7,8 @@ import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import Player from './pages/playerVideo/player';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import FromVideo from './pages/FromVideo';
+import EditVideo from './pages/EditVideo';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 
@@ -26,6 +28,8 @@ function AppContent() {
           <Route path="/video/player" element={<Player />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/FromVideo" element={<FromVideo />} />
+          <Route path="/video/edit/:id" element={<EditVideo />} />
         </Routes>
       </main>
       {!isPlayerPage && <Footer />}

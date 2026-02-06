@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Countdown from '../components/Countdown';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
 
   return (
@@ -29,11 +31,11 @@ const HomePage = () => {
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-12">
-            <button className="mars-button-primary">
+            <button onClick={() => navigate('/FromVideo')} className="mars-button-primary">
               {t('home.submitFilm')}
             </button>
 
-            <button className="mars-button-outline">
+            <button onClick={() => navigate('/jury')} className="mars-button-outline">
               {t('home.discoverJury')}
             </button>
           </div>
