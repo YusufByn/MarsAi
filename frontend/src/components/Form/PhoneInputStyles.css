@@ -1,0 +1,67 @@
+/* Styles personnalisés pour react-phone-number-input */
+
+.PhoneInput {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.PhoneInputInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  outline: none;
+  font-size: 1rem;
+}
+
+.PhoneInputInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.PhoneInputCountry {
+  margin-right: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.PhoneInputCountrySelect {
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.PhoneInputCountrySelect:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.PhoneInputCountrySelectArrow {
+  color: white;
+  opacity: 0.7;
+  margin-left: 0.25rem;
+}
+
+/* Style pour le dropdown du sélecteur de pays */
+.PhoneInputCountrySelect option {
+  background: #1a1a1a;
+  color: white;
+  padding: 0.5rem;
+}
+
+/* Style pour les champs avec erreur */
+.border-red-500 .PhoneInputInput {
+  border-color: #ef4444;
+}
