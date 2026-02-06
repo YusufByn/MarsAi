@@ -11,7 +11,6 @@ import youtubeRoutes from './youtube.routes.js';
 import playerRoutes from './player/player.routes.js';
 import testRoutes from './test.routes.js';
 import countdownRoutes from './cms/countdown.routes.js';
-import tagRoutes from './tag.routes.js';
 
 const router = Router();
 
@@ -25,7 +24,6 @@ router.use('/videos', videoRoutes);
 router.use('/youtube', youtubeRoutes);
 router.use('/player', playerRoutes);
 router.use('/cms', countdownRoutes);
-router.use('/tag', tagRoutes);
 
 // testRoutes garde /test en interne - doit être en dernier pour ne pas intercepter les autres routes
 router.use('/', testRoutes);

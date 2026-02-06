@@ -53,4 +53,4 @@ function validateYoutubeVideo(url) {
 }
 
 // j'exporte les fonctions
-export default { extractVideoId, validateYoutubeVideo };
+export { extractVideoId, validateYoutubeVideo };

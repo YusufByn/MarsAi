@@ -1,14 +1,69 @@
-import validateYoutubeVideo from "../utils/youtube.util.js";
+import { validateYoutubeVideo } from "../utils/youtube.util.js";
+import { normalizeTags, upsertTags } from "../models/tag.model.js";
+import { addTagsToVideo } from "../models/video.model.js";
+import { createStills } from "../models/image.model.js";
+import { createVideo } from "../models/video.model.js";
+import pool from "../config/db.js";
 
-export default async function validateYoutubeUrl(req, res) {    
+export const uploadVideo = async (req, res) => {
 
-    const { youtube_url } = req.body;
-    // condition pour verifier qu'une url youtube est valide
+  const { tags = [], title, youtube_url , cover, first_image, second_image, third_image } = req.body;
+
+  try {
+
+    // normalisation des tags(trim, lowercase)
+    const cleanTags = normalizeTags(tags);
+
+    // ionsersation des tags qui n'existent pas en bdd
+    const newTags = await upsertTags(cleanTags, pool)
+    // validation de l'url youtube
     if (!validateYoutubeVideo(youtube_url)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
         message: "Youtube url not valid",
         error: "Youtube url not valid"
       });
     }
+
+    // creation de la video
+    const video = await createVideo(
+      title, 
+      youtube_url,
+      cover
+    );
+
+    // on recup l'id de la vidéo crée, on va la renvoyer dans la response
+    const videoId = video.insertId;
+
+    // les stills sont un tableau avec 
+    const stills = [
+      { file_name: first_image, sort_order: 1 },
+      { file_name: second_image, sort_order: 2 },
+      { file_name: third_image, sort_order: 3 },
+    ];
+
+    await createStills(videoId, stills);
+
+    const tagIds = newTags.map(t => t.id);
+
+    await addTagsToVideo(videoId, tagIds);
+    
+    return res.status(201).json({
+      success:true,
+      message: "video uploaded successfully",
+      data: {
+        video: videoId,
+        stills,
+        tags: newTags
+      }
+    })
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: "Error uploading video",
+      error: error.message
+    });
+  }
 }
