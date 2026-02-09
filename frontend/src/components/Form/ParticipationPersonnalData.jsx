@@ -1,13 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import './PhoneInputStyles.css';
 import { validateGender, validateFirstName, validateLastName, validateEmail, validateCountry, validateAddress, validateAcquisitionSource, validateAgeVerification, validatePhoneNumber, validateMobileNumber } from '../../services/formService';
+import ParticipationContributorsData from './ParticipationContributorsData';
+import { createPortal } from 'react-dom';
+
+// Modal des contributeurs (en dehors du composant pour éviter les re-créations)
+const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsData, onSave }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="relative bg-[#050505] border border-white/10 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        {/* Bouton de fermeture */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold leading-none"
+          aria-label="Close modal"
+        >
+          ×
+        </button>
+        
+        {/* Contenu de la modal */}
+        <ParticipationContributorsData 
+          contributorsData={contributorsData}
+          setContributorsData={setContributorsData}
+          onSave={onSave}
+        />
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [contributorsData, setContributorsData] = useState({
+    gender: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    productionRole: ''
+  });
 
   // Gestion des changements de champs
   const handleChange = (e) => {
@@ -98,6 +147,15 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
     // Retourne true si aucune erreur
     return !Object.values(newErrors).some(error => error !== null);
+  };
+
+  // Fonction pour sauvegarder les données des contributeurs
+  const handleSaveContributor = () => {
+    setFormDataProp({
+      ...formData,
+      contributors: contributorsData
+    });
+    setIsModalOpen(false);
   };
 
   // Soumission du formulaire
@@ -273,6 +331,26 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
             {errors.ageVerificator && <p className="text-red-500 text-sm mt-1">{errors.ageVerificator}</p>}
           </div>
           
+          <span>Do you have contributors ?</span>
+          <div className="w-60">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="withContributors"
+                id="withContributors"
+                checked={formData.withContributors || false}
+                onChange={(e) => {
+                  handleChange(e);
+                  if (e.target.checked) {
+                    setIsModalOpen(true);
+                  }
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          
           {/* Message d'erreur général */}
           {submitError && (
             <div className="w-60 text-red-500 text-center">
@@ -292,6 +370,15 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
         </form>
       </section>
+
+      {/* Modal des contributeurs */}
+      <ContributorsModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        contributorsData={contributorsData}
+        setContributorsData={setContributorsData}
+        onSave={handleSaveContributor}
+      />
 
     </div>
   );
