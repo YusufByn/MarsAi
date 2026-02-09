@@ -22,12 +22,12 @@ const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsD
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="relative bg-[#050505] border border-white/10 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="relative bg-[#050505] border border-white/10 rounded-xl p-4 max-w-xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
         {/* Bouton de fermeture */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl font-bold leading-none"
+          className="sticky top-0 right-0 float-right ml-4 text-white hover:text-gray-300 text-2xl font-bold leading-none z-10"
           aria-label="Close modal"
         >
           ×
@@ -264,6 +264,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
           </div>
 
           {/* Phones */}
+          <span>Phone Number</span>
           <div className="w-60">
             <PhoneInput
               international
@@ -275,7 +276,8 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
             />
             {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
           </div>
-
+          
+          <span>Mobile Number</span>
           <div className="w-60">
             <PhoneInput
               international
