@@ -26,22 +26,90 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     still1: null,
     still2: null,
     still3: null,
+    videoFile: null,
+    subtitle: null,
   });
+
+  // État pour la durée de la vidéo
+  const [videoDuration, setVideoDuration] = useState(null);
 
   /**
    * Validation d'un fichier image
    */
   const validateImage = (file, fieldName) => {
-    // Vérifier le type
-    if (!file.type.startsWith('image/')) {
-      return 'Please select a valid image file';
+    // Vérifier le type - accepter uniquement JPG/JPEG/PNG
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      return 'Veuillez sélectionner une image JPG ou PNG uniquement';
     }
 
     // Vérifier la taille
-    const maxSize = fieldName === 'coverImage' ? 15 * 1024 * 1024 : 5 * 1024 * 1024; // 15MB pour cover, 5MB pour stills
+    const maxSize = fieldName === 'coverImage' ? 15 * 1024 * 1024 : 7 * 1024 * 1024; // 15MB pour cover, 7MB pour stills
     if (file.size > maxSize) {
-      const maxSizeMB = fieldName === 'coverImage' ? 15 : 5;
+      const maxSizeMB = fieldName === 'coverImage' ? 15 : 7;
       return `File too large. Max: ${maxSizeMB}MB`;
+    }
+
+    return null; // Valide
+  };
+
+  /**
+   * Validation d'un fichier vidéo
+   */
+  const validateVideo = (file) => {
+    // Vérifier l'extension
+    const allowedExtensions = ['.mov', '.mpeg4', '.mp4', '.avi', '.wmv', '.mpegps', '.flv', '.3gpp', '.webm'];
+    const fileName = file.name.toLowerCase();
+    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+    
+    if (!hasValidExtension) {
+      return 'Veuillez sélectionner un fichier vidéo valide (MOV, MP4, AVI, WMV, FLV, 3GPP, WebM)';
+    }
+
+    // Vérifier le type MIME
+    const allowedMimeTypes = [
+      'video/quicktime',      // .mov
+      'video/mp4',            // .mp4
+      'video/x-msvideo',      // .avi
+      'video/x-ms-wmv',       // .wmv
+      'video/x-flv',          // .flv
+      'video/3gpp',           // .3gpp
+      'video/webm'            // .webm
+    ];
+    
+    if (file.type && !allowedMimeTypes.includes(file.type)) {
+      return 'Type de fichier vidéo non autorisé';
+    }
+
+    // Vérifier la taille (max 200MB pour une vidéo)
+    const maxSize = 200 * 1024 * 1024; // 200MB
+    if (file.size > maxSize) {
+      return 'Fichier vidéo trop volumineux. Maximum: 200MB';
+    }
+
+    return null; // Valide
+  };
+
+  /**
+   * Validation d'un fichier sous-titre
+   */
+  const validateSubtitle = (file) => {
+    // Vérifier l'extension
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.srt')) {
+      return 'Veuillez sélectionner un fichier .srt uniquement';
+    }
+
+    // Vérifier le type MIME (peut être text/plain ou application/x-subrip)
+    const allowedMimeTypes = ['text/plain', 'application/x-subrip', 'text/srt'];
+    if (file.type && !allowedMimeTypes.includes(file.type)) {
+      return 'Type de fichier sous-titre non autorisé';
+    }
+
+    // Vérifier la taille (max 1MB pour un fichier de sous-titres)
+    const maxSize = 1 * 1024 * 1024; // 1MB
+    if (file.size > maxSize) {
+      return 'Fichier sous-titre trop volumineux. Maximum: 1MB';
     }
 
     return null; // Valide
@@ -108,10 +176,91 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     const { name } = e.target;
     const file = e.target.files[0];
     
+    if (!file) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+      setFormDataProp({ ...formData, [name]: null });
+      // Réinitialiser la durée si c'est une vidéo
+      if (name === 'videoFile') {
+        setVideoDuration(null);
+      }
+      return;
+    }
+
+    // Valider selon le type de fichier
+    let error = null;
+    if (name === 'videoFile') {
+      error = validateVideo(file);
+    } else if (name === 'subtitle') {
+      error = validateSubtitle(file);
+    }
+
+    if (error) {
+      // Afficher l'erreur et ne pas sauvegarder le fichier
+      setErrors(prev => ({ ...prev, [name]: error }));
+      setFormDataProp({ ...formData, [name]: null });
+      // Réinitialiser l'input
+      e.target.value = '';
+      // Réinitialiser la durée si c'est une vidéo
+      if (name === 'videoFile') {
+        setVideoDuration(null);
+      }
+      return;
+    }
+
+    // Fichier valide
+    setErrors(prev => ({ ...prev, [name]: null }));
     setFormDataProp({
       ...formData,
-      [name]: file || null
+      [name]: file
     });
+
+    // Calculer la durée si c'est une vidéo
+    if (name === 'videoFile') {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = function() {
+        window.URL.revokeObjectURL(video.src);
+        const duration = video.duration;
+        
+        // Vérifier la durée maximale (2m30 = 150 secondes)
+        const maxDuration = 150; // 2 minutes 30 secondes
+        
+        // Convertir la durée en format lisible
+        const hours = Math.floor(duration / 3600);
+        const minutes = Math.floor((duration % 3600) / 60);
+        const seconds = Math.floor(duration % 60);
+        
+        let formattedDuration = '';
+        if (hours > 0) {
+          formattedDuration = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+          formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Si la durée dépasse le maximum
+        if (duration > maxDuration) {
+          setErrors(prev => ({ 
+            ...prev, 
+            videoFile: `Vidéo trop longue (${formattedDuration}). Durée maximale: 2:30` 
+          }));
+          setFormDataProp({ ...formData, videoFile: null });
+          setVideoDuration(null);
+          e.target.value = ''; // Réinitialiser l'input
+          return;
+        }
+        
+        // Durée valide
+        setVideoDuration(formattedDuration);
+      };
+      
+      video.onerror = function() {
+        window.URL.revokeObjectURL(video.src);
+        setVideoDuration('Impossible de lire la durée');
+      };
+      
+      video.src = URL.createObjectURL(file);
+    }
   };
 
   /**
@@ -175,7 +324,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Video Upload */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Upload Video</label>
+            <label className="block text-sm mb-2">Upload Video (max 200MB, durée max 2m30)</label>
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
@@ -184,7 +333,15 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               id="videoFile"
               onChange={handleFileChange}
             />
-            <p className="text-gray-400 text-xs mt-1">Video duration will be displayed here</p>
+            {errors.videoFile ? (
+              <p className="text-red-500 text-xs mt-1">{errors.videoFile}</p>
+            ) : videoDuration ? (
+              <p className="text-green-400 text-xs mt-1">Durée: {videoDuration}</p>
+            ) : formData.videoFile ? (
+              <p className="text-gray-400 text-xs mt-1">Calcul de la durée...</p>
+            ) : (
+              <p className="text-gray-400 text-xs mt-1">La durée sera affichée ici</p>
+            )}
           </div>
 
           {/* Cover Image */}
@@ -214,7 +371,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
-              accept="image/*"
+              accept="image/jpg, image/jpeg, image/png"
               name="coverImage"
               id="coverImage"
               onChange={(e) => handleImageChange(e, 'coverImage')}
@@ -223,7 +380,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Still 1 */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Still 1 (max 5MB)</label>
+            <label className="block text-sm mb-2">Still 1 (max 7MB)</label>
             <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
               {loading.still1 ? (
                 <div className="flex flex-col items-center gap-2">
@@ -248,7 +405,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
-              accept="image/*"
+              accept="image/jpeg, image/jpg, image/png"
               name="still1"
               id="still1"
               onChange={(e) => handleImageChange(e, 'still1')}
@@ -257,7 +414,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           
           {/* Still 2 */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Still 2 (max 5MB)</label>
+            <label className="block text-sm mb-2">Still 2 (max 7MB)</label>
             <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
               {loading.still2 ? (
                 <div className="flex flex-col items-center gap-2">
@@ -282,7 +439,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
-              accept="image/*"
+              accept="image/jpeg, image/jpg, image/png"
               name="still2"
               id="still2"
               onChange={(e) => handleImageChange(e, 'still2')}
@@ -291,7 +448,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           
           {/* Still 3 */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Still 3 (max 5MB)</label>
+            <label className="block text-sm mb-2">Still 3 (max 7MB)</label>
             <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
               {loading.still3 ? (
                 <div className="flex flex-col items-center gap-2">
@@ -316,7 +473,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
-              accept="image/*"
+              accept="image/jpeg, image/jpg, image/png"
               name="still3"
               id="still3"
               onChange={(e) => handleImageChange(e, 'still3')}
@@ -325,7 +482,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Subtitle Upload */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Subtitle File (.srt)</label>
+            <label className="block text-sm mb-2">Subtitle File (.srt, max 1MB)</label>
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
@@ -334,6 +491,9 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               id="subtitle"
               onChange={handleFileChange}
             />
+            {errors.subtitle && (
+              <p className="text-red-500 text-xs mt-1">{errors.subtitle}</p>
+            )}
           </div>
 
           {/* Copyright Section */}
