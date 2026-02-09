@@ -9,9 +9,11 @@ export const uploadVideo = async (req, res) => {
 
   // tags = tableau de tags, le reste c'est body dla request
   const { tags = [], title, youtube_url } = req.body;
-
+  // video file est egal au premier fichier video de la request s'il existe
   const videoFiles = req.files?.video?.[0];
+  // cover file est egal au premier fichier cover de la request s'il existe
   const coverFile = req.files?.cover?.[0];
+  // stills files est egal au tableau de fichiers stills de la request s'il existe
   const stillsFiles = req.files?.stills;
 
   try {
@@ -30,6 +32,7 @@ export const uploadVideo = async (req, res) => {
       });
     }
 
+    // on recup le nom du fichier video et le nom du fichier s'il existe
     const video_file_name = videoFiles.filename;
     const cover = coverFile?.filename;
 
@@ -44,12 +47,14 @@ export const uploadVideo = async (req, res) => {
     // on recup l'id de la vidéo crée, on va la renvoyer dans la response
     const videoId = video.insertId;
 
-    // les stills sont un tableau avec 
+    // les stills sont un tableau avec les noms des fichiers stills et leur ordre
     const stills = [
+      // si l'index 0, 1 2 existe, on les ajoute au tableau 
       { file_name: stillsFiles[0]?.filename, sort_order: 1 },
       { file_name: stillsFiles[1]?.filename, sort_order: 2 },
       { file_name: stillsFiles[2]?.filename, sort_order: 3 },
-    ].filter(still => still.file_name);
+      // on filtre les stills qui ont un nom de fichier
+    ].filter(still => still.file_name); 
 
     // creation des stills, on passe l'id de la video et les stills qui sont dans un tableau et groupé dans l'ordre
     await createStills(videoId, stills);
@@ -69,7 +74,7 @@ export const uploadVideo = async (req, res) => {
         tags: newTags
       }
     })
-
+    
   } catch (error) {
 
     return res.status(500).json({

@@ -27,7 +27,7 @@ export const videoModel = {
 };
 
 // creation de video
-export const createVideo = async (title, youtube_url, video_file_name, cover) => {
+export const createVideo = async (title, youtube_url, cover) => {
 
   // requete prepare
   const query = `INSERT INTO video (title, youtube_url, video_file_name, cover) VALUES (?, ?, ?, ?)`;

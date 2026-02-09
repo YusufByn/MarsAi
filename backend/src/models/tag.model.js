@@ -1,5 +1,3 @@
-import pool from '../config/db.js';
-
 // nettoyage de tags, évite les doublons, trim etc
 // tags en param avec un tableau
 export const normalizeTags = (tags = []) => {
