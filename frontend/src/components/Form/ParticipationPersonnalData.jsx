@@ -179,13 +179,13 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       <h2 className="p-2">Personnal Data</h2>
       
       <div className="text-center flex flex-raw space-between justify-center gap-2">
-        <div className="border rounded-xl w-5  bg-purple-500">
+        <div className="border rounded-full w-7 h-7 bg-purple-500">
           1
         </div>
-        <div className="border rounded-xl w-5">
+        <div className="border rounded-full w-7 h-7">
           2
         </div>
-        <div className="border rounded-xl w-5">
+        <div className="border rounded-full w-7 h-7">
           3
         </div>
       </div>
