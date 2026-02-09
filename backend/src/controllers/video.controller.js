@@ -37,8 +37,8 @@ export const uploadVideo = async (req, res) => {
     const video = await createVideo(
       title, 
       youtube_url,
-      cover,
-      video_file_name
+      video_file_name,
+      cover
     );
 
     // on recup l'id de la vidéo crée, on va la renvoyer dans la response
