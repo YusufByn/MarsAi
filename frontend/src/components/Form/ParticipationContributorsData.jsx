@@ -30,15 +30,15 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
   const validateContributor = () => {
     const newErrors = {};
     
-    if (!currentContributor.gender) newErrors.gender = 'Le genre est requis';
-    if (!currentContributor.firstName?.trim()) newErrors.firstName = 'Le prénom est requis';
-    if (!currentContributor.lastName?.trim()) newErrors.lastName = 'Le nom est requis';
+    if (!currentContributor.gender) newErrors.gender = 'Gender is required';
+    if (!currentContributor.firstName?.trim()) newErrors.firstName = 'First name is required';
+    if (!currentContributor.lastName?.trim()) newErrors.lastName = 'Last name is required';
     if (!currentContributor.email?.trim()) {
-      newErrors.email = 'L\'email est requis';
+      newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentContributor.email)) {
-      newErrors.email = 'Email invalide';
+      newErrors.email = 'Invalid email';
     }
-    if (!currentContributor.productionRole?.trim()) newErrors.productionRole = 'Le rôle est requis';
+    if (!currentContributor.productionRole?.trim()) newErrors.productionRole = 'Role is required';
 
     return newErrors;
   };
@@ -90,7 +90,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
 
   const handleSave = () => {
     if (contributors.length === 0) {
-      setGlobalError('Vous devez ajouter au moins un contributeur');
+      setGlobalError('You must add at least one contributor');
       return;
     }
     setGlobalError('');
@@ -108,9 +108,9 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
 
   const getGenderLabel = (gender) => {
     switch(gender) {
-      case 'women': return 'Femme';
-      case 'man': return 'Homme';
-      case 'other': return 'Autre';
+      case 'women': return 'Woman';
+      case 'man': return 'Man';
+      case 'other': return 'Other';
       default: return '';
     }
   };
@@ -118,8 +118,8 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
   return (
     <div className="text-center">
       <div className="mb-4">
-        <h2 className="p-2 text-xl font-bold text-white">Contributeurs</h2>
-        <p className="text-gray-400 text-xs">Ajoutez tous les contributeurs du projet</p>
+        <h2 className="p-2 text-xl font-bold text-white">Contributors</h2>
+        <p className="text-gray-400 text-xs">Add all the contributors of the project</p>
       </div>
 
       {globalError && (
@@ -133,7 +133,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
         {contributors.length > 0 && (
           <div className="mb-4">
             <h3 className="text-md font-semibold text-white mb-2">
-              Contributeurs ajoutés ({contributors.length})
+              Added contributors ({contributors.length})
             </h3>
             <div className="grid grid-cols-1 gap-2 justify-items-center">
               {contributors.map((contributor, index) => (
@@ -146,7 +146,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                     type="button"
                     onClick={() => removeContributor(contributor.id)}
                     className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-500/20 hover:bg-red-500/40 rounded-lg transition-colors text-red-400 hover:text-red-300"
-                    title="Supprimer"
+                    title="Remove"
                   >
                     ✕
                   </button>
@@ -187,7 +187,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               className="w-60 bg-purple-600/20 hover:bg-purple-600/30 border-2 border-dashed border-purple-500/50 hover:border-purple-500 rounded-xl p-3 text-purple-300 hover:text-purple-200 transition-all flex items-center justify-center gap-2 font-medium text-sm"
             >
               <span className="text-xl">+</span>
-              Ajouter
+              Add
             </button>
           </div>
         )}
@@ -195,7 +195,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
         {/* Formulaire d'ajout */}
         {showForm && (
           <div className="grid grid-cols-1 justify-items-center m-2 gap-3">
-            <h3 className="text-md font-semibold text-white">Nouveau contributeur</h3>
+            <h3 className="text-md font-semibold text-white">New contributor</h3>
             
               {/* Gender */}
               <div className="w-60">
@@ -205,10 +205,10 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   onChange={handleChange}
                   className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.gender ? 'border-red-500' : 'border-white/10'}`}
                 >
-                  <option value="">Sélectionnez le genre</option>
-                  <option value="women">Femme</option>
-                  <option value="man">Homme</option>
-                  <option value="other">Autre</option>
+                  <option value="">Select gender</option>
+                  <option value="women">Woman</option>
+                  <option value="man">Man</option>
+                  <option value="other">Other</option>
                 </select>
                 {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
               </div>
@@ -221,7 +221,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   name="firstName"
                   value={currentContributor.firstName}
                   onChange={handleChange}
-                  placeholder="Prénom"
+                  placeholder="First Name"
                 />
                 {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
               </div>
@@ -234,7 +234,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   name="lastName"
                   value={currentContributor.lastName}
                   onChange={handleChange}
-                  placeholder="Nom"
+                  placeholder="Last Name"
                 />
                 {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
               </div>
@@ -247,7 +247,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   name="email"
                   value={currentContributor.email}
                   onChange={handleChange}
-                  placeholder="email@exemple.com"
+                  placeholder="email@example.com"
                 />
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
@@ -260,7 +260,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   name="productionRole"
                   value={currentContributor.productionRole}
                   onChange={handleChange}
-                  placeholder="Rôle (ex: Réalisateur)"
+                  placeholder="Role (e.g. Director)"
                 />
                 {errors.productionRole && <p className="text-red-500 text-xs mt-1">{errors.productionRole}</p>}
               </div>
@@ -272,14 +272,14 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   onClick={cancelAdd}
                   className="flex-1 bg-gray-700 hover:bg-gray-600 text-white border border-gray-600 rounded-xl p-1.5 text-sm transition-colors"
                 >
-                  Annuler
+                  Cancel
                 </button>
                 <button
                   type="button"
                   onClick={addContributor}
                   className="flex-1 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 rounded-xl p-1.5 text-sm transition-all font-medium"
                 >
-                  Ajouter
+                  Add
                 </button>
               </div>
           </div>
@@ -292,7 +292,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
             onClick={handleSave}
             className="bg-linear-to-r from-purple-500 to-pink-500 text-white border rounded-xl p-2 px-6 hover:from-purple-600 hover:to-pink-400 transition-all font-semibold text-sm"
           >
-            Enregistrer et continuer
+            Save and continue
           </button>
         </div>
       </section>

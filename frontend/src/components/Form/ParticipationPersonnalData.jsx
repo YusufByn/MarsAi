@@ -22,7 +22,7 @@ const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsD
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="relative bg-[#050505] border border-white/10 rounded-xl p-4 max-w-xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
         {/* Bouton de fermeture */}
         <button 
