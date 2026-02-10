@@ -10,13 +10,14 @@ const folders = {
     srt: "uploads/srt"
 }
 
-// si dossier n'existe, on le créer
+// si dossier n'existe pas, on le crée
 const ensureDir = (dir) => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, {
         recursive : true
     });
 };
 
+// la ou l'on va stocker les fichiers
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         let dir = folders.video;
