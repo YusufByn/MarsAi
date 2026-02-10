@@ -175,11 +175,16 @@ const addContributors = async (req, res) => {
         
         // Insérer les contributeurs
         for (const contributor of contributors) {
+            // Supporter les deux formats: frontend (firstName/lastName) et backend (name/last_name)
+            const name = contributor.name || contributor.firstName;
+            const lastName = contributor.last_name || contributor.lastName;
+            const productionRole = contributor.production_role || contributor.productionRole;
+            
             // Validation des champs obligatoires
-            if (!contributor.name || !contributor.last_name) {
+            if (!name || !lastName) {
                 return res.status(400).json({
                     success: false,
-                    error: 'Champs name et last_name obligatoires pour chaque contributeur',
+                    error: 'Champs firstName et lastName obligatoires pour chaque contributeur',
                     field: 'contributors'
                 });
             }
@@ -189,11 +194,11 @@ const addContributors = async (req, res) => {
                  VALUES (?, ?, ?, ?, ?, ?)`,
                 [
                     id,
-                    contributor.name,
-                    contributor.last_name,
+                    name,
+                    lastName,
                     contributor.gender || null,
                     contributor.email || null,
-                    contributor.production_role || null
+                    productionRole || null
                 ]
             );
         }

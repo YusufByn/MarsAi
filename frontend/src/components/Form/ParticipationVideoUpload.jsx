@@ -564,17 +564,22 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           </div>
 
           {/* reCaptcha */}
-          <div className="w-60">
-            <ReCAPTCHA 
-              sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
-              ref={captchaRef}
-              onChange={(token) => setRecaptchaToken(token)}
-              onExpired={() => setRecaptchaToken(null)}
-              theme="dark"
-            />
-            {errors.recaptcha && (
-              <p className="text-red-500 text-xs mt-1">{errors.recaptcha}</p>
-            )}
+          <div className="w-full max-w-2xl mt-4">
+            <div className="border border-white/10 rounded-xl p-6 bg-black/20 flex flex-col items-center gap-3">
+              <span className="text-sm text-gray-300">Vérification de sécurité</span>
+              <div className="flex justify-center">
+                <ReCAPTCHA 
+                  sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
+                  ref={captchaRef}
+                  onChange={(token) => setRecaptchaToken(token)}
+                  onExpired={() => setRecaptchaToken(null)}
+                  theme="dark"
+                />
+              </div>
+              {errors.recaptcha && (
+                <p className="text-red-500 text-xs">{errors.recaptcha}</p>
+              )}
+            </div>
           </div>
 
           {/* Buttons */}

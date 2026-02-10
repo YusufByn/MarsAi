@@ -1,5 +1,5 @@
 import { Router} from 'express';
-// import videoController from '../controllers/videoController.js';
+import videoControllerFull from '../controllers/videoController.js';
 import videoController from '../controllers/video.controller.js';
 // import uploadController from '../controllers/upload.controller.js';
 import  upload  from '../middlewares/upload.middleware.js';
@@ -27,8 +27,10 @@ const router = Router();
 
 // router.put('/videos/:id/upload-subtitles', ...upload.sub, uploadController.uploadSubtitles);
 
-// router.post('/videos/:id/contributors', videoController.addContributors);
+// Route pour ajouter des contributeurs à une vidéo
+router.post('/videos/:id/contributors', videoControllerFull.addContributors);
 
-// router.post('/videos/:id/social-media', videoController.addSocialMedia);
+// Route pour ajouter des réseaux sociaux à une vidéo
+router.post('/videos/:id/social-media', videoControllerFull.addSocialMedia);
 
 export default router;
