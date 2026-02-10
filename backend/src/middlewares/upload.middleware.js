@@ -6,7 +6,8 @@ import fs from 'fs';
 const folders = {
     video: "uploads/videos",
     cover: "uploads/covers",
-    still: "uploads/stills"
+    still: "uploads/stills",
+    srt: "uploads/srt"
 }
 
 // si dossier n'existe, on le créer
@@ -22,6 +23,7 @@ const storage = multer.diskStorage({
 
         if (file.fieldname === "cover") dir = folders.cover;
         if (file.fieldname === "stills") dir = folders.still;
+        if (file.fieldname === "srt") dir = folders.srt;
 
         ensureDir(dir);
         cb(null, dir);
@@ -36,6 +38,7 @@ const fileFilter = (req, file, cb) => {
         video: ["video/mp4", "video/quicktime", "video/x-matroska", "video/webm", "video/mov"],
         cover: ["image/jpeg", "image/png", "image/webp", "image/jpg"],
         stills: ["image/jpeg", "image/png", "image/webp", "image/jpg"],
+        srt: ["text/plain", "application/srt", "application/x-subrip"],
     };
 
     if (allowedTypes[file.fieldname]?.includes(file.mimetype)) { 
@@ -54,4 +57,5 @@ export const upload = multer({
     { name: "video", maxCount: 1 },
     { name: "cover", maxCount: 1 },
     { name: "stills", maxCount: 3 },
+    { name: "srt", maxCount: 1 },
 ]);
