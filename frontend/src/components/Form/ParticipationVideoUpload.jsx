@@ -178,10 +178,12 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     
     if (!file) {
       setErrors(prev => ({ ...prev, [name]: null }));
-      setFormDataProp({ ...formData, [name]: null });
       // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
         setVideoDuration(null);
+        setFormDataProp({ ...formData, [name]: null, duration: null });
+      } else {
+        setFormDataProp({ ...formData, [name]: null });
       }
       return;
     }
@@ -197,12 +199,14 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     if (error) {
       // Afficher l'erreur et ne pas sauvegarder le fichier
       setErrors(prev => ({ ...prev, [name]: error }));
-      setFormDataProp({ ...formData, [name]: null });
       // Réinitialiser l'input
       e.target.value = '';
       // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
         setVideoDuration(null);
+        setFormDataProp({ ...formData, [name]: null, duration: null });
+      } else {
+        setFormDataProp({ ...formData, [name]: null });
       }
       return;
     }
@@ -222,6 +226,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       video.onloadedmetadata = function() {
         window.URL.revokeObjectURL(video.src);
         const duration = video.duration;
+        const durationInSeconds = Math.floor(duration);
         
         // Vérifier la durée maximale (2m30 = 150 secondes)
         const maxDuration = 150; // 2 minutes 30 secondes
@@ -244,14 +249,15 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             ...prev, 
             videoFile: `Video too long (${formattedDuration}). Maximum duration: 2:30` 
           }));
-          setFormDataProp({ ...formData, videoFile: null });
+          setFormDataProp({ ...formData, videoFile: null, duration: null });
           setVideoDuration(null);
           e.target.value = ''; // Réinitialiser l'input
           return;
         }
         
-        // Durée valide
+        // Durée valide - stocker en secondes pour la DB et en format lisible pour l'affichage
         setVideoDuration(formattedDuration);
+        setFormDataProp({ ...formData, videoFile: file, duration: durationInSeconds });
       };
       
       video.onerror = function() {

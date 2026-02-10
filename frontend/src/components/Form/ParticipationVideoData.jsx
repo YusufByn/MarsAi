@@ -241,8 +241,8 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
                   className="w-4 h-4"
                   type="radio"
                   name="classification"
-                  value="full_ai"
-                  checked={formData.classification === 'full_ai'}
+                  value="ia"
+                  checked={formData.classification === 'ia'}
                   onChange={handleChange}
                 />
                 <span>Full AI</span>
