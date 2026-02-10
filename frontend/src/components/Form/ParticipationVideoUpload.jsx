@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReCAPTCHA from "react-google-recaptcha";
+import validateRecaptcha from '../../../../shared/validators/recaptcha.validator.js';
 
 const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const navigate = useNavigate();
@@ -28,10 +30,17 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     still3: null,
     videoFile: null,
     subtitle: null,
+    recaptcha: null,
   });
 
   // État pour la durée de la vidéo
   const [videoDuration, setVideoDuration] = useState(null);
+
+  // État pour le token reCAPTCHA
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+
+  // Référence pour le composant reCAPTCHA
+  const captchaRef = useRef(null);
 
   /**
    * Validation d'un fichier image
@@ -295,6 +304,51 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     };
   }, [previews]);
 
+  /**
+   * Gestion de la soumission du formulaire
+   */
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Récupérer le token reCAPTCHA
+    const token = captchaRef.current?.getValue();
+    
+    // Valider le reCAPTCHA
+    const recaptchaError = validateRecaptcha(token);
+    if (recaptchaError) {
+      setErrors(prev => ({ ...prev, recaptcha: recaptchaError }));
+      return;
+    }
+    
+    // Réinitialiser l'erreur reCAPTCHA si tout est OK
+    setErrors(prev => ({ ...prev, recaptcha: null }));
+    
+    // Vérifier les champs obligatoires
+    if (!formData.videoFile) {
+      alert("Please upload a video");
+      return;
+    }
+    
+    if (!formData.coverImage) {
+      alert("Please upload a cover image");
+      return;
+    }
+    
+    if (!formData.rightsAccepted) {
+      alert("Please accept the rights");
+      return;
+    }
+    
+    // TODO : Envoyer les données au backend
+    console.log("✅ Form is valid!");
+    console.log("reCAPTCHA Token:", token);
+    console.log("Form data:", formData);
+    
+    // Reset du reCAPTCHA après soumission
+    captchaRef.current?.reset();
+    setRecaptchaToken(null);
+  };
+
   return (
     <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center">
       <h2 className="p-2">Video Upload</h2>
@@ -312,7 +366,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       </div>
 
       <section className="FormContainer">
-        <form method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
+        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
 
           {/* Video Upload */}
           <div className="w-60">
@@ -509,6 +563,20 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             </div>
           </div>
 
+          {/* reCaptcha */}
+          <div className="w-60">
+            <ReCAPTCHA 
+              sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
+              ref={captchaRef}
+              onChange={(token) => setRecaptchaToken(token)}
+              onExpired={() => setRecaptchaToken(null)}
+              theme="dark"
+            />
+            {errors.recaptcha && (
+              <p className="text-red-500 text-xs mt-1">{errors.recaptcha}</p>
+            )}
+          </div>
+
           {/* Buttons */}
           <div className="flex gap-4 m-5 p-1 place-self-center">
             <button
@@ -519,7 +587,12 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             </button>
             <button
               type="submit"
-              className="bg-linear-to-r from-purple-700 to-pink-500 border rounded-xl p-2 px-8">
+              disabled={!recaptchaToken}
+              className={`border rounded-xl p-2 px-8 transition-colors ${
+                recaptchaToken 
+                  ? 'bg-linear-to-r from-purple-700 to-pink-500 hover:from-purple-600 hover:to-pink-400' 
+                  : 'bg-gray-600 cursor-not-allowed opacity-50'
+              }`}>
               Submit
             </button>
           </div>

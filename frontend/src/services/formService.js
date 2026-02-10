@@ -23,6 +23,7 @@ import {
 // Fonction de validation des numéros de téléphone internationaux
 import { isValidPhoneNumber } from 'react-phone-number-input';
 
+
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
@@ -409,7 +410,7 @@ function validateCreativeResume(value) {
 /**
  * Valide la classification
  * 
- * @param {string} value - La classification ("hybrid" ou "full_ai")
+ * @param {string} value - La classification ("hybrid" ou "ia")
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateClassification(value) {
@@ -417,7 +418,7 @@ function validateClassification(value) {
         return "Classification is required";
     }
     
-    if (!["hybrid", "full_ai"].includes(value)) {
+    if (!["hybrid", "ia"].includes(value)) {
         return "Invalid classification";
     }
     
@@ -463,6 +464,7 @@ function validateTags(value) {
     return null;
 };
 
+    
 // ============================================
 // EXPORTS
 // ============================================
@@ -494,6 +496,6 @@ export {
     validateSynopsis,         // Validation du synopsis (max 500 caractères)
     validateTechResume,       // Validation du résumé technique (max 500 caractères)
     validateCreativeResume,   // Validation du résumé créatif (max 500 caractères)
-    validateClassification,   // Validation de la classification (hybrid/full_ai)
+    validateClassification,   // Validation de la classification (hybrid/ia)
     validateTags              // Validation des tags (séparés par virgules)
 };
