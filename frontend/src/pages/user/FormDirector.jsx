@@ -23,6 +23,7 @@ const FormDirector = () => {
       address: '',
       acquisitionSource: '',
       ageVerificator: false,
+      contributors: [], // Ajout des contributeurs
     },
     step2: {
       title: '',
@@ -34,6 +35,7 @@ const FormDirector = () => {
       creativeResume: '',
       classification: '',
       tags: [],
+      socialMedia: [], // Ajout des réseaux sociaux si nécessaire
     },
     step3: {
       coverImage: null,
@@ -81,6 +83,7 @@ const FormDirector = () => {
               setEtape={setEtape}
               formData={formData.step3}
               setFormData={(data) => updateStepData('step3', data)}
+              allFormData={formData}
             />
           </div>
         )}

@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReCAPTCHA from "react-google-recaptcha";
 import validateRecaptcha from '../../../../shared/validators/recaptcha.validator.js';
+import { submitCompleteForm } from '../../services/api.service.js';
 
-const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataProp}) => {
+const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataProp, allFormData}) => {
   const navigate = useNavigate();
 
   // États locaux pour les previews (URLs temporaires)
@@ -41,6 +42,11 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
   // Référence pour le composant reCAPTCHA
   const captchaRef = useRef(null);
+
+  // État pour la soumission du formulaire
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   /**
    * Validation d'un fichier image
@@ -310,6 +316,10 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Réinitialiser les états
+    setSubmitError(null);
+    setSubmitSuccess(false);
+    
     // Récupérer le token reCAPTCHA
     const token = captchaRef.current?.getValue();
     
@@ -325,28 +335,55 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     
     // Vérifier les champs obligatoires
     if (!formData.videoFile) {
-      alert("Please upload a video");
+      setSubmitError("Please upload a video");
       return;
     }
     
     if (!formData.coverImage) {
-      alert("Please upload a cover image");
+      setSubmitError("Please upload a cover image");
       return;
     }
     
     if (!formData.rightsAccepted) {
-      alert("Please accept the rights");
+      setSubmitError("Please accept the rights");
       return;
     }
     
-    // TODO : Envoyer les données au backend
-    console.log("✅ Form is valid!");
-    console.log("reCAPTCHA Token:", token);
-    console.log("Form data:", formData);
+    // Démarrer la soumission
+    setIsSubmitting(true);
     
-    // Reset du reCAPTCHA après soumission
-    captchaRef.current?.reset();
-    setRecaptchaToken(null);
+    try {
+      console.log("📤 Soumission du formulaire complet...");
+      console.log("Form data:", allFormData);
+      
+      // Envoyer toutes les données au backend
+      const result = await submitCompleteForm(allFormData, token);
+      
+      console.log("✅ Soumission réussie!", result);
+      
+      // Afficher le succès
+      setSubmitSuccess(true);
+      
+      // Réinitialiser le reCAPTCHA
+      captchaRef.current?.reset();
+      setRecaptchaToken(null);
+      
+      // Rediriger après 2 secondes
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+      
+    } catch (error) {
+      console.error("❌ Erreur lors de la soumission:", error);
+      setSubmitError(error.message || "An error occurred while submitting the form. Please try again.");
+      
+      // Réinitialiser le reCAPTCHA en cas d'erreur
+      captchaRef.current?.reset();
+      setRecaptchaToken(null);
+      
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -577,23 +614,53 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             )}
           </div>
 
+          {/* Messages de succès et d'erreur */}
+          {submitSuccess && (
+            <div className="w-60 mx-auto mb-3 p-3 bg-green-500/20 border border-green-500 rounded-xl text-green-400 text-sm text-center">
+              ✅ Your video has been successfully submitted!
+              <br />
+              <span className="text-xs">Redirecting...</span>
+            </div>
+          )}
+          
+          {submitError && (
+            <div className="w-60 mx-auto mb-3 p-3 bg-red-500/20 border border-red-500 rounded-xl text-red-400 text-sm text-center">
+              ❌ {submitError}
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="flex gap-4 m-5 p-1 place-self-center">
             <button
               type="button"
               onClick={() => setEtape(2)}
-              className="bg-gray-700 hover:bg-gray-600 border rounded-xl p-2 px-8 transition-colors">
+              disabled={isSubmitting}
+              className={`border rounded-xl p-2 px-8 transition-colors ${
+                isSubmitting 
+                  ? 'bg-gray-600 cursor-not-allowed opacity-50' 
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}>
               Back
             </button>
             <button
               type="submit"
-              disabled={!recaptchaToken}
+              disabled={!recaptchaToken || isSubmitting}
               className={`border rounded-xl p-2 px-8 transition-colors ${
-                recaptchaToken 
+                recaptchaToken && !isSubmitting
                   ? 'bg-linear-to-r from-purple-700 to-pink-500 hover:from-purple-600 hover:to-pink-400' 
                   : 'bg-gray-600 cursor-not-allowed opacity-50'
               }`}>
-              Submit
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Submitting...
+                </span>
+              ) : (
+                'Submit'
+              )}
             </button>
           </div>
 

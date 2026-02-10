@@ -1,34 +1,23 @@
-import { Router} from 'express';
-// import videoController from '../controllers/videoController.js';
-import videoController from '../controllers/video.controller.js';
-// import uploadController from '../controllers/upload.controller.js';
-import  upload  from '../middlewares/upload.middleware.js';
+import { Router } from 'express';
+import videoControllerFull from '../controllers/videoController.js';
+import uploadController from '../controllers/upload.controller.js';
+import upload from '../middlewares/upload.middleware.js';
 
 const router = Router();
-// const uploadController = require('../controllers/uploadController');
 
-// router.post(
-//     '/videos',
-//     ...upload.video,
-//     (req, res, next) => {
-//       if (req.file) req.body.video_file_name = req.file.filename;
-//       next();
-//     },
-//     videoController.create
-//   );
+// Route pour créer une vidéo (métadonnées uniquement, sans fichiers)
+router.post('/videos', videoControllerFull.createVideo);
 
-// router.post('/videos', videoController.createVideo);
+// Routes pour uploader les fichiers séparément
+router.put('/videos/:id/upload-video', ...upload.video, uploadController.uploadVideoFile);
+router.put('/videos/:id/upload-cover', ...upload.cover, uploadController.uploadCover);
+router.put('/videos/:id/upload-stills', ...upload.still, uploadController.uploadStills);
+router.put('/videos/:id/upload-subtitles', ...upload.sub, uploadController.uploadSubtitles);
 
-// router.put('/videos/:id/upload-video', ...upload.video, uploadController.uploadVideoFile);:
+// Route pour ajouter des contributeurs à une vidéo
+router.post('/videos/:id/contributors', videoControllerFull.addContributors);
 
-// router.put('/videos/:id/upload-cover', ...upload.cover, uploadController.uploadCover);
-
-// router.put('/videos/:id/upload-stills', ...upload.still, uploadController.uploadStills);
-
-// router.put('/videos/:id/upload-subtitles', ...upload.sub, uploadController.uploadSubtitles);
-
-// router.post('/videos/:id/contributors', videoController.addContributors);
-
-// router.post('/videos/:id/social-media', videoController.addSocialMedia);
+// Route pour ajouter des réseaux sociaux à une vidéo
+router.post('/videos/:id/social-media', videoControllerFull.addSocialMedia);
 
 export default router;
