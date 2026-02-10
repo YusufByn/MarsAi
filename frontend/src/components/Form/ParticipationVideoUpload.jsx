@@ -308,20 +308,6 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       <section className="FormContainer">
         <form method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
 
-          {/* YouTube URL */}
-          <div className="w-60">
-            <label className="block text-sm mb-2">YouTube URL</label>
-            <input 
-              className="bg-black/50 border rounded-xl p-2 w-60"
-              type="text"
-              name="youtubeUrl"
-              id="youtubeUrl"
-              value={formData.youtubeUrl}
-              onChange={handleChange}
-              placeholder="YouTube URL"
-            />
-          </div>
-
           {/* Video Upload */}
           <div className="w-60">
             <label className="block text-sm mb-2">Upload Video (max 200MB, max duration 2m30)</label>

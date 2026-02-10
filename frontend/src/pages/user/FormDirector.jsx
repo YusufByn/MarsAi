@@ -40,7 +40,6 @@ const FormDirector = () => {
       still1: null,
       still2: null,
       still3: null,
-      youtubeUrl: '',
       videoFile: null,
       subtitle: null,
       rightsAccepted: false,
