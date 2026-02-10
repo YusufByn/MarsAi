@@ -9,6 +9,19 @@ export const memoModel = {
     return rows[0];
   },
 
+  async getAllByUser(userId) {
+    const [rows] = await pool.execute(
+      `SELECT sm.id, sm.user_id, sm.video_id, sm.rating, sm.statut, sm.playlist, sm.comment, sm.created_at, sm.updated_at,
+              v.title, v.cover, v.duration, v.classification
+       FROM selector_memo sm
+       LEFT JOIN video v ON sm.video_id = v.id
+       WHERE sm.user_id = ?
+       ORDER BY sm.updated_at DESC`,
+      [userId]
+    );
+    return rows;
+  },
+
   async upsertMemo({ userId, videoId, statut, playlist, comment }) {
     const existing = await this.getByUserAndVideo(userId, videoId);
 

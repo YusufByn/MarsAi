@@ -25,6 +25,21 @@ export const memoController = {
     }
   },
 
+  // ici c'est la qu'on va recup tous les memos de l'utilisateur
+  async getAllByUser(req, res, next) {
+    try {
+      const { userId } = req.params;
+      const memos = await memoModel.getAllByUser(userId);
+
+      res.json({
+        success: true,
+        data: memos,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   // ici c'est la qu'on va enregistrer le memo de l'utilisateur pour la video
   async upsert(req, res, next) {
     try {

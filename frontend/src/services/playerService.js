@@ -1,8 +1,8 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export const playerService = {
-  async getVideoFeed(limit = 10) {
-    const response = await fetch(`${API_URL}/api/videos?limit=${limit}`);
+  async getVideoFeed(userId, limit = 10) {
+    const response = await fetch(`${API_URL}/api/player/videos?userId=${userId}&limit=${limit}`);
     if (!response.ok) {
       throw new Error('Erreur lors du chargement des videos');
     }

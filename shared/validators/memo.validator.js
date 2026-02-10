@@ -17,7 +17,7 @@ const memoSchema = z
   .object({
     user_id: z.coerce.number().int().positive(),
     video_id: z.coerce.number().int().positive(),
-    statut: z.enum(['liked', 'rejected', 'discuss']).optional(),
+    statut: z.enum(['yes', 'no', 'discuss']).optional(),
     playlist: playlistSchema.optional(),
     comment: z.string().max(2000).optional(),
   })

@@ -1,9 +1,7 @@
 const API_URL = 'http://localhost:4000/api/newsletter';
 
 export const newsletterService = {
-  /**
-   * S'inscrire à la newsletter
-   */
+//la c'ets pour s'inscrire
   async subscribe(email) {
     try {
       const response = await fetch(`${API_URL}/subscribe`, {
@@ -26,9 +24,7 @@ export const newsletterService = {
     }
   },
 
-  /**
-   * Se désabonner de la newsletter
-   */
+//Systeme de désabonnement
   async unsubscribe(email) {
     try {
       const response = await fetch(`${API_URL}/unsubscribe`, {
@@ -51,9 +47,7 @@ export const newsletterService = {
     }
   },
 
-  /**
-   * Récupérer le nombre d'abonnés
-   */
+  // ici c'est pour avoir l'ensemble des abonnés 
   async getCount() {
     try {
       const response = await fetch(`${API_URL}/count`);

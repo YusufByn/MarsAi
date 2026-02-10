@@ -12,16 +12,16 @@ import { requireRole } from '../middlewares/requireRole.middleware.js';
 const router = Router();
 
 // route publiques 
-// route pour s'abonner à la newsletter
+// route pour s'abonner
 router.post('/subscribe', validateSubscribe, newsletterController.subscribe);
-// route pour se désabonner de la newsletter
+// route pour se désabonner
 router.post('/unsubscribe', validateUnsubscribe, newsletterController.unsubscribe);
-// route pour compter les abonnés actifs
+// route pour compter kes inscrit
 router.get('/count', newsletterController.getCount);
 
 // routes protégées
 
-// route pour récupérer tous les abonnées actifs
+// route pour récupérer tous les abonnées actifs 
 router.get('/', checkAuth, requireRole('admin', 'superadmin'), newsletterController.getAllActive);
 // route pour prévisualiser le nombre de destinataires par type
 router.post('/campaign/preview', checkAuth, requireRole('admin', 'superadmin'), validatePreviewRecipients, newsletterController.previewRecipients);

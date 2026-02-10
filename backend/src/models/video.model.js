@@ -2,6 +2,26 @@ import { pool } from '../db/index.js';
 
 export const videoModel = {
 
+  /**
+   * Recuperer les videos pour le player, en excluant celles deja notees par le selecteur
+   * @param {number} userId - ID du selecteur
+   * @returns {Promise<Array>} Liste des videos non encore evaluees
+   */
+  async findForPlayer(userId) {
+    const [rows] = await pool.execute(
+      `SELECT v.id, v.title, v.title_en, v.synopsis, v.video_file_name, v.cover,
+              v.duration, v.classification, v.email, v.realisator_name, v.realisator_lastname
+       FROM video v
+       WHERE v.id NOT IN (
+         SELECT sm.video_id FROM selector_memo sm WHERE sm.user_id = ?
+       )
+       -- FUTURE: AND v.id IN (SELECT a.video_id FROM assignation a WHERE a.user_id = ?)
+       ORDER BY v.created_at DESC`,
+      [userId]
+    );
+    return rows;
+  },
+
   async findAll({ limit = 10 }) {
     const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 50) : 10;
     const [rows] = await pool.execute(

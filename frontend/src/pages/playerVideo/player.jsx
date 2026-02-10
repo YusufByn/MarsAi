@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ActionButtons from './selectorOption/ActionButtons';
 import RatingModal from './selectorOption/RatingModal';
@@ -9,6 +10,7 @@ import { playerService } from '../../services/playerService';
 
 const Player = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [videos, setVideos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,19 +27,44 @@ const Player = () => {
   const [statuses, setStatuses] = useState({});
   const [saving, setSaving] = useState(false);
 
+  // États pour les notifications et feedback visuel
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+  const [actionFeedback, setActionFeedback] = useState({ show: false, type: '' });
+
   const containerRef = useRef(null);
   const videosRef = useRef({});
   const touchStartY = useRef(0);
   const observerRef = useRef(null);
   const tabCountRef = useRef(0);
   const tabTimerRef = useRef(null);
-  const userId = 1; // À remplacer par l'ID utilisateur réel
+
+  // Récupérer l'ID utilisateur réel depuis localStorage
+  const [userId, setUserId] = useState(null);
 
   // URL du backend
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+  // Charger l'utilisateur connecté
+  useEffect(() => {
+    const storedUser = localStorage.getItem('auth_user');
+    if (storedUser) {
+      const authUser = JSON.parse(storedUser);
+      setUserId(authUser.id);
+      console.log('[PLAYER] User ID:', authUser.id);
+    } else {
+      console.log('[PLAYER] No user found in localStorage');
+    }
+  }, []);
+
   // Charger les ratings et memos existants (fonction déclarée AVANT useEffect)
-  const loadRatingsAndMemos = async (videoList) => {
+  const loadRatingsAndMemos = async (videoList, userIdToUse) => {
+    if (!userIdToUse) {
+      console.log('[PLAYER] Cannot load ratings/memos: userId not available yet');
+      return;
+    }
+
+    console.log('[PLAYER] Loading ratings/memos for user:', userIdToUse);
+
     try {
       const ratingsData = {};
       const memosData = {};
@@ -46,7 +73,7 @@ const Player = () => {
       for (const video of videoList) {
         try {
           // Charger le memo
-          const memoResponse = await playerService.getMemo(video.id, userId);
+          const memoResponse = await playerService.getMemo(video.id, userIdToUse);
           if (memoResponse?.data) {
             memosData[video.id] = memoResponse.data.comment || '';
             statusesData[video.id] = memoResponse.data.statut || 'no';
@@ -55,11 +82,12 @@ const Player = () => {
           }
 
           // Charger le rating
-          const ratingResponse = await playerService.getRating(video.id, userId);
+          const ratingResponse = await playerService.getRating(video.id, userIdToUse);
           if (ratingResponse?.data?.rating) {
             ratingsData[video.id] = Number(ratingResponse.data.rating);
           }
         } catch (err) {
+          console.log('[PLAYER] Error loading data for video', video.id, err.message);
           statusesData[video.id] = 'no';
         }
       }
@@ -67,46 +95,55 @@ const Player = () => {
       setRatings(ratingsData);
       setMemos(memosData);
       setStatuses(statusesData);
+      console.log('[PLAYER] Loaded ratings/memos:', { ratingsData, statusesData });
     } catch (error) {
-      console.error('Erreur chargement ratings/memos:', error);
+      console.error('[PLAYER ERROR] Loading ratings/memos:', error);
     }
   };
 
   // Récupérer les vidéos depuis le backend
   useEffect(() => {
+    // Ne pas charger les vidéos tant qu'on n'a pas le userId
+    if (!userId) return;
+
     const fetchVideos = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/player/videos`);
+        console.log('[PLAYER] Fetching videos for user:', userId);
+        const response = await fetch(`${API_URL}/api/player/videos?userId=${userId}`);
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Erreur HTTP:', response.status, errorText);
+          console.error('[PLAYER ERROR] HTTP:', response.status, errorText);
           throw new Error(`Erreur HTTP: ${response.status}`);
         }
 
         const result = await response.json();
         const videos = result.data || result;
 
-        // Construire l'URL complète pour chaque vidéo
+        console.log('[PLAYER] Videos loaded:', videos.length);
+
+        // Construire l'URL complete pour chaque video
         const videosWithFullUrl = Array.isArray(videos) ? videos.map(video => ({
           ...video,
           video_url: video.video_url
             ? `${API_URL}${video.video_url}`
-            : video.filename
-              ? `${API_URL}/upload/${video.filename}`
-              : null
+            : video.video_file_name
+              ? `${API_URL}/upload/${video.video_file_name}`
+              : null,
+          author: video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' '),
+          description: video.description || video.synopsis || '',
         })) : [];
 
         setVideos(videosWithFullUrl);
 
-        // Charger les ratings et memos pour chaque vidéo
-        if (videosWithFullUrl.length > 0) {
-          await loadRatingsAndMemos(videosWithFullUrl);
+        // Charger les ratings et memos pour chaque vidéo (si userId disponible)
+        if (videosWithFullUrl.length > 0 && userId) {
+          await loadRatingsAndMemos(videosWithFullUrl, userId);
         }
 
         setIsLoading(false);
       } catch (error) {
-        console.error('Erreur chargement vidéos:', error);
+        console.error('[PLAYER ERROR] Loading videos:', error);
         setIsLoading(false);
         setVideos([]);
       }
@@ -192,7 +229,10 @@ const Player = () => {
   // Reset tab count quand on change de vidéo
   useEffect(() => {
     tabCountRef.current = 0;
-  }, [currentIndex]);
+    if (videos[currentIndex]) {
+      console.log('[PLAYER] CurrentIndex changed to:', currentIndex, 'Video ID:', videos[currentIndex].id);
+    }
+  }, [currentIndex, videos]);
 
   // Intersection Observer pour détecter quelle vidéo est visible
   useEffect(() => {
@@ -205,8 +245,10 @@ const Player = () => {
           if (!videoElement) return;
 
           const index = parseInt(entry.target.dataset.index);
+          const videoId = videos[index]?.id;
 
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+            console.log('[PLAYER] Video visible - Index:', index, 'ID:', videoId);
             setCurrentIndex(index);
             const playPromise = videoElement.play();
             if (playPromise !== undefined) {
@@ -239,6 +281,22 @@ const Player = () => {
     };
   }, [videos]);
 
+  // Verifie si la video courante a un statut avant de permettre la navigation
+  const canNavigate = () => {
+    const currentVideoId = videos[currentIndex]?.id;
+    if (!currentVideoId) return true;
+    const status = statuses[currentVideoId];
+    return status && status !== undefined;
+  };
+
+  // Etat pour l'indicateur "choisissez un statut"
+  const [showStatusWarning, setShowStatusWarning] = useState(false);
+
+  const showStatusRequired = () => {
+    setShowStatusWarning(true);
+    setTimeout(() => setShowStatusWarning(false), 2000);
+  };
+
   // Gestion du swipe tactile
   const handleTouchStart = (e) => {
     touchStartY.current = e.touches[0].clientY;
@@ -249,7 +307,12 @@ const Player = () => {
     const diff = touchStartY.current - touchEndY;
 
     if (Math.abs(diff) > 50) {
+      // Bloquer le swipe vers la video suivante si pas de statut
       if (diff > 0 && currentIndex < videos.length - 1) {
+        if (!canNavigate()) {
+          showStatusRequired();
+          return;
+        }
         goToVideo(currentIndex + 1);
       } else if (diff < 0 && currentIndex > 0) {
         goToVideo(currentIndex - 1);
@@ -258,11 +321,48 @@ const Player = () => {
   };
 
   const goToVideo = (index) => {
+    // Bloquer la navigation vers l'avant si pas de statut sur la video courante
+    if (index > currentIndex && !canNavigate()) {
+      showStatusRequired();
+      return;
+    }
     const container = containerRef.current;
     container.scrollTo({
       top: index * window.innerHeight,
       behavior: 'smooth',
     });
+  };
+
+  // Afficher une notification avec feedback visuel
+  const showNotification = (message, type = 'success') => {
+    console.log('[NOTIFICATION]', message, type);
+
+    // Afficher le feedback visuel immédiat (grande icône au centre)
+    setActionFeedback({ show: true, type });
+
+    // Afficher la notification toast
+    setNotification({ show: true, message, type });
+
+    // Masquer le feedback visuel après 800ms
+    setTimeout(() => {
+      setActionFeedback({ show: false, type: '' });
+    }, 800);
+
+    // Masquer la notification après 2500ms
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: 'success' });
+    }, 2500);
+  };
+
+  // Passer à la vidéo suivante
+  const goToNextVideo = () => {
+    if (currentIndex < videos.length - 1) {
+      setTimeout(() => {
+        goToVideo(currentIndex + 1);
+      }, 1000);
+    } else {
+      showNotification('Derniere video atteinte', 'success');
+    }
   };
 
   // Toggle play/pause
@@ -283,6 +383,10 @@ const Player = () => {
 
   const handleVideoEnded = (index) => {
     if (index < videos.length - 1) {
+      if (!canNavigate()) {
+        showStatusRequired();
+        return;
+      }
       goToVideo(index + 1);
     }
   };
@@ -301,7 +405,13 @@ const Player = () => {
   // Gestion du clic sur les boutons de statut
   const handleStatusClick = async (newStatus) => {
     const videoId = videos[currentIndex]?.id;
-    if (!videoId) return;
+    console.log('[PLAYER] handleStatusClick - currentIndex:', currentIndex, 'videoId:', videoId, 'status:', newStatus);
+
+    if (!videoId || !userId) {
+      console.error('[PLAYER ERROR] Missing videoId or userId', { videoId, userId, currentIndex });
+      showNotification('Erreur: utilisateur non connecte', 'error');
+      return;
+    }
 
     // Si "Oui" est cliqué, ouvrir le modal de notation
     if (newStatus === 'yes') {
@@ -309,32 +419,58 @@ const Player = () => {
       return;
     }
 
-    // Sinon, sauvegarder directement le statut
+    // Mettre à jour l'état immédiatement pour feedback visuel
+    const oldStatus = statuses[videoId];
     setStatuses(prev => ({ ...prev, [videoId]: newStatus }));
 
     try {
-      // Si "À discuter", ajouter à la playlist
-      if (newStatus === 'discuss') {
-        await playerService.togglePlaylist(videoId, userId, true);
-      }
-
+      // Sauvegarder le memo avec playlist si "À discuter"
       await playerService.saveMemo({
         user_id: userId,
         video_id: videoId,
         statut: newStatus,
+        playlist: newStatus === 'discuss' ? 1 : 0,
         comment: memos[videoId] || '',
       });
+
+      console.log('[PLAYER] Status saved:', newStatus);
+
+      // Afficher message de succès selon le statut
+      if (newStatus === 'no') {
+        showNotification('Video rejetee', 'error');
+      } else if (newStatus === 'discuss') {
+        showNotification('Ajoutee a discuter', 'success');
+      }
+
+      // Passer à la vidéo suivante
+      goToNextVideo();
     } catch (error) {
-      console.error('Erreur sauvegarde status:', error);
+      console.error('[PLAYER ERROR] Saving status:', error);
+      showNotification('Erreur lors de la sauvegarde', 'error');
+      // Remettre l'ancien statut en cas d'erreur
+      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || 'no' }));
     }
   };
 
   // Sauvegarder la notation depuis le modal
   const handleSaveRating = async (rating) => {
     const videoId = videos[currentIndex]?.id;
-    if (!videoId) return;
+    if (!videoId || !userId) {
+      console.error('[PLAYER ERROR] Missing videoId or userId');
+      showNotification('Erreur: utilisateur non connecte', 'error');
+      return;
+    }
 
     setSaving(true);
+
+    // Sauvegarder les anciens états
+    const oldRating = ratings[videoId];
+    const oldStatus = statuses[videoId];
+
+    // Mettre à jour les états immédiatement pour feedback visuel
+    setRatings(prev => ({ ...prev, [videoId]: rating }));
+    setStatuses(prev => ({ ...prev, [videoId]: 'yes' }));
+
     try {
       // Sauvegarder le rating
       await playerService.saveRating({
@@ -348,14 +484,23 @@ const Player = () => {
         user_id: userId,
         video_id: videoId,
         statut: 'yes',
+        playlist: 0,
         comment: memos[videoId] || '',
       });
 
-      // Mettre à jour les états locaux
-      setRatings(prev => ({ ...prev, [videoId]: rating }));
-      setStatuses(prev => ({ ...prev, [videoId]: 'yes' }));
+      console.log('[PLAYER] Rating saved:', rating);
+
+      // Afficher message de succès
+      showNotification(`Video selectionnee avec note ${rating}/10`, 'success');
+
+      // Passer à la vidéo suivante
+      goToNextVideo();
     } catch (error) {
-      console.error('Erreur sauvegarde notation:', error);
+      console.error('[PLAYER ERROR] Saving rating:', error);
+      showNotification('Erreur lors de la notation', 'error');
+      // Remettre les anciens états en cas d'erreur
+      setRatings(prev => ({ ...prev, [videoId]: oldRating || 0 }));
+      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || 'no' }));
       throw error;
     } finally {
       setSaving(false);
@@ -385,7 +530,11 @@ const Player = () => {
   // Envoyer un email au réalisateur
   const handleSendEmail = async (message) => {
     const videoId = videos[currentIndex]?.id;
-    if (!videoId) return;
+    if (!videoId || !userId) {
+      console.error('[PLAYER ERROR] Missing videoId or userId');
+      showNotification('Erreur: utilisateur non connecte', 'error');
+      return;
+    }
 
     try {
       await playerService.sendEmailToCreator({
@@ -393,8 +542,17 @@ const Player = () => {
         user_id: userId,
         message: message,
       });
+
+      console.log('[PLAYER] Email sent');
+
+      // Afficher message de succès
+      showNotification('Email envoye au realisateur', 'success');
+
+      // Passer à la vidéo suivante
+      goToNextVideo();
     } catch (error) {
-      console.error('Erreur envoi email:', error);
+      console.error('[PLAYER ERROR] Sending email:', error);
+      showNotification('Erreur lors de l\'envoi de l\'email', 'error');
       throw error;
     }
   };
@@ -419,11 +577,25 @@ const Player = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 overflow-y-scroll snap-y snap-mandatory bg-black scrollbar-hide"
+      className={`fixed inset-0 snap-y snap-mandatory bg-black scrollbar-hide ${
+        canNavigate() ? 'overflow-y-scroll' : 'overflow-hidden'
+      }`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
+      {/* Bouton retour à la page selector - Desktop: centré en haut, Mobile: en haut à gauche */}
+      <button
+        onClick={() => navigate('/selector')}
+        className="fixed top-6 left-6 md:left-1/2 md:-translate-x-1/2 z-[60] flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full bg-black/50 backdrop-blur-md hover:bg-black/70 transition-all shadow-2xl border border-white/10 hover:scale-105 active:scale-95"
+        title="Retour au profil sélecteur"
+      >
+        <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span className="hidden md:inline text-white text-sm font-semibold">Mon Profil Selector</span>
+      </button>
+
       {videos.map((video, index) => (
         <div
           key={video.id}
@@ -514,7 +686,17 @@ const Player = () => {
             )}
           </div>
 
-          {/* Barre de progression vidéo */}
+          {/* Boutons d'action dans le slide */}
+          <ActionButtons
+            key={`actions-${video.id}-${index}`}
+            currentStatus={statuses[video.id] || 'no'}
+            rating={ratings[video.id] || 0}
+            onStatusClick={handleStatusClick}
+            onNoteClick={() => setShowNotePanel(true)}
+            onEmailClick={() => setShowEmailPanel(true)}
+          />
+
+          {/* Barre de progression video */}
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/20 z-10">
             <div
               className="h-full bg-white transition-all duration-100"
@@ -528,20 +710,16 @@ const Player = () => {
         </div>
       ))}
 
-      {/* Boutons d'action flottants style Tinder */}
-      {videos.length > 0 && (
-        <>
-          <ActionButtons
-            currentStatus={statuses[videos[currentIndex]?.id] || 'no'}
-            rating={ratings[videos[currentIndex]?.id] || 0}
-            onStatusClick={handleStatusClick}
-            onNoteClick={() => setShowNotePanel(true)}
-            onEmailClick={() => setShowEmailPanel(true)}
-          />
+      {/* Aide raccourcis clavier (global) */}
+      <KeyboardShortcuts />
 
-          {/* Aide raccourcis clavier */}
-          <KeyboardShortcuts />
-        </>
+      {/* Indicateur "choisissez un statut" */}
+      {showStatusWarning && (
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[70] animate-bounce">
+          <div className="px-6 py-3 rounded-2xl bg-white/90 backdrop-blur-md shadow-2xl">
+            <span className="text-black text-sm font-bold">Choisissez un statut pour continuer</span>
+          </div>
+        </div>
       )}
 
       {/* Modal de notation */}
@@ -585,6 +763,57 @@ const Player = () => {
           onSend={handleSendEmail}
         />
       )}
+
+      {/* Feedback visuel central - Grande icône au centre */}
+      {actionFeedback.show && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none">
+          <div className={`transform transition-all duration-500 ease-out ${
+            actionFeedback.show ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
+          }`}>
+            <div className={`w-32 h-32 rounded-full flex items-center justify-center shadow-2xl ${
+              actionFeedback.type === 'success'
+                ? 'bg-green-500'
+                : actionFeedback.type === 'error'
+                ? 'bg-red-500'
+                : 'bg-amber-500'
+            }`}>
+              {actionFeedback.type === 'success' ? (
+                <svg className="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Toast en haut */}
+      <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[70] transition-all duration-300 ${
+        notification.show ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'
+      }`}>
+        <div className={`px-6 py-4 rounded-2xl backdrop-blur-md shadow-2xl border-2 ${
+          notification.type === 'success'
+            ? 'bg-green-500/95 border-green-400 text-white'
+            : 'bg-red-500/95 border-red-400 text-white'
+        }`}>
+          <div className="flex items-center gap-3">
+            {notification.type === 'success' ? (
+              <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="text-base font-bold">{notification.message}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

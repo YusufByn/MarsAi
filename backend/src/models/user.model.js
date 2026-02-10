@@ -69,9 +69,18 @@ export async function resetLoginAttempts(email) {
     }
 }
 
+export async function getUserById(id) {
+    const [rows] = await pool.execute(
+        'SELECT id, email, role, name, lastname, last_login_at, created_at, updated_at FROM user WHERE id = ?',
+        [id]
+    );
+    return rows[0];
+}
+
 export const userModel = {
     registerUser,
-    getUserByEmail, 
+    getUserByEmail,
+    getUserById,
     incrementLoginAttempts,
     resetLoginAttempts
 };
