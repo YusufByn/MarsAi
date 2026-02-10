@@ -40,7 +40,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     // Vérifier le type - accepter uniquement JPG/JPEG/PNG
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type.toLowerCase())) {
-      return 'Veuillez sélectionner une image JPG ou PNG uniquement';
+      return 'Please select a JPG or PNG image only';
     }
 
     // Vérifier la taille
@@ -63,7 +63,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
     
     if (!hasValidExtension) {
-      return 'Veuillez sélectionner un fichier vidéo valide (MOV, MP4, AVI, WMV, FLV, 3GPP, WebM)';
+      return 'Please select a valid video file (MOV, MP4, AVI, WMV, FLV, 3GPP, WebM)';
     }
 
     // Vérifier le type MIME
@@ -78,13 +78,13 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     ];
     
     if (file.type && !allowedMimeTypes.includes(file.type)) {
-      return 'Type de fichier vidéo non autorisé';
+      return 'Video file type not allowed';
     }
 
     // Vérifier la taille (max 200MB pour une vidéo)
     const maxSize = 200 * 1024 * 1024; // 200MB
     if (file.size > maxSize) {
-      return 'Fichier vidéo trop volumineux. Maximum: 200MB';
+      return 'Video file too large. Maximum: 200MB';
     }
 
     return null; // Valide
@@ -97,19 +97,19 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     // Vérifier l'extension
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith('.srt')) {
-      return 'Veuillez sélectionner un fichier .srt uniquement';
+      return 'Please select a .srt file only';
     }
 
     // Vérifier le type MIME (peut être text/plain ou application/x-subrip)
     const allowedMimeTypes = ['text/plain', 'application/x-subrip', 'text/srt'];
     if (file.type && !allowedMimeTypes.includes(file.type)) {
-      return 'Type de fichier sous-titre non autorisé';
+      return 'Subtitle file type not allowed';
     }
 
     // Vérifier la taille (max 1MB pour un fichier de sous-titres)
     const maxSize = 1 * 1024 * 1024; // 1MB
     if (file.size > maxSize) {
-      return 'Fichier sous-titre trop volumineux. Maximum: 1MB';
+      return 'Subtitle file too large. Maximum: 1MB';
     }
 
     return null; // Valide
@@ -242,7 +242,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
         if (duration > maxDuration) {
           setErrors(prev => ({ 
             ...prev, 
-            videoFile: `Vidéo trop longue (${formattedDuration}). Durée maximale: 2:30` 
+            videoFile: `Video too long (${formattedDuration}). Maximum duration: 2:30` 
           }));
           setFormDataProp({ ...formData, videoFile: null });
           setVideoDuration(null);
@@ -256,7 +256,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       
       video.onerror = function() {
         window.URL.revokeObjectURL(video.src);
-        setVideoDuration('Impossible de lire la durée');
+        setVideoDuration('Unable to read duration');
       };
       
       video.src = URL.createObjectURL(file);
@@ -324,7 +324,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Video Upload */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Upload Video (max 200MB, durée max 2m30)</label>
+            <label className="block text-sm mb-2">Upload Video (max 200MB, max duration 2m30)</label>
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
@@ -336,11 +336,11 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             {errors.videoFile ? (
               <p className="text-red-500 text-xs mt-1">{errors.videoFile}</p>
             ) : videoDuration ? (
-              <p className="text-green-400 text-xs mt-1">Durée: {videoDuration}</p>
+              <p className="text-green-400 text-xs mt-1">Duration: {videoDuration}</p>
             ) : formData.videoFile ? (
-              <p className="text-gray-400 text-xs mt-1">Calcul de la durée...</p>
+              <p className="text-gray-400 text-xs mt-1">Calculating duration...</p>
             ) : (
-              <p className="text-gray-400 text-xs mt-1">La durée sera affichée ici</p>
+              <p className="text-gray-400 text-xs mt-1">Duration will be displayed here</p>
             )}
           </div>
 

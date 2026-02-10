@@ -50,13 +50,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [contributorsData, setContributorsData] = useState({
-    gender: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    productionRole: ''
-  });
+  const [contributorsData, setContributorsData] = useState([]);
 
   // Gestion des changements de champs
   const handleChange = (e) => {
