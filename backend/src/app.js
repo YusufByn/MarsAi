@@ -2,19 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
-<<<<<<< HEAD
-import { jwtConfig } from './config/jwt.js';
-import authRoutes from './routes/auth.routes.js'
-import adminRoutes from './routes/admin.routes.js'
-=======
+
 import routes from './routes/index.js';
->>>>>>> e7ec5bc1a5944611b9aec2a7e14fde4c885aa6db
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,12 +38,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // toutes les routes
 app.use('/api', routes);
 
-<<<<<<< HEAD
-app.use('/api/admin', adminRoutes);
-
-=======
 // middleware pour gérer les erreurs
->>>>>>> e7ec5bc1a5944611b9aec2a7e14fde4c885aa6db
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({
