@@ -4,6 +4,7 @@ import 'react-phone-number-input/style.css';
 import './PhoneInputStyles.css';
 import { validateGender, validateFirstName, validateLastName, validateEmail, validateCountry, validateAddress, validateAcquisitionSource, validateAgeVerification, validatePhoneNumber, validateMobileNumber } from '../../services/formService';
 import ParticipationContributorsData from './ParticipationContributorsData';
+import ParticipationSocialNetworks from './ParticipationSocialNetworks';
 import { createPortal } from 'react-dom';
 
 // Modal des contributeurs (en dehors du composant pour éviter les re-créations)
@@ -45,12 +46,57 @@ const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsD
   );
 };
 
+// Modal des réseaux sociaux (en dehors du composant pour éviter les re-créations)
+const SocialNetworksModal = ({ isOpen, onClose, realisatorSocialNetworks, setRealisatorSocialNetworks, onSave }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isOpen]);
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="relative bg-[#050505] border border-white/10 rounded-xl p-4 max-w-xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+        {/* Bouton de fermeture */}
+        <button 
+          onClick={onClose}
+          className="sticky top-0 right-0 float-right ml-4 text-white hover:text-gray-300 text-2xl font-bold leading-none z-10"
+          aria-label="Close modal"
+        >
+          ×
+        </button>
+        
+        {/* Contenu de la modal */}
+        <ParticipationSocialNetworks 
+          realisatorSocialNetworks={realisatorSocialNetworks}
+          setRealisatorSocialNetworks={setRealisatorSocialNetworks}
+          onSave={onSave}
+        />
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contributorsData, setContributorsData] = useState([]);
+  const [realisatorSocialNetworks, setRealisatorSocialNetworks] = useState({
+    facebook: '',
+    instagram: '',
+    X: '',
+    LinkedIn: '',
+    youtube: '',
+    TikTok: '',
+    other: '',
+  });
+  const [isSocialNetworksModalOpen, setIsSocialNetworksModalOpen] = useState(false);
 
   // Gestion des changements de champs
   const handleChange = (e) => {
@@ -150,6 +196,15 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       contributors: contributorsData
     });
     setIsModalOpen(false);
+  };
+
+  // Fonction pour sauvegarder les données des réseaux sociaux
+  const handleSaveSocialNetworks = () => {
+    setFormDataProp({
+      ...formData,
+      socialNetworks: realisatorSocialNetworks
+    });
+    setIsSocialNetworksModalOpen(false);
   };
 
   // Soumission du formulaire
@@ -346,7 +401,26 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
-          
+          <span>Do you have social networks ?</span>
+          <div className="w-60">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="withSocialNetworks"
+                id="withSocialNetworks"
+                checked={formData.withSocialNetworks || false}
+                onChange={(e) => {
+                  handleChange(e);
+                  if (e.target.checked) {
+                    setIsSocialNetworksModalOpen(true);
+                  }
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
           {/* Message d'erreur général */}
           {submitError && (
             <div className="w-60 text-red-500 text-center">
@@ -374,6 +448,14 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
         contributorsData={contributorsData}
         setContributorsData={setContributorsData}
         onSave={handleSaveContributor}
+      />
+      {/* Modal des réseaux sociaux */}
+      <SocialNetworksModal 
+        isOpen={isSocialNetworksModalOpen}
+        onClose={() => setIsSocialNetworksModalOpen(false)}
+        realisatorSocialNetworks={realisatorSocialNetworks}
+        setRealisatorSocialNetworks={setRealisatorSocialNetworks}
+        onSave={handleSaveSocialNetworks}
       />
 
     </div>

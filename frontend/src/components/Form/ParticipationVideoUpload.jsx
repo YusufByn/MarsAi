@@ -172,6 +172,25 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
   };
 
   /**
+   * Suppression d'une image
+   */
+  const handleRemoveImage = (fieldName) => {
+    // Révoquer l'URL de preview
+    if (previews[fieldName]) {
+      URL.revokeObjectURL(previews[fieldName]);
+    }
+    
+    // Réinitialiser les états
+    setPreviews(prev => ({ ...prev, [fieldName]: null }));
+    setFormDataProp({ ...formData, [fieldName]: null });
+    setErrors(prev => ({ ...prev, [fieldName]: null }));
+    
+    // Réinitialiser l'input file
+    const input = document.getElementById(fieldName);
+    if (input) input.value = '';
+  };
+
+  /**
    * Gestion des autres champs (non-images)
    */
   const handleChange = (e) => {
@@ -463,8 +482,8 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Still 1 */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Still 1 (max 7MB)</label>
-            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
+            <label className="block text-sm mb-2">Still 1 (optional, max 7MB)</label>
+            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden relative">
               {loading.still1 ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -476,11 +495,23 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                   <span className="text-red-500 text-xs">{errors.still1}</span>
                 </div>
               ) : previews.still1 ? (
-                <img 
-                  src={previews.still1} 
-                  alt="Still 1 preview" 
-                  className="w-full h-full object-contain"
-                />
+                <>
+                  <img 
+                    src={previews.still1} 
+                    alt="Still 1 preview" 
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage('still1')}
+                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 rounded-full p-2 transition-colors"
+                    aria-label="Remove still 1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </>
               ) : (
                 <span className="text-gray-500 text-xs">Preview</span>
               )}
@@ -497,8 +528,8 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           
           {/* Still 2 */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Still 2 (max 7MB)</label>
-            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
+            <label className="block text-sm mb-2">Still 2 (optional, max 7MB)</label>
+            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden relative">
               {loading.still2 ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -510,11 +541,23 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                   <span className="text-red-500 text-xs">{errors.still2}</span>
                 </div>
               ) : previews.still2 ? (
-                <img 
-                  src={previews.still2} 
-                  alt="Still 2 preview" 
-                  className="w-full h-full object-contain"
-                />
+                <>
+                  <img 
+                    src={previews.still2} 
+                    alt="Still 2 preview" 
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage('still2')}
+                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 rounded-full p-2 transition-colors"
+                    aria-label="Remove still 2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </>
               ) : (
                 <span className="text-gray-500 text-xs">Preview</span>
               )}
@@ -531,8 +574,8 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           
           {/* Still 3 */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Still 3 (max 7MB)</label>
-            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
+            <label className="block text-sm mb-2">Still 3 (optional, max 7MB)</label>
+            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden relative">
               {loading.still3 ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -544,11 +587,23 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                   <span className="text-red-500 text-xs">{errors.still3}</span>
                 </div>
               ) : previews.still3 ? (
-                <img 
-                  src={previews.still3} 
-                  alt="Still 3 preview" 
-                  className="w-full h-full object-contain"
-                />
+                <>
+                  <img 
+                    src={previews.still3} 
+                    alt="Still 3 preview" 
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage('still3')}
+                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 rounded-full p-2 transition-colors"
+                    aria-label="Remove still 3"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </>
               ) : (
                 <span className="text-gray-500 text-xs">Preview</span>
               )}
@@ -565,7 +620,8 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Subtitle Upload */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Subtitle File (.srt, max 1MB)</label>
+            <label className="block text-sm mb-2">If there is voice or txt needing translation :
+              <br />Subtitle File (.srt, max 1MB)</label>
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
@@ -600,15 +656,35 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             </div>
           </div>
 
+          {/* Newsletter Subscription */}
+          <div className="w-full max-w-2xl mt-4">
+            <label className="flex items-center gap-2 mb-2 justify-center cursor-pointer">
+              <input 
+                type="checkbox"
+                name="newsletterSubscription"
+                id="newsletterSubscription"
+                checked={formData.newsletterSubscription || false}
+                onChange={handleChange}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span className="text-sm">Subscribe to our newsletter to stay updated on Mars AI news</span>
+            </label>
+            <p className="text-xs text-gray-400 text-center">
+              You can unsubscribe at any time
+            </p>
+          </div>
+
           {/* reCaptcha */}
-          <div className="w-60">
-            <ReCAPTCHA 
-              sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
-              ref={captchaRef}
-              onChange={(token) => setRecaptchaToken(token)}
-              onExpired={() => setRecaptchaToken(null)}
-              theme="dark"
-            />
+          <div className="w-auto flex flex-col items-center">
+            <div className="w-[302px] h-[75.5px] overflow-hidden rounded shadow-md">
+              <ReCAPTCHA 
+                sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
+                ref={captchaRef}
+                onChange={(token) => setRecaptchaToken(token)}
+                onExpired={() => setRecaptchaToken(null)}
+                theme="dark"
+              />
+            </div>
             {errors.recaptcha && (
               <p className="text-red-500 text-xs mt-1">{errors.recaptcha}</p>
             )}

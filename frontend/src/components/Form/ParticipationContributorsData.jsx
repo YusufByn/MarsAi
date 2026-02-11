@@ -97,14 +97,6 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
     onSave();
   };
 
-  const getGenderIcon = (gender) => {
-    switch(gender) {
-      case 'women': return '👩';
-      case 'man': return '👨';
-      case 'other': return '🧑';
-      default: return '👤';
-    }
-  };
 
   const getGenderLabel = (gender) => {
     switch(gender) {
@@ -152,9 +144,6 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   </button>
 
                   <div className="flex items-start gap-3">
-                    <div className="text-2xl">
-                      {getGenderIcon(contributor.gender)}
-                    </div>
                     <div className="flex-1">
                       <h4 className="text-white font-semibold text-sm">
                         {contributor.firstName} {contributor.lastName}
@@ -164,7 +153,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                       </p>
                       <div className="space-y-0.5">
                         <p className="text-gray-400 text-[10px]">
-                          📧 {contributor.email}
+                          {contributor.email}
                         </p>
                         <p className="text-gray-400 text-[10px]">
                           {getGenderLabel(contributor.gender)}
