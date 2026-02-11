@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { validateTitle, validateLanguage, validateSynopsis, validateTechResume, validateCreativeResume, validateClassification, validateTags } from '../../services/formService';
+import { validateTitle, validateTitleEN, validateLanguage, validateSynopsis, validateSynopsisEN, validateTechResume, validateCreativeResume, validateClassification, validateTags } from '../../services/formService';
 import TagInput from './TagInput';
 
 const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataProp}) => {
@@ -37,15 +37,19 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
     switch(fieldName) {
       case 'title':
-      case 'titleEN':
         error = validateTitle(value);
+        break;
+      case 'titleEN':
+        error = validateTitleEN(value);
         break;
       case 'language':
         error = validateLanguage(value);
         break;
       case 'synopsis':
-      case 'synopsisEN':
         error = validateSynopsis(value);
+        break;
+      case 'synopsisEN':
+        error = validateSynopsisEN(value);
         break;
       case 'techResume':
         error = validateTechResume(value);
@@ -73,10 +77,10 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
   const validateForm = () => {
     const newErrors = {
       title: validateTitle(formData.title),
-      titleEN: validateTitle(formData.titleEN),
+      titleEN: validateTitleEN(formData.titleEN),
       language: validateLanguage(formData.language),
       synopsis: validateSynopsis(formData.synopsis),
-      synopsisEN: validateSynopsis(formData.synopsisEN),
+      synopsisEN: validateSynopsisEN(formData.synopsisEN),
       techResume: validateTechResume(formData.techResume),
       creativeResume: validateCreativeResume(formData.creativeResume),
       classification: validateClassification(formData.classification),
@@ -124,24 +128,13 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
       <section className="FormContainer">
         <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
 
-          {/* Title */}
-          <div className="w-60">
-            <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.title ? 'border-red-500' : ''}`}
-              type="text"
-              name="title"
-              id="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="Title"
-            />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-          </div>
-
           {/* Title EN */}
           <div className="w-60">
+            <label htmlFor="titleEN" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Title EN <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.titleEN ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.titleEN ? 'border-red-500' : 'border-white/10'}`}
               type="text"
               name="titleEN"
               id="titleEN"
@@ -152,10 +145,30 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
             {errors.titleEN && <p className="text-red-500 text-sm mt-1">{errors.titleEN}</p>}
           </div>
 
+          {/* Title */}
+          <div className="w-60">
+            <label htmlFor="title" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Title
+            </label>
+            <input 
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.title ? 'border-red-500' : 'border-white/10'}`}
+              type="text"
+              name="title"
+              id="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Title"
+            />
+            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+          </div>
+
           {/* Language */}
           <div className="w-60">
+            <label htmlFor="language" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Language <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.language ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.language ? 'border-red-500' : 'border-white/10'}`}
               type="text"
               name="language"
               id="language"
@@ -166,24 +179,13 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
             {errors.language && <p className="text-red-500 text-sm mt-1">{errors.language}</p>}
           </div>
 
-          {/* Synopsis */}
-          <div className="w-60">
-            <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsis ? 'border-red-500' : ''}`}
-              name="synopsis"
-              id="synopsis"
-              value={formData.synopsis}
-              onChange={handleChange}
-              placeholder="Synopsis"
-              rows="4"
-            />
-            {errors.synopsis && <p className="text-red-500 text-sm mt-1">{errors.synopsis}</p>}
-          </div>
-
           {/* Synopsis EN */}
           <div className="w-60">
+            <label htmlFor="synopsisEN" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Synopsis EN <span className="text-red-500">*</span>
+            </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsisEN ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsisEN ? 'border-red-500' : 'border-white/10'}`}
               name="synopsisEN"
               id="synopsisEN"
               value={formData.synopsisEN}
@@ -194,10 +196,30 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
             {errors.synopsisEN && <p className="text-red-500 text-sm mt-1">{errors.synopsisEN}</p>}
           </div>
 
+          {/* Synopsis */}
+          <div className="w-60">
+            <label htmlFor="synopsis" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Synopsis
+            </label>
+            <textarea 
+              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsis ? 'border-red-500' : 'border-white/10'}`}
+              name="synopsis"
+              id="synopsis"
+              value={formData.synopsis}
+              onChange={handleChange}
+              placeholder="Synopsis"
+              rows="4"
+            />
+            {errors.synopsis && <p className="text-red-500 text-sm mt-1">{errors.synopsis}</p>}
+          </div>
+
           {/* Tech Resume */}
           <div className="w-60">
+            <label htmlFor="techResume" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Technical Resume <span className="text-red-500">*</span>
+            </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.techResume ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.techResume ? 'border-red-500' : 'border-white/10'}`}
               name="techResume"
               id="techResume"
               value={formData.techResume}
@@ -210,8 +232,11 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
           {/* Creative Resume */}
           <div className="w-60">
+            <label htmlFor="creativeResume" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Creative Resume <span className="text-red-500">*</span>
+            </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.creativeResume ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.creativeResume ? 'border-red-500' : 'border-white/10'}`}
               name="creativeResume"
               id="creativeResume"
               value={formData.creativeResume}
@@ -224,6 +249,9 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
           {/* Classification */}
           <div className="w-60">
+            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Classification <span className="text-red-500">*</span>
+            </label>
             <div className="flex items-center justify-center gap-6 p-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
@@ -234,7 +262,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
                   checked={formData.classification === 'hybrid'}
                   onChange={handleChange}
                 />
-                <span>Hybrid</span>
+                <span className="text-sm">Hybrid</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
@@ -245,18 +273,23 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
                   checked={formData.classification === 'ia'}
                   onChange={handleChange}
                 />
-                <span>Full AI</span>
+                <span className="text-sm">Full AI</span>
               </label>
             </div>
             {errors.classification && <p className="text-red-500 text-sm mt-1">{errors.classification}</p>}
           </div>
 
           {/* Tags */}
-          <TagInput
-            value={formData.tags}
-            onChange={handleTagsChange}
-            error={errors.tags}
-          />
+          <div className="w-60">
+            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Tags
+            </label>
+            <TagInput
+              value={formData.tags}
+              onChange={handleTagsChange}
+              error={errors.tags}
+            />
+          </div>
 
           {/* Message d'erreur général */}
           {submitError && (

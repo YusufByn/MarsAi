@@ -187,7 +187,10 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
             <h3 className="text-md font-semibold text-white">New contributor</h3>
             
               {/* Gender */}
-              <div className="w-60">
+              <div className="w-60 text-left">
+                <label className="block text-xs text-gray-400 mb-1 ml-1">
+                  Gender <span className="text-red-500">*</span>
+                </label>
                 <select 
                   name="gender"
                   value={currentContributor.gender}
@@ -203,7 +206,10 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               </div>
 
               {/* First Name */}
-              <div className="w-60">
+              <div className="w-60 text-left">
+                <label className="block text-xs text-gray-400 mb-1 ml-1">
+                  First Name <span className="text-red-500">*</span>
+                </label>
                 <input 
                   className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.firstName ? 'border-red-500' : 'border-white/10'}`}
                   type="text"
@@ -216,7 +222,10 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               </div>
 
               {/* Last Name */}
-              <div className="w-60">
+              <div className="w-60 text-left">
+                <label className="block text-xs text-gray-400 mb-1 ml-1">
+                  Last Name <span className="text-red-500">*</span>
+                </label>
                 <input 
                   className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.lastName ? 'border-red-500' : 'border-white/10'}`}
                   type="text"
@@ -229,7 +238,10 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               </div>
 
               {/* Email */}
-              <div className="w-60">
+              <div className="w-60 text-left">
+                <label className="block text-xs text-gray-400 mb-1 ml-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
                 <input 
                   className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.email ? 'border-red-500' : 'border-white/10'}`}
                   type="email"
@@ -242,7 +254,10 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               </div>
 
               {/* Production Role */}
-              <div className="w-60">
+              <div className="w-60 text-left">
+                <label className="block text-xs text-gray-400 mb-1 ml-1">
+                  Role <span className="text-red-500">*</span>
+                </label>
                 <input
                   className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.productionRole ? 'border-red-500' : 'border-white/10'}`}
                   type="text"

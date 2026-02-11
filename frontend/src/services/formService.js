@@ -225,18 +225,18 @@ function validateAgeVerification(value) {
 // ============================================
 
 /**
- * Valide le numéro de téléphone fixe
+ * Valide le numéro de téléphone fixe (OPTIONNEL)
  * Utilise la librairie react-phone-number-input pour valider le format international
  * 
  * Format attendu: format international avec indicatif pays (ex: +33612345678)
  * 
  * @param {string} value - Le numéro de téléphone à valider (format international)
- * @returns {string|null} - null si valide, sinon message d'erreur
+ * @returns {string|null} - null si valide ou vide, sinon message d'erreur
  */
 function validatePhoneNumber(value) {
-    // Vérifie que le champ n'est pas vide
+    // Si le champ est vide, c'est valide (champ optionnel)
     if (!value || value.trim() === '') {
-        return "Phone number is required";
+        return null;
     }
     
     try {
@@ -283,15 +283,16 @@ function validateMobileNumber(value) {
 // ============================================
 
 /**
- * Valide le titre de la vidéo
+ * Valide le titre de la vidéo (OPTIONNEL)
  * Accepte lettres, chiffres, espaces et ponctuation basique
  * 
  * @param {string} value - Le titre à valider
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateTitle(value) {
+    // Si le champ est vide, c'est valide (champ optionnel)
     if (!value || value.trim() === '') {
-        return "Title is required";
+        return null;
     }
     
     if (value.length < 2) {
@@ -306,6 +307,35 @@ function validateTitle(value) {
     const titlePattern = /^[a-zA-Z0-9À-ÿ\s',.!?:()-]+$/;
     if (!titlePattern.test(value)) {
         return "Title contains invalid characters";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide le titre EN (OBLIGATOIRE)
+ * Accepte lettres, chiffres, espaces et ponctuation basique
+ * 
+ * @param {string} value - Le titre EN à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateTitleEN(value) {
+    if (!value || value.trim() === '') {
+        return "Title EN is required";
+    }
+    
+    if (value.length < 2) {
+        return "Title EN must be at least 2 characters";
+    }
+    
+    if (value.length > 255) {
+        return "Title EN must not exceed 255 characters";
+    }
+    
+    // Pattern pour titre (lettres, chiffres, ponctuation basique)
+    const titlePattern = /^[a-zA-Z0-9À-ÿ\s',.!?:()-]+$/;
+    if (!titlePattern.test(value)) {
+        return "Title EN contains invalid characters";
     }
     
     return null;
@@ -341,15 +371,16 @@ function validateLanguage(value) {
 };
 
 /**
- * Valide le synopsis
+ * Valide le synopsis (OPTIONNEL)
  * Accepte lettres, chiffres et toute ponctuation
  * 
  * @param {string} value - Le synopsis à valider
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateSynopsis(value) {
+    // Si le champ est vide, c'est valide (champ optionnel)
     if (!value || value.trim() === '') {
-        return "Synopsis is required";
+        return null;
     }
     
     if (value.length < 10) {
@@ -358,6 +389,29 @@ function validateSynopsis(value) {
     
     if (value.length > 500) {
         return "Synopsis must not exceed 500 characters";
+    }
+    
+    return null;
+};
+
+/**
+ * Valide le synopsis EN (OBLIGATOIRE)
+ * Accepte lettres, chiffres et toute ponctuation
+ * 
+ * @param {string} value - Le synopsis EN à valider
+ * @returns {string|null} - null si valide, sinon message d'erreur
+ */
+function validateSynopsisEN(value) {
+    if (!value || value.trim() === '') {
+        return "Synopsis EN is required";
+    }
+    
+    if (value.length < 10) {
+        return "Synopsis EN must be at least 10 characters";
+    }
+    
+    if (value.length > 500) {
+        return "Synopsis EN must not exceed 500 characters";
     }
     
     return null;
@@ -426,7 +480,7 @@ function validateClassification(value) {
 };
 
 /**
- * Valide les tags (format: tableau de strings)
+ * Valide les tags (format: tableau de strings) - OPTIONNEL
  * 
  * @param {Array} value - Tableau de tags à valider
  * @returns {string|null} - null si valide, sinon message d'erreur
@@ -437,9 +491,9 @@ function validateTags(value) {
         return "Tags must be an array";
     }
     
-    // Au moins 1 tag requis
+    // Si le tableau est vide, c'est valide (champ optionnel)
     if (value.length === 0) {
-        return "At least one tag is required";
+        return null;
     }
     
     // Maximum 10 tags
@@ -491,9 +545,11 @@ export {
     validateMobileNumber,     // Validation du mobile (format international)
     
     // Validation données vidéo
-    validateTitle,            // Validation du titre (max 255 caractères)
+    validateTitle,            // Validation du titre (optionnel, max 255 caractères)
+    validateTitleEN,          // Validation du titre EN (obligatoire, max 255 caractères)
     validateLanguage,         // Validation de la langue (lettres uniquement)
-    validateSynopsis,         // Validation du synopsis (max 500 caractères)
+    validateSynopsis,         // Validation du synopsis (optionnel, max 500 caractères)
+    validateSynopsisEN,       // Validation du synopsis EN (obligatoire, max 500 caractères)
     validateTechResume,       // Validation du résumé technique (max 500 caractères)
     validateCreativeResume,   // Validation du résumé créatif (max 500 caractères)
     validateClassification,   // Validation de la classification (hybrid/ia)

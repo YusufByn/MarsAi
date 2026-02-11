@@ -176,12 +176,16 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       lastName: validateLastName(formData.lastName),
       email: validateEmail(formData.email),
       country: validateCountry(formData.country),
-      phoneNumber: validatePhoneNumber(formData.phoneNumber),
       mobileNumber: validateMobileNumber(formData.mobileNumber),
       address: validateAddress(formData.address),
       acquisitionSource: validateAcquisitionSource(formData.acquisitionSource),
       ageVerificator: validateAgeVerification(formData.ageVerificator),
     };
+
+    // Valider phoneNumber seulement s'il n'est pas vide
+    if (formData.phoneNumber && formData.phoneNumber.trim() !== '') {
+      newErrors.phoneNumber = validatePhoneNumber(formData.phoneNumber);
+    }
 
     setErrors(newErrors);
 
@@ -244,12 +248,15 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
           {/* Civility */}
           <div className="w-60">
+            <label htmlFor="gender" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Gender <span className="text-red-500">*</span>
+            </label>
             <select 
               name="gender"
               id="gender"
               value={formData.gender}
               onChange={handleChange}
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.gender ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.gender ? 'border-red-500' : 'border-white/10'}`}
             >
               <option value="">Select your gender</option>
               <option value="women">Women</option>
@@ -260,8 +267,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
           </div>
 
           <div className="w-60">
+            <label htmlFor="firstName" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              First Name <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.firstName ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.firstName ? 'border-red-500' : 'border-white/10'}`}
               type="text"
               name="firstName"
               id="firstName"
@@ -273,8 +283,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
           </div>
 
           <div className="w-60">
+            <label htmlFor="lastName" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Last Name <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.lastName ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.lastName ? 'border-red-500' : 'border-white/10'}`}
               type="text"
               name="lastName"
               id="lastName"
@@ -287,8 +300,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
           {/* Email */}
           <div className="w-60">
+            <label htmlFor="email" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Email <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.email ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.email ? 'border-red-500' : 'border-white/10'}`}
               type="email"
               name="email"
               id="email"
@@ -300,8 +316,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
           </div>
 
           <div className="w-60">
+            <label htmlFor="country" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Country <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.country ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.country ? 'border-red-500' : 'border-white/10'}`}
               type="text"
               name="country"
               id="country"
@@ -313,27 +332,31 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
           </div>
 
           {/* Phones */}
-          <span>Phone Number</span>
           <div className="w-60">
+            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Phone Number
+            </label>
             <PhoneInput
               international
               defaultCountry="FR"
               value={formData.phoneNumber}
               onChange={(value) => handlePhoneChange('phoneNumber', value)}
-              className={`bg-black/50 border rounded-xl p-2 ${errors.phoneNumber ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 ${errors.phoneNumber ? 'border-red-500' : 'border-white/10'}`}
               placeholder="Phone Number"
             />
             {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
           </div>
           
-          <span>Mobile Number</span>
           <div className="w-60">
+            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Mobile Number <span className="text-red-500">*</span>
+            </label>
             <PhoneInput
               international
               defaultCountry="FR"
               value={formData.mobileNumber}
               onChange={(value) => handlePhoneChange('mobileNumber', value)}
-              className={`bg-black/50 border rounded-xl p-2 ${errors.mobileNumber ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 ${errors.mobileNumber ? 'border-red-500' : 'border-white/10'}`}
               placeholder="Mobile Number"
             />
             {errors.mobileNumber && <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>}
@@ -341,8 +364,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
           {/* Address */}
           <div className="w-60">
+            <label htmlFor="address" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              Address <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.address ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.address ? 'border-red-500' : 'border-white/10'}`}
               type="text"
               name="address"
               id="address"
@@ -355,8 +381,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
           {/* Acquisition source */}
           <div className="w-60">
+            <label htmlFor="acquisitionSource" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+              How did you hear about us? <span className="text-red-500">*</span>
+            </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.acquisitionSource ? 'border-red-500' : ''}`}
+              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.acquisitionSource ? 'border-red-500' : 'border-white/10'}`}
               type="text"
               name="acquisitionSource"
               id="acquisitionSource"
@@ -370,14 +399,14 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
           <div className="w-60">
             <label className="flex items-center gap-2">
               <input 
-                className={`bg-black/50 border rounded p-2 ${errors.ageVerificator ? 'border-red-500' : ''}`}
+                className={`bg-black/50 border rounded p-2 ${errors.ageVerificator ? 'border-red-500' : 'border-white/10'}`}
                 type="checkbox"
                 name="ageVerificator"
                 id="ageVerificator"
                 checked={formData.ageVerificator}
                 onChange={handleChange}
               />
-              <span>Are you 18 years old or older?</span>
+              <span className="text-sm">Are you 18 years old or older? <span className="text-red-500">*</span></span>
             </label>
             {errors.ageVerificator && <p className="text-red-500 text-sm mt-1">{errors.ageVerificator}</p>}
           </div>

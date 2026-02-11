@@ -426,7 +426,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Video Upload */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Upload Video (max 200MB, max duration 2m30)</label>
+            <label className="block text-sm mb-2">Upload Video (max 200MB, max duration 2m30) <span className="text-red-500">*</span></label>
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
@@ -448,7 +448,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* Cover Image */}
           <div className="w-60">
-            <label className="block text-sm mb-2">Cover Image (max 15MB)</label>
+            <label className="block text-sm mb-2">Cover Image (max 15MB) <span className="text-red-500">*</span></label>
             <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
               {loading.coverImage ? (
                 <div className="flex flex-col items-center gap-2">
@@ -676,7 +676,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
           {/* reCaptcha */}
           <div className="w-auto flex flex-col items-center">
-            <div className="w-[302px] h-[75.5px] overflow-hidden rounded shadow-md">
+            <div className="w-[301px] h-[75.5px] overflow-hidden rounded shadow-md">
               <ReCAPTCHA 
                 sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
                 ref={captchaRef}
