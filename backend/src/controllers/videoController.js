@@ -45,7 +45,7 @@ const createVideo = async (req, res) => {
         const data = req.body;
         
         // 1. Validation des champs obligatoires
-        const validation = validateRequired(data, ['title', 'email', 'rights_accepted']);
+        const validation = validateRequired(data, ['email', 'rights_accepted']);
         if (!validation.valid) {
             return res.status(400).json({
                 success: false,
@@ -100,7 +100,7 @@ const createVideo = async (req, res) => {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 userId,
-                data.title,
+                data.title || '',  // Utiliser une chaîne vide au lieu de null
                 data.title_en || null,
                 data.synopsis || null,
                 data.synopsis_en || null,
