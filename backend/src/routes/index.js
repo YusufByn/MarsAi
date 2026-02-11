@@ -7,7 +7,6 @@ import newsletterRoutes from './newsletter.routes.js';
 import memoRoutes from './memo.routes.js';
 import ratingRoutes from './rating.routes.js';
 import videoRoutes from './video.routes.js';
-import youtubeRoutes from './youtube.routes.js';
 import playerRoutes from './player/player.routes.js';
 import testRoutes from './test.routes.js';
 import countdownRoutes from './cms/countdown.routes.js';
@@ -21,7 +20,6 @@ router.use('/newsletter', newsletterRoutes);
 router.use('/memo', memoRoutes);
 router.use('/rating', ratingRoutes);
 router.use('/videos', videoRoutes);
-router.use('/youtube', youtubeRoutes);
 router.use('/player', playerRoutes);
 router.use('/cms', countdownRoutes);
 

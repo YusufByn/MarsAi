@@ -27,13 +27,13 @@ export const videoModel = {
 };
 
 // creation de video
-export const createVideo = async (title, video_file_name, srt_file_name, cover) => {
+export const createVideo = async (title, youtube_url, video_file_name, srt_file_name, cover) => {
 
   // requete prepare
-  const query = `INSERT INTO video (title, video_file_name, srt_file_name, cover) VALUES (?, ?, ?, ?)`;
+  const query = `INSERT INTO video (title, youtube_url, video_file_name, srt_file_name, cover) VALUES (?, ?, ?, ?, ?)`;
 
   // valeurs a injecter dans la requete
-  const values = [title, video_file_name, srt_file_name, cover];
+  const values = [title, youtube_url, video_file_name, srt_file_name, cover];
 
   // execution de la requete
   const [rows] = await pool.execute(query, values);

@@ -2,12 +2,13 @@ import { normalizeTags, upsertTags } from "../models/tag.model.js";
 import { addTagsToVideo } from "../models/video.model.js";
 import { createStills } from "../models/image.model.js";
 import { createVideo } from "../models/video.model.js";
+import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import pool from "../config/db.js";
 
 export const uploadVideo = async (req, res) => {
 
   // tags = tableau de tags, le reste c'est body dla request
-  const { tags = [], title} = req.body;
+  const { tags = [], title, description, categoryId, privacyStatus} = req.body;
   // video file est egal au premier fichier video de la request s'il existe
   const videoFiles = req.files?.video?.[0];
   // cover file est egal au premier fichier cover de la request s'il existe
@@ -33,13 +34,22 @@ export const uploadVideo = async (req, res) => {
       });
     }
 
+    const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
+      title,
+      description: description || "",
+      categoryId: categoryId || "22",
+      privacyStatus: privacyStatus || "unlisted"
+    });
+
     // on recup le nom du fichier video et le nom du fichier s'il existe
     const video_file_name = videoFiles.filename;
     const cover = coverFile?.filename;
     const srt_file_name = srtFile?.filename;
+    const youtube_url = youtubeUpload.youtubeUrl;
     // creation de la video
     const video = await createVideo(
       title, 
+      youtube_url,
       video_file_name,
       srt_file_name,
       cover
@@ -73,7 +83,8 @@ export const uploadVideo = async (req, res) => {
         video: videoId,
         stills,
         tags: newTags,
-        srt_file_name
+        srt_file_name,
+        youtube_url
       }
     })
     
