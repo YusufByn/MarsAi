@@ -14,14 +14,17 @@ const oauth2Client = new google.auth.OAuth2(
 const authUrl = oauth2Client.generateAuthUrl({
   access_type: 'offline',
   prompt: 'consent',
-  scope: ['https://www.googleapis.com/auth/youtube.upload']
+  scope: [
+    'https://www.googleapis.com/auth/youtube.upload',
+    'https://www.googleapis.com/auth/youtube.force-ssl'
+  ]
 });
 
 console.log('Open this URL in your browser:');
 console.log(authUrl);
 
 // après consentement, récupérer le code dans l'URL
-const code = 'COLLE_LE_CODE_ICI';
+const code = '4/0ASc3gC0_4G0g-yTn4CUnJnms6YFiR7sPZBGQtZXwqgt5-d2zvjDXppymkDTHUSJOl3uxXA';
 
 async function getTokens() {
   if (code === 'COLLE_LE_CODE_ICI') {

@@ -1,9 +1,24 @@
+<<<<<<< HEAD
 import pool from '../config/db.js';
 
 /**
  * Modèle pour gérer les tags et leurs relations avec les vidéos
  * Tables: tag, video_tag
  */
+=======
+// nettoyage de tags, évite les doublons, trim etc
+// tags en param avec un tableau
+export const normalizeTags = (tags = []) => {
+    // on return un noueau tableau ou l'on parcour le tableau tags
+    // on trim chaque tag et on les mets en minuscule
+    // on filtre les tags quu sont vides ou ont une longeur supérieur à 0
+    return [... new Set(
+        tags
+            .map(t => t.trim().toLowerCase())
+            .filter(t => t.length > 0)
+    )];
+}
+>>>>>>> origin/yusuf-branch-4
 
 export const tagModel = {
   /**

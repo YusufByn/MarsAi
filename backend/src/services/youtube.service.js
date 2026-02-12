@@ -41,6 +41,10 @@ export const uploadVideoToYoutube = async (filePath, metadata = {}) => {
     title = 'Untitled',
     description = '',
     tags = [],
+    thumbnailPath = '',
+    srt_file_name = 'sous-titre',
+    srtLanguage = '',
+    srtPath = '',
     categoryId = '22', 
     privacyStatus = 'unlisted' 
   } = metadata;
@@ -66,14 +70,48 @@ export const uploadVideoToYoutube = async (filePath, metadata = {}) => {
     }
   });
 
-  console.log('response', response);
-  console.log('response.data', response.data);
+  const videoId = response?.data?.id;
+  
+  if(!videoId) {
+    throw new Error('Failed to upload video to YouTube');
+  }
+
+  if (thumbnailPath) {
+    await youtube.thumbnails.set({
+      videoId,
+      media: {
+        body: fs.createReadStream(thumbnailPath)
+      }
+    });
+  }
+  
+  // si le chemin du fichier srt existe, on upload le sous-titre
+  if (srtPath) {
+    // on upload le sous-titre
+    await youtube.captions.insert({
+      part: ['snippet'],
+      requestBody: {
+        snippet: {
+          videoId,
+          language: srtLanguage,
+          name: srt_file_name,
+          isDraft: false
+        }
+      },
+      media: {
+        body: fs.createReadStream(srtPath)
+      }
+    });
+  }
+
+  console.log('videoId', videoId);
+  console.log('video', response.data);
 
   //retourner l'id et l'url de la video
   return {
     // l'id de la vidéo, quand on fait un console log de la response, on voit l'id
-    youtubeId: response.data.id,
+    youtubeId: videoId,
     // l'url de la vidéo, concaténé avec le https://youtu.be/ et l'id de la vidéo
-    youtubeUrl: `https://youtu.be/${response.data.id}`
+    youtubeUrl: `https://youtu.be/${videoId}`
   };
 };

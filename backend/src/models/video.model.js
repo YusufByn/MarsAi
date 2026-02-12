@@ -1,4 +1,4 @@
-import { pool } from '../db/index.js';
+import pool from '../config/db.js';
 
 export const videoModel = {
 
@@ -225,4 +225,36 @@ export const videoModel = {
     );
     return rows;
   }
+};
+
+// creation de video
+export const createVideo = async (title, youtube_url, video_file_name, srt_file_name, cover) => {
+
+  // requete prepare
+  const query = `INSERT INTO video (title, youtube_url, video_file_name, srt_file_name, cover) VALUES (?, ?, ?, ?, ?)`;
+
+  // valeurs a injecter dans la requete
+  const values = [title, youtube_url, video_file_name, srt_file_name, cover];
+
+  // execution de la requete
+  const [rows] = await pool.execute(query, values);
+
+  return rows;
+}; 
+
+export const addTagsToVideo = async (videoId, tagIds) => {
+
+  // variable placeholder pour pour ajuster les placeholders dans la requête
+  const placeholders = tagIds.map(() => "(?, ?)").join(", ");
+
+  // boucle sur les tagIgs, on ajoute le video et tag id a celuici
+  const values = tagIds.flatMap(tagId => [videoId, tagId]);
+
+  // requet prépare
+  const query = `INSERT INTO video_tag (video_id, tag_id) VALUES ${placeholders}`;
+
+  // execution de la requete
+  const [rows] = await pool.execute(query, values);
+
+  return rows;
 };

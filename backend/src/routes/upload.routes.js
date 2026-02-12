@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import videoSubmissionController from '../controllers/videoSubmission.controller.js';
 import upload from '../middlewares/upload.middleware.js';
@@ -140,6 +141,16 @@ router.get('/:id/validate-token', validateEditTokenMiddleware, (req, res) => {
 // ========================================
 // ROUTES ADMIN
 // ========================================
+=======
+import { Router} from 'express';
+import { uploadVideo } from '../controllers/video.controller.js';
+import { upload } from '../middlewares/upload.middleware.js';
+
+const router = Router();
+
+router.post('/video', upload, uploadVideo);
+
+>>>>>>> origin/yusuf-branch-4
 
 /**
  * POST /api/upload/:id/request-edit
