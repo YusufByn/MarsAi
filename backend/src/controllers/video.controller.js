@@ -82,7 +82,8 @@ export const uploadVideo = async (req, res) => {
       mobile_number: req.body.mobile_number ?? null,
       fixe_number: req.body.fixe_number ?? null,
       address: req.body.address ?? null,
-      acquisition_source: req.body.acquisition_source ?? null
+      acquisition_source: req.body.acquisition_source ?? null,
+      rights_accepted: req.body.rights_accepted
     });
     
     // on recup l'id de la vidéo crée, on va la renvoyer dans la response

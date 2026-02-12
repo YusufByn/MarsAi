@@ -252,8 +252,8 @@ export const createVideo = async (payload) => {
       title, title_en, synopsis, synopsis_en, language, country, duration,
       classification, tech_resume, creative_resume,
       realisator_name, realisator_lastname, realisator_gender,
-      email, birthday, mobile_number, fixe_number, address, acquisition_source
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      email, birthday, mobile_number, fixe_number, address, acquisition_source, rights_accepted
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const values = [
@@ -279,7 +279,8 @@ export const createVideo = async (payload) => {
     payload.mobile_number ?? null,
     payload.fixe_number ?? null,
     payload.address ?? null,
-    payload.acquisition_source ?? null
+    payload.acquisition_source ?? null,
+    payload.rights_accepted ? 1 : 0
   ];
 
   const [rows] = await pool.execute(query, values);

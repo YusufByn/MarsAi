@@ -73,23 +73,22 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
    */
   const validateVideo = (file) => {
     // Vérifier l'extension
-    const allowedExtensions = ['.mov', '.mpeg4', '.mp4', '.avi', '.wmv', '.mpegps', '.flv', '.3gpp', '.webm'];
+    const allowedExtensions = ['.mov', '.mpeg4', '.mp4', '.webm', '.mkv'];
     const fileName = file.name.toLowerCase();
     const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
     
     if (!hasValidExtension) {
-      return 'Please select a valid video file (MOV, MP4, AVI, WMV, FLV, 3GPP, WebM)';
+      return 'Please select a valid video file (MOV, MPEG4, MP4, WebM, MKV)';
     }
 
     // Vérifier le type MIME
     const allowedMimeTypes = [
       'video/quicktime',      // .mov
       'video/mp4',            // .mp4
-      'video/x-msvideo',      // .avi
-      'video/x-ms-wmv',       // .wmv
-      'video/x-flv',          // .flv
-      'video/3gpp',           // .3gpp
-      'video/webm'            // .webm
+      'video/x-matroska',     // .mkv
+      'video/webm',           // .webm
+      'video/mov',            // tolérance backend
+      'application/octet-stream' // certains navigateurs
     ];
     
     if (file.type && !allowedMimeTypes.includes(file.type)) {
@@ -116,7 +115,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     }
 
     // Vérifier le type MIME (peut être text/plain ou application/x-subrip)
-    const allowedMimeTypes = ['text/plain', 'application/x-subrip', 'text/srt'];
+    const allowedMimeTypes = ['text/plain', 'application/srt', 'application/x-subrip', 'application/octet-stream'];
     if (file.type && !allowedMimeTypes.includes(file.type)) {
       return 'Subtitle file type not allowed';
     }
@@ -430,7 +429,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
             <input 
               className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
               type="file"
-              accept=".MOV,.MPEG4,.MP4,.AVI,.WMV,.MPEGPS,.FLV,.3GPP,.WebM"
+              accept=".MOV,.MPEG4,.MP4,.WebM,.MKV"
               name="videoFile"
               id="videoFile"
               onChange={handleFileChange}

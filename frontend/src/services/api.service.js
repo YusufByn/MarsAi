@@ -5,6 +5,36 @@
 // URL de base de l'API - à ajuster selon votre configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:4000/api';
 
+const MIME_BY_EXTENSION = {
+  '.mp4': 'video/mp4',
+  '.mpeg4': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.webm': 'video/webm',
+  '.mkv': 'video/x-matroska',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.srt': 'text/plain',
+};
+
+const normalizeFileForUpload = (file, fallbackMimeType = '') => {
+  if (!file) return null;
+
+  const fileName = (file.name || '').toLowerCase();
+  const extension = fileName.includes('.') ? `.${fileName.split('.').pop()}` : '';
+  const mappedMimeType = MIME_BY_EXTENSION[extension] || fallbackMimeType || file.type || '';
+
+  if (!mappedMimeType || file.type === mappedMimeType) {
+    return file;
+  }
+
+  return new File([file], file.name, {
+    type: mappedMimeType,
+    lastModified: file.lastModified || Date.now(),
+  });
+};
+
 /**
  * Créer une vidéo (métadonnées uniquement, sans fichiers)
  * @param {Object} videoData - Données de la vidéo
@@ -13,47 +43,72 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_
  */
 export const createVideo = async (videoData, recaptchaToken) => {
   try {
-    // Mapper les données du frontend vers le format backend
+    // Mapper les données du frontend vers le format backend (requête unique multipart)
     const step1 = videoData.step1 || {};
     const step2 = videoData.step2 || {};
     const step3 = videoData.step3 || {};
-    
-    // Créer un objet JSON avec les métadonnées uniquement (pas de fichiers)
-    const videoMetadata = {
-      // Données personnelles (step1)
-      email: step1.email || null,
-      realisator_name: step1.firstName || null,
-      realisator_lastname: step1.lastName || null,
-      realisator_gender: step1.gender || null,
-      country: step1.country || null,
-      fixe_number: step1.phoneNumber || null,
-      mobile_number: step1.mobileNumber || null,
-      address: step1.address || null,
-      acquisition_source: step1.acquisitionSource || null,
-      
-      // Données de la vidéo (step2)
-      title: step2.title || null,
-      title_en: step2.titleEN || null,
-      language: step2.language || null,
-      synopsis: step2.synopsis || null,
-      synopsis_en: step2.synopsisEN || null,
-      tech_resume: step2.techResume || null,
-      creative_resume: step2.creativeResume || null,
-      classification: step2.classification || 'hybrid',
-      
-      // Rights accepted (obligatoire)
-      rights_accepted: step3.rightsAccepted ? 1 : 0,
 
-      // Token reCAPTCHA attendu par le middleware backend
-      recaptchaToken: recaptchaToken || null
+    const formData = new FormData();
+
+    // Champs texte backend
+    const textFields = {
+      email: step1.email || '',
+      realisator_name: step1.firstName || '',
+      realisator_lastname: step1.lastName || '',
+      realisator_gender: step1.gender || '',
+      country: step1.country || '',
+      fixe_number: step1.phoneNumber || '',
+      mobile_number: step1.mobileNumber || '',
+      address: step1.address || '',
+      acquisition_source: step1.acquisitionSource || '',
+      title: step2.title || '',
+      title_en: step2.titleEN || '',
+      language: step2.language || '',
+      synopsis: step2.synopsis || '',
+      synopsis_en: step2.synopsisEN || '',
+      tech_resume: step2.techResume || '',
+      creative_resume: step2.creativeResume || '',
+      classification: step2.classification || 'hybrid',
+      duration: step3.duration || '',
+      rights_accepted: step3.rightsAccepted ? '1' : '0',
+      recaptchaToken: recaptchaToken || ''
     };
-    
-    const response = await fetch(`${API_BASE_URL}/upload/videos`, {
+
+    Object.entries(textFields).forEach(([key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
+    });
+
+    // Tags: le backend attend un tableau dans req.body.tags
+    if (Array.isArray(step2.tags) && step2.tags.length > 0) {
+      const tagNames = step2.tags
+        .map((tag) => tag?.value || tag?.label || tag)
+        .filter(Boolean);
+
+      tagNames.forEach((tag) => {
+        formData.append('tags', String(tag));
+      });
+    }
+
+    // Fichiers (noms de champs attendus par multer backend)
+    const normalizedVideo = normalizeFileForUpload(step3.videoFile, 'video/mp4');
+    const normalizedCover = normalizeFileForUpload(step3.coverImage, 'image/jpeg');
+    const normalizedStill1 = normalizeFileForUpload(step3.still1, 'image/jpeg');
+    const normalizedStill2 = normalizeFileForUpload(step3.still2, 'image/jpeg');
+    const normalizedStill3 = normalizeFileForUpload(step3.still3, 'image/jpeg');
+    const normalizedSubtitle = normalizeFileForUpload(step3.subtitle, 'text/plain');
+
+    if (normalizedVideo) formData.append('video', normalizedVideo);
+    if (normalizedCover) formData.append('cover', normalizedCover);
+    if (normalizedStill1) formData.append('stills', normalizedStill1);
+    if (normalizedStill2) formData.append('stills', normalizedStill2);
+    if (normalizedStill3) formData.append('stills', normalizedStill3);
+    if (normalizedSubtitle) formData.append('srt', normalizedSubtitle);
+
+    const response = await fetch(`${API_BASE_URL}/upload/video`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(videoMetadata),
+      body: formData,
     });
     
     if (!response.ok) {
@@ -259,96 +314,17 @@ export const addSocialMedia = async (videoId, socialMedia) => {
  */
 export const submitCompleteForm = async (formData, recaptchaToken) => {
   try {
-    // Étape 1: Créer la vidéo (métadonnées uniquement)
-    console.log('📤 Création de la vidéo...');
+    // Backend actuel: un seul endpoint gère métadonnées + fichiers
+    console.log('📤 Création de la vidéo (soumission unique)...');
     const videoResponse = await createVideo(formData, recaptchaToken);
-    
-    if (!videoResponse.success || !videoResponse.video || !videoResponse.video.id) {
-      throw new Error('Erreur lors de la création de la vidéo');
+
+    if (!videoResponse?.success) {
+      throw new Error(videoResponse?.message || 'Erreur lors de la création de la vidéo');
     }
-    
-    const videoId = videoResponse.video.id;
-    console.log('✅ Vidéo créée avec l\'ID:', videoId);
-    
-    // Étape 2: Upload des fichiers (en parallèle si possible)
-    const uploadPromises = [];
-    
-    if (formData.step3?.videoFile) {
-      console.log('📤 Upload de la vidéo...');
-      uploadPromises.push(
-        uploadVideoFile(videoId, formData.step3.videoFile)
-          .then(() => console.log('✅ Vidéo uploadée'))
-          .catch(err => {
-            console.error('❌ Erreur upload vidéo:', err);
-            throw new Error('Erreur lors de l\'upload de la vidéo: ' + err.message);
-          })
-      );
-    }
-    
-    if (formData.step3?.coverImage) {
-      console.log('📤 Upload de la couverture...');
-      uploadPromises.push(
-        uploadCover(videoId, formData.step3.coverImage)
-          .then(() => console.log('✅ Couverture uploadée'))
-          .catch(err => {
-            console.error('❌ Erreur upload couverture:', err);
-            throw new Error('Erreur lors de l\'upload de la couverture: ' + err.message);
-          })
-      );
-    }
-    
-    const stillFiles = [
-      formData.step3?.still1,
-      formData.step3?.still2,
-      formData.step3?.still3
-    ].filter(Boolean);
-    
-    if (stillFiles.length > 0) {
-      console.log(`📤 Upload de ${stillFiles.length} image(s) still...`);
-      uploadPromises.push(
-        uploadStills(videoId, stillFiles)
-          .then(() => console.log('✅ Stills uploadées'))
-          .catch(err => {
-            console.error('❌ Erreur upload stills:', err);
-            throw new Error('Erreur lors de l\'upload des stills: ' + err.message);
-          })
-      );
-    }
-    
-    if (formData.step3?.subtitle) {
-      console.log('📤 Upload des sous-titres...');
-      uploadPromises.push(
-        uploadSubtitles(videoId, formData.step3.subtitle)
-          .then(() => console.log('✅ Sous-titres uploadés'))
-          .catch(err => {
-            console.error('❌ Erreur upload sous-titres:', err);
-            throw new Error('Erreur lors de l\'upload des sous-titres: ' + err.message);
-          })
-      );
-    }
-    
-    // Attendre que tous les uploads soient terminés
-    if (uploadPromises.length > 0) {
-      await Promise.all(uploadPromises);
-      console.log('✅ Tous les fichiers uploadés');
-    }
-    
-    // Étape 3: Ajouter les contributeurs (si présents)
-    if (formData.step1?.contributors && formData.step1.contributors.length > 0) {
-      console.log('📤 Envoi des contributeurs...');
-      const contributorsResponse = await addContributors(videoId, formData.step1.contributors);
-      console.log('✅ Contributeurs ajoutés:', contributorsResponse.contributors?.length || 0);
-    }
-    
-    // Étape 4: Ajouter les réseaux sociaux (si présents)
-    if (formData.step2?.socialMedia && formData.step2.socialMedia.length > 0) {
-      console.log('📤 Envoi des réseaux sociaux...');
-      const socialMediaResponse = await addSocialMedia(videoId, formData.step2.socialMedia);
-      console.log('✅ Réseaux sociaux ajoutés:', socialMediaResponse.social_media?.length || 0);
-    }
-    
-    console.log('✅ Formulaire complet soumis avec succès!');
-    
+
+    const videoId = videoResponse?.data?.video || null;
+    console.log('✅ Soumission backend réussie. ID vidéo:', videoId);
+
     return {
       success: true,
       videoId,
