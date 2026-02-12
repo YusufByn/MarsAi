@@ -1,13 +1,14 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import FormDirector from './pages/user/FormDirector';
 import JuryDetails from './pages/user/JuryDetails';
 import AllJury from './pages/user/AllJury';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import Player from './pages/playerVideo/player';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import FromVideo from './pages/FromVideo';
+import FormDirector from './pages/user/FormDirector';
 import EditVideo from './pages/EditVideo';
 import Selector from './pages/selector/selector';
 import Videos from './pages/Videos';
@@ -30,7 +31,7 @@ function AppContent() {
           <Route path="/video/player" element={<Player />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/FromVideo" element={<FromVideo />} />
+          <Route path="/formsubmission" element={<FormDirector />} />
           <Route path="/video/edit/:id" element={<EditVideo />} />
           <Route path="/selector" element={<Selector />} />
           <Route path="/videos" element={<Videos />} />
