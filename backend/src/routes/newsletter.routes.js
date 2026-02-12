@@ -5,7 +5,7 @@ import {
   validateUnsubscribe, 
   validateSendCampaign, 
   validatePreviewRecipients 
-} from '../middlewares/validator/newsletter.validator.js';
+} from '../../../shared/validators/newsletter.validator.js';
 import { checkAuth, restrictTo } from '../middlewares/auth.middleware.js';
 const router = Router();
 
