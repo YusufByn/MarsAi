@@ -7,7 +7,7 @@ import {
   validatePreviewRecipients 
 } from '../../../shared/validators/newsletter.validator.js';
 import { checkAuth } from '../middlewares/auth.middleware.js';
-import { requireRole } from '../middlewares/requireRole.middleware.js';
+import { restrictTo } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
