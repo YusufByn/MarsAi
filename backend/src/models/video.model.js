@@ -244,6 +244,37 @@ export const addTagsToVideo = async (videoId, tagIds) => {
   return rows;
 };
 
+export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
+  if (!Array.isArray(socialLinks) || socialLinks.length === 0) {
+    return [];
+  }
+
+  const createdLinks = [];
+
+  for (const link of socialLinks) {
+    const platform = String(link?.platform || '').trim().toLowerCase();
+    const url = String(link?.url || '').trim();
+
+    if (!platform || !url) continue;
+
+    const [socialResult] = await pool.execute(
+      `INSERT INTO social_media (platform, url) VALUES (?, ?)`,
+      [platform, url]
+    );
+
+    const socialMediaId = socialResult.insertId;
+
+    await pool.execute(
+      `INSERT INTO video_social_media (video_id, social_media_id) VALUES (?, ?)`,
+      [videoId, socialMediaId]
+    );
+
+    createdLinks.push({ id: socialMediaId, platform, url });
+  }
+
+  return createdLinks;
+};
+
 // nouvelle fonction d'ajout on test, imax
 export const createVideo = async (payload) => {
   const query = `

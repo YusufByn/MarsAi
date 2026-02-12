@@ -35,6 +35,35 @@ const normalizeFileForUpload = (file, fallbackMimeType = '') => {
   });
 };
 
+const SOCIAL_PLATFORM_MAP = {
+  facebook: 'facebook',
+  instagram: 'instagram',
+  x: 'x',
+  twitter: 'x',
+  linkedin: 'linkedin',
+  youtube: 'youtube',
+  tiktok: 'tiktok',
+  other: 'website',
+  website: 'website',
+};
+
+const normalizeSocialNetworks = (socialNetworks = {}) => {
+  if (!socialNetworks || typeof socialNetworks !== 'object') {
+    return [];
+  }
+
+  return Object.entries(socialNetworks)
+    .map(([rawPlatform, rawUrl]) => {
+      const platformKey = String(rawPlatform || '').trim().toLowerCase();
+      const url = String(rawUrl || '').trim();
+      const platform = SOCIAL_PLATFORM_MAP[platformKey];
+
+      if (!platform || !url) return null;
+      return { platform, url };
+    })
+    .filter(Boolean);
+};
+
 /**
  * Créer une vidéo (métadonnées uniquement, sans fichiers)
  * @param {Object} videoData - Données de la vidéo
@@ -84,11 +113,23 @@ export const createVideo = async (videoData, recaptchaToken) => {
     if (Array.isArray(step2.tags) && step2.tags.length > 0) {
       const tagNames = step2.tags
         .map((tag) => tag?.value || tag?.label || tag)
+        .map((tag) => String(tag).trim())
         .filter(Boolean);
 
-      tagNames.forEach((tag) => {
-        formData.append('tags', String(tag));
-      });
+      // Garantit un tableau côté backend même avec un seul tag
+      if (tagNames.length === 1) {
+        formData.append('tags', tagNames[0]);
+        formData.append('tags', tagNames[0]);
+      } else {
+        tagNames.forEach((tag) => {
+          formData.append('tags', tag);
+        });
+      }
+    }
+
+    const socialNetworks = normalizeSocialNetworks(step1.socialNetworks || {});
+    if (socialNetworks.length > 0) {
+      formData.append('social_networks', JSON.stringify(socialNetworks));
     }
 
     // Fichiers (noms de champs attendus par multer backend)
