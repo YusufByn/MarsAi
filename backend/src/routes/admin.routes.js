@@ -18,6 +18,6 @@ router.post('/events', adminController.createEvent);
 router.delete('/events/:id', adminController.deleteEvent);
 
 router.get('/cms', adminController.getCms);
-router.put('/cms/:section_type', adminController.updateCms); // ex: /api/admin/cms/hero
+router.put('/cms/:section_type', adminController.updateCms); 
 
 export default router;
