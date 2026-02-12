@@ -8,9 +8,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_
 /**
  * Créer une vidéo (métadonnées uniquement, sans fichiers)
  * @param {Object} videoData - Données de la vidéo
+ * @param {string} recaptchaToken - Token reCAPTCHA v2
  * @returns {Promise<Object>} - Réponse avec l'ID de la vidéo créée
  */
-export const createVideo = async (videoData) => {
+export const createVideo = async (videoData, recaptchaToken) => {
   try {
     // Mapper les données du frontend vers le format backend
     const step1 = videoData.step1 || {};
@@ -41,7 +42,10 @@ export const createVideo = async (videoData) => {
       classification: step2.classification || 'hybrid',
       
       // Rights accepted (obligatoire)
-      rights_accepted: step3.rightsAccepted ? 1 : 0
+      rights_accepted: step3.rightsAccepted ? 1 : 0,
+
+      // Token reCAPTCHA attendu par le middleware backend
+      recaptchaToken: recaptchaToken || null
     };
     
     const response = await fetch(`${API_BASE_URL}/upload/videos`, {
@@ -54,7 +58,7 @@ export const createVideo = async (videoData) => {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de la création de la vidéo');
+      throw new Error(errorData.error || errorData.message || 'Erreur lors de la création de la vidéo');
     }
     
     return await response.json();
@@ -250,14 +254,14 @@ export const addSocialMedia = async (videoId, socialMedia) => {
 /**
  * Soumettre l'ensemble du formulaire (vidéo + fichiers + contributeurs + réseaux sociaux)
  * @param {Object} formData - Toutes les données du formulaire
- * @param {string} _recaptchaToken - Token reCAPTCHA (réservé pour usage futur)
+ * @param {string} recaptchaToken - Token reCAPTCHA
  * @returns {Promise<Object>} - Réponse complète
  */
-export const submitCompleteForm = async (formData, _recaptchaToken) => {
+export const submitCompleteForm = async (formData, recaptchaToken) => {
   try {
     // Étape 1: Créer la vidéo (métadonnées uniquement)
     console.log('📤 Création de la vidéo...');
-    const videoResponse = await createVideo(formData);
+    const videoResponse = await createVideo(formData, recaptchaToken);
     
     if (!videoResponse.success || !videoResponse.video || !videoResponse.video.id) {
       throw new Error('Erreur lors de la création de la vidéo');
