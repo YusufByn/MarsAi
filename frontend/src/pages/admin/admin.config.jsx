@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Eye, EyeOff } from 'lucide-react';
+import React, { useState } from 'react';
+import { Save } from 'lucide-react';
 
 export default function AdminConfig() {
     // État local pour stocker la config (normalement fetché depuis l'API)

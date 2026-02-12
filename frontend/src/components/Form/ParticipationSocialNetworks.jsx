@@ -32,9 +32,9 @@ const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSo
     if (!url) return true; // Les champs sont optionnels
     
     try {
-      const urlPattern = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
+      const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w._~:/?#[\]@!$&'()*+,;=-]*)?$/;
       return urlPattern.test(url);
-    } catch (e) {
+    } catch {
       return false;
     }
   };
@@ -78,7 +78,7 @@ const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSo
 
       <section className="FormSocialNetworks">
         <div className="grid grid-cols-1 justify-items-center m-2 gap-3">
-          {socialNetworksList.map(({ key, label, icon, placeholder }) => (
+          {socialNetworksList.map(({ key, icon, placeholder }) => (
             <div key={key} className="w-full max-w-xs">
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg">

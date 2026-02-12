@@ -245,7 +245,7 @@ function validatePhoneNumber(value) {
             return "Invalid phone number format";
         }
         return null; // Validation réussie
-    } catch (error) {
+    } catch {
         // En cas d'erreur de parsing, retourne un message d'erreur
         return "Invalid phone number format";
     }
@@ -272,7 +272,7 @@ function validateMobileNumber(value) {
             return "Invalid mobile number format";
         }
         return null; // Validation réussie
-    } catch (error) {
+    } catch {
         // En cas d'erreur de parsing, retourne un message d'erreur
         return "Invalid mobile number format";
     }

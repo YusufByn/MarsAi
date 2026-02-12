@@ -1,27 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import LanguageToggle from '../LanguageToggle';
+
+function readAuthFromStorage() {
+  const storedUser = localStorage.getItem('auth_user');
+  if (storedUser) {
+    const authUser = JSON.parse(storedUser);
+    return { user: authUser, isJury: authUser.role === 'jury' };
+  }
+  return { user: null, isJury: false };
+}
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState(null);
-  const [isJury, setIsJury] = useState(false);
+  const [logoutFlag, setLogoutFlag] = useState(false);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('auth_user');
-    if (storedUser) {
-      const authUser = JSON.parse(storedUser);
-      setUser(authUser);
-      setIsJury(authUser.role === 'jury');
-    }
-  }, [location]);
+  // Re-read auth from localStorage on every render (triggered by location or logoutFlag change)
+  const { user, isJury } = logoutFlag ? { user: null, isJury: false } : readAuthFromStorage();
+
+  // Ensure logoutFlag is consumed (location is used to trigger re-renders on route change)
+  void location;
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
-    setUser(null);
-    setIsJury(false);
+    setLogoutFlag(true);
     navigate('/');
   };
 

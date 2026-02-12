@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import CreatableSelect from 'react-select/creatable';
 
 const FromVideo = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
@@ -74,7 +72,7 @@ const FromVideo = () => {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/tag');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/tag`);
         const result = await response.json();
 
         if (result.success) {
@@ -158,7 +156,7 @@ const FromVideo = () => {
       // Ajouter les stills (max 3)
       if (formData.still_files && formData.still_files.length > 0) {
         console.log('[SUBMIT] Ajout de', formData.still_files.length, 'stills');
-        formData.still_files.forEach((file, index) => {
+        formData.still_files.forEach((file) => {
           formDataToSend.append('stills', file);
           console.log('[SUBMIT] Still ajouté:', file.name);
         });
@@ -212,7 +210,7 @@ const FromVideo = () => {
       console.log('[SUBMIT] Envoi de la soumission vidéo...');
 
       // Appel API
-      const response = await fetch('http://localhost:4000/api/upload/submit', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/upload/submit`, {
         method: 'POST',
         body: formDataToSend
         // Ne pas définir Content-Type, le navigateur le fera automatiquement avec boundary

@@ -31,7 +31,7 @@ const HomePage = () => {
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-12">
-            <button onClick={() => navigate('/FromVideo')} className="mars-button-primary">
+            <button onClick={() => navigate('/formsubmission')} className="mars-button-primary">
               {t('home.submitFilm')}
             </button>
 

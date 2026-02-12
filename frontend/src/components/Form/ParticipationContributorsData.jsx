@@ -128,7 +128,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               Added contributors ({contributors.length})
             </h3>
             <div className="grid grid-cols-1 gap-2 justify-items-center">
-              {contributors.map((contributor, index) => (
+              {contributors.map((contributor) => (
                 <div 
                   key={contributor.id} 
                   className="w-full max-w-xs bg-linear-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-3 relative hover:border-purple-500/50 transition-all text-left"

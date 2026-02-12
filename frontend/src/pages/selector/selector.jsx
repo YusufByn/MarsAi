@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../../services/userService';
 import { selectorMemoService } from '../../services/selectorMemoService';
@@ -7,7 +7,6 @@ const Selector = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [memos, setMemos] = useState([]);
-  const [filteredMemos, setFilteredMemos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -42,7 +41,6 @@ const Selector = () => {
         // Récupérer tous les memos de cet utilisateur
         const memosResponse = await selectorMemoService.getAllByUser(authUser.id);
         setMemos(memosResponse.data);
-        setFilteredMemos(memosResponse.data);
 
         setLoading(false);
       } catch (err) {
@@ -56,7 +54,7 @@ const Selector = () => {
   }, [navigate]);
 
   // Fonction de tri et filtrage
-  useEffect(() => {
+  const filteredMemos = useMemo(() => {
     let result = [...memos];
 
     // Filtrage par statut
@@ -87,7 +85,7 @@ const Selector = () => {
       }
     });
 
-    setFilteredMemos(result);
+    return result;
   }, [memos, sortBy, sortOrder, filterStatut, filterPlaylist]);
 
   if (loading) {
