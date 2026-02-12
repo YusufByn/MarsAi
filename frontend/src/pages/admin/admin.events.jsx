@@ -1,43 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User, Zap, Clock, MapPin, Download, Edit } from 'lucide-react';
 
 export default function AdminEvents() {
-    const [events, setEvents] = useState([]);
     // Données factices pour l'exemple visuel (à remplacer par ton fetch API)
+    const [events] = useState([
+        {
+            id: 1,
+            title: "MASTERCLASS: PROMPT ENGINEERING VIDEO",
+            description: "Apprenez à maîtriser la cohérence temporelle...",
+            coach: "Jean Dupond AI Lab",
+            date: "2026-05-17T10:00:00",
+            duration: 120,
+            location: "AUDITORIUM MUCEM",
+            stock: 50,
+            registered: 12
+        },
+        {
+            id: 2,
+            title: "ATELIER: MUSIQUE & IA GÉNÉRATIVE",
+            description: "Composition assistée par IA...",
+            coach: "Sora Music Team",
+            date: "2026-05-17T14:00:00",
+            duration: 120,
+            location: "STUDIO 1 - FRICHE BELLE DE MAI",
+            stock: 20,
+            registered: 16
+        }
+    ]);
     const stats = {
         totalReservations: 245,
         dailyIncrease: 12,
         fillRate: 78
     };
-
-    useEffect(() => {
-        // Fetch API ici : GET /api/admin/events
-        // Pour l'instant, on mock selon ta DB :
-        setEvents([
-            {
-                id: 1,
-                title: "MASTERCLASS: PROMPT ENGINEERING VIDEO",
-                description: "Apprenez à maîtriser la cohérence temporelle...",
-                coach: "Jean Dupond AI Lab", // Champ 'created_by' ou spécifique
-                date: "2026-05-17T10:00:00",
-                duration: 120,
-                location: "AUDITORIUM MUCEM",
-                stock: 50,
-                registered: 12 // Calculé via table reservation
-            },
-            {
-                id: 2,
-                title: "ATELIER: MUSIQUE & IA GÉNÉRATIVE",
-                description: "Composition assistée par IA...",
-                coach: "Sora Music Team",
-                date: "2026-05-17T14:00:00",
-                duration: 120,
-                location: "STUDIO 1 - FRICHE BELLE DE MAI",
-                stock: 20,
-                registered: 16
-            }
-        ]);
-    }, []);
 
     return (
         <div className="p-8 bg-gray-50 min-h-screen ml-64"> {/* Marge pour la sidebar */}

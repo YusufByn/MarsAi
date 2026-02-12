@@ -9,7 +9,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
   // Gestion des changements de champs
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     
     setFormDataProp({
       ...formData,

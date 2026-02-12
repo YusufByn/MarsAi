@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import ParticipationPersonnalData from '../../components/Form/ParticipationPersonnalData.jsx';
 import ParticipationVideoData from '../../components/Form/ParticipationVideoData.jsx';
 import ParticipationVideoUpload from '../../components/Form/ParticipationVideoUpload.jsx';
@@ -7,7 +6,6 @@ import ParticipationVideoUpload from '../../components/Form/ParticipationVideoUp
 
 
 const FormDirector = () => {
-  const navigate = useNavigate();
   const [etape, setEtape] = useState(1);
 
   // État centralisé pour toutes les étapes du formulaire

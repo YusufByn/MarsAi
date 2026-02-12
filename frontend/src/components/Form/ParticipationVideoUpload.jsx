@@ -313,6 +313,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
         if (url) URL.revokeObjectURL(url);
       });
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -372,13 +373,13 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     setIsSubmitting(true);
     
     try {
-      console.log("📤 Soumission du formulaire complet...");
-      console.log("Form data:", allFormData);
+      console.log("[SUBMIT] Soumission du formulaire complet...");
+      console.log("[SUBMIT] Form data:", allFormData);
       
       // Envoyer toutes les données au backend
       const result = await submitCompleteForm(allFormData, token);
       
-      console.log("✅ Soumission réussie!", result);
+      console.log("[SUBMIT] Soumission reussie!", result);
       
       // Afficher le succès
       setSubmitSuccess(true);
@@ -393,7 +394,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       }, 2000);
       
     } catch (error) {
-      console.error("❌ Erreur lors de la soumission:", error);
+      console.error("[SUBMIT ERROR] Erreur lors de la soumission:", error);
       setSubmitError(error.message || "An error occurred while submitting the form. Please try again.");
       
       // Réinitialiser le reCAPTCHA en cas d'erreur

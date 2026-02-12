@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 
 const EditVideo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
@@ -60,12 +58,13 @@ const EditVideo = () => {
     }
 
     validateToken();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, id]);
 
   const validateToken = async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/upload/${id}/validate-token?token=${token}`
+        `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/upload/${id}/validate-token?token=${token}`
       );
 
       const data = await response.json();
@@ -153,7 +152,7 @@ const EditVideo = () => {
       }
 
       const response = await fetch(
-        `http://localhost:4000/api/upload/${id}/update?token=${token}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/upload/${id}/update?token=${token}`,
         {
           method: 'PUT',
           body: formDataToSend

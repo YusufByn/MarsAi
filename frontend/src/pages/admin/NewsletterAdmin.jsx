@@ -80,20 +80,21 @@ const NewsletterAdmin = () => {
 
   // Récupérer le nombre de destinataires (uniquement newsletter)
   useEffect(() => {
-    fetchRecipientCounts();
-  }, []);
-
-  const fetchRecipientCounts = async () => {
-    try {
-      const response = await newsletterService.previewRecipients(['newsletter']);
-      setRecipientCounts({
-        newsletter: response.data.breakdown.newsletter,
-        total: response.data.total
+    let cancelled = false;
+    newsletterService.previewRecipients(['newsletter'])
+      .then(response => {
+        if (!cancelled) {
+          setRecipientCounts({
+            newsletter: response.data.breakdown.newsletter,
+            total: response.data.total
+          });
+        }
+      })
+      .catch(error => {
+        console.error('[NEWSLETTER] Erreur lors de la recuperation des destinataires:', error);
       });
-    } catch (error) {
-      console.error('Erreur lors de la récupération des destinataires:', error);
-    }
-  };
+    return () => { cancelled = true; };
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;

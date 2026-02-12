@@ -25,7 +25,7 @@ const Player = () => {
   const [ratings, setRatings] = useState({});
   const [memos, setMemos] = useState({});
   const [statuses, setStatuses] = useState({});
-  const [saving, setSaving] = useState(false);
+  const [_saving, setSaving] = useState(false);
 
   // États pour les notifications et feedback visuel
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
@@ -224,6 +224,7 @@ const Player = () => {
         clearTimeout(tabTimerRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showRatingModal, showNotePanel, showEmailPanel, videos, currentIndex]);
 
   // Reset tab count quand on change de vidéo

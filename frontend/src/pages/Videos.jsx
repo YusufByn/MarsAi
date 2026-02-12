@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { videoService } from '../services/videoService';
 
 const Videos = () => {
   const navigate = useNavigate();
   const [videos, setVideos] = useState([]);
-  const [filteredVideos, setFilteredVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +31,6 @@ const Videos = () => {
         // Récupérer toutes les vidéos
         const response = await videoService.getAll();
         setVideos(response.data);
-        setFilteredVideos(response.data);
 
         setLoading(false);
       } catch (err) {
@@ -46,7 +44,7 @@ const Videos = () => {
   }, [navigate]);
 
   // Filtrage
-  useEffect(() => {
+  const filteredVideos = useMemo(() => {
     let result = [...videos];
 
     // Recherche par titre
@@ -62,7 +60,7 @@ const Videos = () => {
       result = result.filter(video => video.classification === filterClassification);
     }
 
-    setFilteredVideos(result);
+    return result;
   }, [videos, searchTerm, filterClassification]);
 
   const handleVideoClick = (videoId) => {

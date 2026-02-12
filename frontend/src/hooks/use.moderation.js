@@ -11,7 +11,7 @@ export function useModeration() {
         try {
             // Remplace par ton URL réelle
             const query = new URLSearchParams(filters).toString();
-            const res = await fetch(`http://localhost:4000/api/admin/videos?${query}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/admin/videos?${query}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             const data = await res.json();
@@ -26,7 +26,7 @@ export function useModeration() {
     // Mettre à jour un statut
     const updateStatus = async (id, newStatus) => {
         try {
-            await fetch(`http://localhost:4000/api/admin/videos/${id}/status`, {
+            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/admin/videos/${id}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -45,6 +45,7 @@ export function useModeration() {
     // Recharger quand les filtres changent
     useEffect(() => {
         fetchFilms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters]);
 
     return { films, loading, filters, setFilters, updateStatus, refresh: fetchFilms };
