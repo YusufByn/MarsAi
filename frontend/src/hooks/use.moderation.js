@@ -12,7 +12,7 @@ export function useModeration() {
             // Remplace par ton URL réelle
             const query = new URLSearchParams(filters).toString();
             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/admin/videos?${query}`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
             });
             const data = await res.json();
             setFilms(data.films || []);
@@ -30,7 +30,7 @@ export function useModeration() {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                 },
                 body: JSON.stringify({ status: newStatus })
             });
