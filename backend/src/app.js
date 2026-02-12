@@ -2,13 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
+
 import routes from './routes/index.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,6 +47,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // middleware pour gérer les erreurs
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({
