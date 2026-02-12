@@ -10,6 +10,7 @@ import videoRoutes from './video.routes.js';
 import youtubeRoutes from './youtube.routes.js';
 import testRoutes from './test.routes.js';
 import countdownRoutes from './cms/countdown.routes.js';
+import adminRoutes from "./admin.routes.js";
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/rating', ratingRoutes);
 router.use('/videos', videoRoutes);
 router.use('/youtube', youtubeRoutes);
 router.use('/cms', countdownRoutes);
+router.use('/admin', adminRoutes);
 
 // testRoutes garde /test en interne
 router.use('/', testRoutes);

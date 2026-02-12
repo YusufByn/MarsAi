@@ -1,16 +1,43 @@
 import pool from '../config/db.js';
 
-export const eventModel = {
+export const EventModel = {
     async findAll() {
-        // Récupère tout + calcule le nombre d'inscrits si tu as une table reservation
-        // Sinon, utilise juste les champs de la table event
         const query = `
-            SELECT e.*, 
-            (SELECT COUNT(*) FROM reservation r WHERE r.event_id = e.id) as registered_count
-            FROM event e ORDER BY e.date ASC
+            SELECT 
+                id, 
+                title, 
+                description, 
+                date, 
+                duration, 
+                stock, 
+                illustration, 
+                location,
+                created_by,
+                created_at 
+            FROM event 
+            ORDER BY date ASC
         `;
         const [rows] = await pool.execute(query);
         return rows;
     },
-    // ... create, update, delete comme vu précédemment
+
+    async create(data) {
+        const { title, description, date, duration, stock, illustration, location, created_by } = data;
+        
+        const query = `
+            INSERT INTO event 
+            (title, description, date, duration, stock, illustration, location, created_by, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `;
+        
+        const [result] = await pool.execute(query, [
+            title, description, date, duration, stock, illustration, location, created_by
+        ]);
+        return result.insertId;
+    },
+
+    async delete(id) {
+        const [result] = await pool.execute('DELETE FROM event WHERE id = ?', [id]);
+        return result.affectedRows > 0;
+    }
 };

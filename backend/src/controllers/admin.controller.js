@@ -66,7 +66,6 @@ export const adminController = {
         }
     },
 
-    // --- ÉVÈNEMENTS ---
     async listEvents(req, res) {
         try {
             const events = await EventModel.findAll();
@@ -78,7 +77,6 @@ export const adminController = {
 
     async createEvent(req, res) {
         try {
-            // req.user.id vient du middleware checkAuth
             const newId = await EventModel.create({ ...req.body, created_by: req.user.id });
             res.json({ success: true, id: newId });
         } catch (error) {
@@ -96,7 +94,6 @@ export const adminController = {
         }
     },
 
-    // --- CMS ---
     async getCms(req, res) {
         try {
             const data = await CmsModel.findAll();
@@ -109,8 +106,8 @@ export const adminController = {
 
     async updateCms(req, res) {
         try {
-            const { section_type } = req.params; // ex: 'hero'
-            const configData = req.body; // L'objet complet envoyé par le front
+            const { section_type } = req.params;
+            const configData = req.body; 
 
             await CmsModel.update(section_type, configData);
             res.json({ success: true });
