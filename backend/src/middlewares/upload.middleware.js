@@ -20,8 +20,10 @@ const ensureDir = (dir) => {
 // la ou l'on va stocker les fichiers
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        // variable qui permet de stocker le fichier dans le dossier correspondant 
         let dir = folders.video;
 
+        
         if (file.fieldname === "cover") dir = folders.cover;
         if (file.fieldname === "stills") dir = folders.still;
         if (file.fieldname === "srt") dir = folders.srt;

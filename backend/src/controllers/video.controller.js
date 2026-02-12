@@ -34,18 +34,28 @@ export const uploadVideo = async (req, res) => {
       });
     }
 
-    const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
-      title,
-      description: description || "",
-      categoryId: categoryId || "22",
-      privacyStatus: privacyStatus || "unlisted"
-    });
-
     // on recup le nom du fichier video et le nom du fichier s'il existe
     const video_file_name = videoFiles.filename;
     const cover = coverFile?.filename;
     const srt_file_name = srtFile?.filename;
+
+    // upload de la video sur youtube
+    // on passe le chemin du fichier video, et les metadata
+    const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
+      title,
+      description: description || "",
+      tags: cleanTags,
+      thumbnailPath: coverFile?.path,
+      srt_file_name: srtFile?.filename,
+      srtLanguage: req.body.srtLanguage || 'fr',
+      srtPath: srtFile?.path,
+      categoryId: categoryId || "22",
+      privacyStatus: privacyStatus || "unlisted"
+    });
+
     const youtube_url = youtubeUpload.youtubeUrl;
+
+
     // creation de la video
     const video = await createVideo(
       title, 
