@@ -8,7 +8,6 @@ import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import Player from './pages/playerVideo/player';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import FormDirector from './pages/user/FormDirector';
 import EditVideo from './pages/EditVideo';
 import Selector from './pages/selector/selector';
 import Videos from './pages/Videos';

@@ -4,6 +4,7 @@ import { createStills } from "../models/image.model.js";
 import { createVideo } from "../models/video.model.js";
 import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import pool from "../config/db.js";
+import { youtube } from "googleapis/build/src/apis/youtube/index.js";
 
 export const uploadVideo = async (req, res) => {
 
@@ -41,60 +42,97 @@ export const uploadVideo = async (req, res) => {
 
     // upload de la video sur youtube
     // on passe le chemin du fichier video, et les metadata
-    const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
-      title,
-      description: description || "",
-      tags: cleanTags,
-      thumbnailPath: coverFile?.path,
-      srt_file_name: srtFile?.filename,
-      srtLanguage: req.body.srtLanguage || 'fr',
-      srtPath: srtFile?.path,
-      categoryId: categoryId || "22",
-      privacyStatus: privacyStatus || "unlisted"
-    });
+    // const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
+    //   title,
+    //   description: description || "",
+    //   tags: cleanTags,
+    //   thumbnailPath: coverFile?.path,
+    //   srt_file_name: srtFile?.filename,
+    //   srtLanguage: req.body.srtLanguage || 'fr',
+    //   srtPath: srtFile?.path,
+    //   categoryId: categoryId || "22",
+    //   privacyStatus: privacyStatus || "unlisted"
+    // });
 
-    const youtube_url = youtubeUpload.youtubeUrl;
+    // const youtube_url = youtubeUpload.youtubeUrl;
 
 
-    // creation de la video
-    const video = await createVideo(
-      title, 
-      youtube_url,
+    const video = await createVideo({
+      youtube_url: null,
       video_file_name,
       srt_file_name,
-      cover
-    );
-
+      cover,
+    
+      // champs texte déjà existants dans ton req.body
+      title: req.body.title ?? null,
+      title_en: req.body.title_en ?? null,
+      synopsis: req.body.synopsis ?? null,
+      synopsis_en: req.body.synopsis_en ?? null,
+      language: req.body.language ?? null,
+      country: req.body.country ?? null,
+      duration: req.body.duration ?? null,
+      classification: req.body.classification ?? "hybrid",
+      tech_resume: req.body.tech_resume ?? null,
+      creative_resume: req.body.creative_resume ?? null,
+      realisator_name: req.body.realisator_name ?? null,
+      realisator_lastname: req.body.realisator_lastname ?? null,
+      realisator_gender: req.body.realisator_gender ?? null,
+      email: req.body.email ?? null,
+      birthday: req.body.birthday ?? null,
+      mobile_number: req.body.mobile_number ?? null,
+      fixe_number: req.body.fixe_number ?? null,
+      address: req.body.address ?? null,
+      acquisition_source: req.body.acquisition_source ?? null
+    });
+    
     // on recup l'id de la vidéo crée, on va la renvoyer dans la response
     const videoId = video.insertId;
 
     // les stills sont un tableau avec les noms des fichiers stills et leur ordre
     const stills = [
-      // si l'index 0, 1 2 existe, on les ajoute au tableau 
-      { file_name: stillsFiles[0]?.filename, sort_order: 1 },
-      { file_name: stillsFiles[1]?.filename, sort_order: 2 },
-      { file_name: stillsFiles[2]?.filename, sort_order: 3 },
-      // on filtre les stills qui ont un nom de fichier
-    ].filter(still => still.file_name); 
+      { file_name: stillsFiles?.[0]?.filename, sort_order: 1 },
+      { file_name: stillsFiles?.[1]?.filename, sort_order: 2 },
+      { file_name: stillsFiles?.[2]?.filename, sort_order: 3 },
+    ].filter(still => still.file_name);
 
-    // creation des stills, on passe l'id de la video et les stills qui sont dans un tableau et groupé dans l'ordre
-    await createStills(videoId, stills);
+    if (stills.length > 0) {
+      await createStills(videoId, stills);
+    }
 
     // on recup les ids des tags qui ont été crées
     const tagIds = newTags.map(t => t.id);
+    if (tagIds.length > 0) {
+      await addTagsToVideo(videoId, tagIds);
+    }
 
-    // ajout les tags a la vidéo
-    await addTagsToVideo(videoId, tagIds);
-    
     return res.status(201).json({
       success:true,
       message: "video uploaded successfully",
       data: {
         video: videoId,
+        youtube_url: null,
         stills,
         tags: newTags,
         srt_file_name,
-        youtube_url
+        title: req.body.title ?? null,
+        title_en: req.body.title_en ?? null,
+        synopsis: req.body.synopsis ?? null,
+        synopsis_en: req.body.synopsis_en ?? null,
+        language: req.body.language ?? null,
+        country: req.body.country ?? null,
+        duration: req.body.duration ?? null,
+        classification: req.body.classification ?? "hybrid",
+        tech_resume: req.body.tech_resume ?? null,
+        creative_resume: req.body.creative_resume ?? null,
+        realisator_name: req.body.realisator_name ?? null,
+        realisator_lastname: req.body.realisator_lastname ?? null,
+        realisator_gender: req.body.realisator_gender ?? null,
+        email: req.body.email ?? null,
+        birthday: req.body.birthday ?? null,
+        mobile_number: req.body.mobile_number ?? null,
+        fixe_number: req.body.fixe_number ?? null,
+        address: req.body.address ?? null,
+        acquisition_source: req.body.acquisition_source ?? null
       }
     })
     

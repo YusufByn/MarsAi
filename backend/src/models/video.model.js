@@ -227,21 +227,6 @@ export const videoModel = {
   }
 };
 
-// creation de video
-export const createVideo = async (title, youtube_url, video_file_name, srt_file_name, cover) => {
-
-  // requete prepare
-  const query = `INSERT INTO video (title, youtube_url, video_file_name, srt_file_name, cover) VALUES (?, ?, ?, ?, ?)`;
-
-  // valeurs a injecter dans la requete
-  const values = [title, youtube_url, video_file_name, srt_file_name, cover];
-
-  // execution de la requete
-  const [rows] = await pool.execute(query, values);
-
-  return rows;
-}; 
-
 export const addTagsToVideo = async (videoId, tagIds) => {
 
   // variable placeholder pour pour ajuster les placeholders dans la requête
@@ -256,5 +241,47 @@ export const addTagsToVideo = async (videoId, tagIds) => {
   // execution de la requete
   const [rows] = await pool.execute(query, values);
 
+  return rows;
+};
+
+// nouvelle fonction d'ajout on test, imax
+export const createVideo = async (payload) => {
+  const query = `
+    INSERT INTO video (
+      youtube_url, video_file_name, srt_file_name, cover,
+      title, title_en, synopsis, synopsis_en, language, country, duration,
+      classification, tech_resume, creative_resume,
+      realisator_name, realisator_lastname, realisator_gender,
+      email, birthday, mobile_number, fixe_number, address, acquisition_source
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const values = [
+    payload.youtube_url ?? null,
+    payload.video_file_name ?? null,
+    payload.srt_file_name ?? null,
+    payload.cover ?? null,
+    payload.title ?? null,
+    payload.title_en ?? null,
+    payload.synopsis ?? null,
+    payload.synopsis_en ?? null,
+    payload.language ?? null,
+    payload.country ?? null,
+    payload.duration ?? null,
+    payload.classification ?? "hybrid",
+    payload.tech_resume ?? null,
+    payload.creative_resume ?? null,
+    payload.realisator_name ?? null,
+    payload.realisator_lastname ?? null,
+    payload.realisator_gender ?? null,
+    payload.email ?? null,
+    payload.birthday ?? null,
+    payload.mobile_number ?? null,
+    payload.fixe_number ?? null,
+    payload.address ?? null,
+    payload.acquisition_source ?? null
+  ];
+
+  const [rows] = await pool.execute(query, values);
   return rows;
 };
