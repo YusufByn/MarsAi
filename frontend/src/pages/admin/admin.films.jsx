@@ -59,11 +59,13 @@ export default function AdminFilms() {
 
   const statusBadge = (status) => {
     const map = {
+      draft: 'bg-gray-500/20 text-gray-400',
       pending: 'bg-yellow-500/20 text-yellow-400',
-      approved: 'bg-green-500/20 text-green-400',
+      validated: 'bg-green-500/20 text-green-400',
       rejected: 'bg-red-500/20 text-red-400',
+      banned: 'bg-red-800/20 text-red-600',
     };
-    const labels = { pending: 'En attente', approved: 'Approuve', rejected: 'Rejete' };
+    const labels = { draft: 'Brouillon', pending: 'En attente', validated: 'Valide', rejected: 'Rejete', banned: 'Banni' };
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-bold ${map[status] || 'bg-gray-500/20 text-gray-400'}`}>
         {labels[status] || status}
@@ -94,7 +96,7 @@ export default function AdminFilms() {
         >
           <option value="">Tous les statuts</option>
           <option value="pending">En attente</option>
-          <option value="approved">Approuve</option>
+          <option value="validated">Valide</option>
           <option value="rejected">Rejete</option>
         </select>
       </div>
@@ -136,12 +138,12 @@ export default function AdminFilms() {
 
                   {/* Actions */}
                   <div className="flex gap-2 mt-2">
-                    {film.status !== 'approved' && (
+                    {film.status !== 'validated' && (
                       <button
-                        onClick={() => handleStatusChange(film.id, 'approved')}
+                        onClick={() => handleStatusChange(film.id, 'validated')}
                         className="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition-colors"
                       >
-                        Approuver
+                        Valider
                       </button>
                     )}
                     {film.status !== 'rejected' && (

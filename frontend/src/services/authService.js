@@ -8,6 +8,21 @@ const parseResponse = async (response) => {
   return data;
 };
 
+export const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
+
+export const clearAuth = () => {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_user');
+};
+
 export const authService = {
   async register(payload) {
     const response = await fetch(`${API_URL}/api/auth/register`, {

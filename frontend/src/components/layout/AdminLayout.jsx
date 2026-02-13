@@ -1,11 +1,14 @@
 import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import AdminSidebar from './admin.sidebar';
+import { isTokenExpired, clearAuth } from '../../services/authService';
 
 export default function AdminLayout() {
+  const token = localStorage.getItem('auth_token');
   const storedUser = localStorage.getItem('auth_user');
 
-  if (!storedUser) {
+  if (!storedUser || !token || isTokenExpired(token)) {
+    clearAuth();
     return <Navigate to="/login" replace />;
   }
 
