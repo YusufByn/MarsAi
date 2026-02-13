@@ -102,4 +102,46 @@ export const adminService = {
     if (!response.ok) throw new Error(data.message || 'Erreur update CMS');
     return data;
   },
+
+  // --- Users ---
+  async listUsers() {
+    const response = await fetch(`${API_URL}/users`, {
+      headers: authHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur utilisateurs');
+    return data;
+  },
+
+  async createUser(userData) {
+    const response = await fetch(`${API_URL}/users`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(userData),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur creation utilisateur');
+    return data;
+  },
+
+  async updateUser(id, userData) {
+    const response = await fetch(`${API_URL}/users/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(userData),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur mise a jour utilisateur');
+    return data;
+  },
+
+  async deleteUser(id) {
+    const response = await fetch(`${API_URL}/users/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur suppression utilisateur');
+    return data;
+  },
 };

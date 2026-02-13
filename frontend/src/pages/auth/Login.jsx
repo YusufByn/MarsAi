@@ -26,7 +26,9 @@ const Login = () => {
       localStorage.setItem('auth_user', JSON.stringify(response.user || {}));
       setStatus('success');
       setMessage(t('login.success'));
-      navigate('/');
+
+      const isAdmin = response.user?.role === 'admin' || response.user?.role === 'superadmin';
+      navigate(isAdmin ? '/admin/dashboard' : '/');
     } catch (error) {
       setStatus('error');
       setMessage(error.message || t('login.error'));
