@@ -3,6 +3,7 @@ import { addSocialMediaToVideo, addTagsToVideo } from "../models/video.model.js"
 import { createStills } from "../models/image.model.js";
 import { createVideo } from "../models/video.model.js";
 import { uploadVideoToYoutube } from "../services/youtube.service.js";
+import { getVideoDuration } from "../utils/video.util.js";
 import pool from "../config/db.js";
 
 const ALLOWED_SOCIAL_PLATFORMS = new Set([
@@ -72,6 +73,7 @@ export const uploadVideo = async (req, res) => {
     const video_file_name = videoFiles.filename;
     const cover = coverFile?.filename;
     const srt_file_name = srtFile?.filename;
+    const duration = await getVideoDuration(videoFiles.path);
     console.log('coverFile', coverFile);
 
     // upload de la video sur youtube
@@ -104,7 +106,7 @@ export const uploadVideo = async (req, res) => {
       synopsis_en: req.body.synopsis_en ?? null,
       language: req.body.language ?? null,
       country: req.body.country ?? null,
-      duration: req.body.duration ?? null,
+      duration: duration ?? null,
       classification: req.body.classification ?? "hybrid",
       tech_resume: req.body.tech_resume ?? null,
       creative_resume: req.body.creative_resume ?? null,
@@ -158,7 +160,7 @@ export const uploadVideo = async (req, res) => {
         synopsis_en: req.body.synopsis_en ?? null,
         language: req.body.language ?? null,
         country: req.body.country ?? null,
-        duration: req.body.duration ?? null,
+        duration: duration ?? null,
         classification: req.body.classification ?? "hybrid",
         tech_resume: req.body.tech_resume ?? null,
         creative_resume: req.body.creative_resume ?? null,
