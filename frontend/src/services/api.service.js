@@ -85,6 +85,8 @@ export const createVideo = async (videoData, recaptchaToken) => {
       realisator_name: step1.firstName || '',
       realisator_lastname: step1.lastName || '',
       realisator_gender: step1.gender || '',
+      // DB choice: birthday column stores majority checkbox as 1/0
+      birthday: step1.ageVerificator ? '1' : '0',
       country: step1.country || '',
       fixe_number: step1.phoneNumber || '',
       mobile_number: step1.mobileNumber || '',

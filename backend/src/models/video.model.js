@@ -292,7 +292,8 @@ export const createVideo = async (payload) => {
     payload.video_file_name ?? null,
     payload.srt_file_name ?? null,
     payload.cover ?? null,
-    payload.title ?? null,
+    // Keep title optional at API level while satisfying NOT NULL DB schema.
+    payload.title ?? '',
     payload.title_en ?? null,
     payload.synopsis ?? null,
     payload.synopsis_en ?? null,

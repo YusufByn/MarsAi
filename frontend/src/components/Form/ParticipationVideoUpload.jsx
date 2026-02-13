@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ReCAPTCHA from "react-google-recaptcha";
 import validateRecaptcha from '../../../../shared/validators/recaptcha.validator.js';
 import { submitCompleteForm } from '../../services/api.service.js';
+import { newsletterService } from '../../services/newsletterService.js';
 
 const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataProp, allFormData}) => {
   const navigate = useNavigate();
@@ -376,6 +377,15 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       
       // Envoyer toutes les données au backend
       const result = await submitCompleteForm(allFormData, token);
+
+      // Inscription newsletter optionnelle (non bloquante pour la soumission vidéo)
+      if (formData.newsletterSubscription && allFormData?.step1?.email) {
+        try {
+          await newsletterService.subscribe(allFormData.step1.email);
+        } catch (newsletterError) {
+          console.warn("Newsletter subscription warning:", newsletterError?.message || newsletterError);
+        }
+      }
       
       console.log("✅ Soumission réussie!", result);
       
