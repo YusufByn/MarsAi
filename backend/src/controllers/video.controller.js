@@ -4,7 +4,6 @@ import { createStills } from "../models/image.model.js";
 import { createVideo } from "../models/video.model.js";
 import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import pool from "../config/db.js";
-import { youtube } from "googleapis/build/src/apis/youtube/index.js";
 
 export const uploadVideo = async (req, res) => {
 
@@ -42,23 +41,23 @@ export const uploadVideo = async (req, res) => {
 
     // upload de la video sur youtube
     // on passe le chemin du fichier video, et les metadata
-    // const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
-    //   title,
-    //   description: description || "",
-    //   tags: cleanTags,
-    //   thumbnailPath: coverFile?.path,
-    //   srt_file_name: srtFile?.filename,
-    //   srtLanguage: req.body.srtLanguage || 'fr',
-    //   srtPath: srtFile?.path,
-    //   categoryId: categoryId || "22",
-    //   privacyStatus: privacyStatus || "unlisted"
-    // });
+    const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
+      title,
+      description: description || "",
+      tags: cleanTags,
+      thumbnailPath: coverFile?.path,
+      srt_file_name: srtFile?.filename,
+      srtLanguage: req.body.srtLanguage || 'fr',
+      srtPath: srtFile?.path,
+      categoryId: categoryId || "22",
+      privacyStatus: privacyStatus || "unlisted"
+    });
 
-    // const youtube_url = youtubeUpload.youtubeUrl;
+    const youtube_url = youtubeUpload.youtubeUrl;
 
 
     const video = await createVideo({
-      youtube_url: null,
+      youtube_url,
       video_file_name,
       srt_file_name,
       cover,
@@ -110,7 +109,7 @@ export const uploadVideo = async (req, res) => {
       message: "video uploaded successfully",
       data: {
         video: videoId,
-        youtube_url: null,
+        youtube_url,
         stills,
         tags: newTags,
         srt_file_name,
