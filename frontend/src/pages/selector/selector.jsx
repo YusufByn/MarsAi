@@ -10,11 +10,8 @@ const Selector = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Filtres et tri
-  const [sortBy, setSortBy] = useState('updated_at');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [filterStatut, setFilterStatut] = useState('all');
-  const [filterPlaylist, setFilterPlaylist] = useState('all');
+  // Filtre actif (null = aucun encart selectionne, pas de liste affichee)
+  const [activeFilter, setActiveFilter] = useState(null);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -28,9 +25,11 @@ const Selector = () => {
 
         const authUser = JSON.parse(storedUser);
 
-        // Vérifier que l'utilisateur a le rôle jury
-        if (authUser.role !== 'jury') {
+        // Vérifier que l'utilisateur a un rôle autorisé
+        const allowedRoles = ['jury', 'admin', 'superadmin'];
+        if (!allowedRoles.includes(authUser.role)) {
           setError('Acces reserve aux membres du jury');
+          setLoading(false);
           return;
         }
 
@@ -53,40 +52,16 @@ const Selector = () => {
     loadUserData();
   }, [navigate]);
 
-  // Fonction de tri et filtrage
+  const handleCardClick = (statut) => {
+    setActiveFilter(prev => prev === statut ? null : statut);
+  };
+
   const filteredMemos = useMemo(() => {
-    let result = [...memos];
-
-    // Filtrage par statut
-    if (filterStatut !== 'all') {
-      result = result.filter(memo => memo.statut === filterStatut);
-    }
-
-    // Filtrage par playlist
-    if (filterPlaylist !== 'all') {
-      const playlistValue = filterPlaylist === 'yes' ? 1 : 0;
-      result = result.filter(memo => memo.playlist === playlistValue);
-    }
-
-    // Tri
-    result.sort((a, b) => {
-      let aValue = a[sortBy];
-      let bValue = b[sortBy];
-
-      if (sortBy === 'rating') {
-        aValue = aValue || 0;
-        bValue = bValue || 0;
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    return result;
-  }, [memos, sortBy, sortOrder, filterStatut, filterPlaylist]);
+    if (!activeFilter) return [];
+    return memos
+      .filter(memo => memo.statut === activeFilter)
+      .sort((a, b) => (b.updated_at > a.updated_at ? 1 : -1));
+  }, [memos, activeFilter]);
 
   if (loading) {
     return (
@@ -112,13 +87,37 @@ const Selector = () => {
     );
   }
 
+  const cards = [
+    {
+      key: 'yes',
+      label: 'Oui',
+      activeClass: 'bg-green-500/30 border-2 border-green-400 ring-2 ring-green-400/30',
+      inactiveClass: 'bg-green-500/10 border border-green-500/20 hover:bg-green-500/20',
+      countClass: 'text-green-400',
+    },
+    {
+      key: 'no',
+      label: 'Non',
+      activeClass: 'bg-red-500/30 border-2 border-red-400 ring-2 ring-red-400/30',
+      inactiveClass: 'bg-red-500/10 border border-red-500/20 hover:bg-red-500/20',
+      countClass: 'text-red-400',
+    },
+    {
+      key: 'discuss',
+      label: 'A discuter',
+      activeClass: 'bg-yellow-500/30 border-2 border-yellow-400 ring-2 ring-yellow-400/30',
+      inactiveClass: 'bg-yellow-500/10 border border-yellow-500/20 hover:bg-yellow-500/20',
+      countClass: 'text-yellow-400',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Profil du jury */}
         <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <h1 className="text-3xl font-bold mb-6">Profil Jury</h1>
+          <h1 className="text-3xl font-bold mb-6">Profil Selector</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
@@ -152,7 +151,7 @@ const Selector = () => {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Nombre de memos</p>
+                <p className="text-xs text-gray-400">Videos evaluees</p>
                 <p className="text-lg font-bold">{memos.length}</p>
               </div>
             </div>
@@ -161,99 +160,33 @@ const Selector = () => {
 
         {/* Dashboard des memos */}
         <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <h2 className="text-2xl font-bold mb-6">Dashboard - Mes evaluations</h2>
+          <h2 className="text-2xl font-bold mb-6">Mes evaluations</h2>
 
-          {/* Filtres et tri */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Tri par */}
-            <div className="space-y-2">
-              <label className="text-xs text-gray-400">Trier par</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-              >
-                <option value="updated_at">Date modification</option>
-                <option value="created_at">Date creation</option>
-                <option value="rating">Note</option>
-                <option value="title">Titre video</option>
-              </select>
-            </div>
-
-            {/* Ordre */}
-            <div className="space-y-2">
-              <label className="text-xs text-gray-400">Ordre</label>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-              >
-                <option value="desc">Decroissant</option>
-                <option value="asc">Croissant</option>
-              </select>
-            </div>
-
-            {/* Filtre statut */}
-            <div className="space-y-2">
-              <label className="text-xs text-gray-400">Statut</label>
-              <select
-                value={filterStatut}
-                onChange={(e) => setFilterStatut(e.target.value)}
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-              >
-                <option value="all">Tous</option>
-                <option value="yes">Oui</option>
-                <option value="no">Non</option>
-                <option value="discuss">A discuter</option>
-              </select>
-            </div>
-
-            {/* Filtre playlist */}
-            <div className="space-y-2">
-              <label className="text-xs text-gray-400">Playlist</label>
-              <select
-                value={filterPlaylist}
-                onChange={(e) => setFilterPlaylist(e.target.value)}
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-              >
-                <option value="all">Tous</option>
-                <option value="yes">Dans playlist</option>
-                <option value="no">Hors playlist</option>
-              </select>
-            </div>
+          {/* Encarts cliquables */}
+          <div className="mb-6 grid grid-cols-3 gap-4">
+            {cards.map(({ key, label, activeClass, inactiveClass, countClass }) => {
+              const count = memos.filter(m => m.statut === key).length;
+              const isActive = activeFilter === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleCardClick(key)}
+                  className={`rounded-xl p-4 text-left transition-all cursor-pointer ${
+                    isActive ? activeClass : inactiveClass
+                  }`}
+                >
+                  <p className="text-xs text-gray-400">{label}</p>
+                  <p className={`text-2xl font-bold ${countClass}`}>{count}</p>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Statistiques rapides */}
-          <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4">
-              <p className="text-xs text-gray-400">Oui</p>
-              <p className="text-2xl font-bold text-green-400">
-                {memos.filter(m => m.statut === 'yes').length}
-              </p>
-            </div>
-            <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
-              <p className="text-xs text-gray-400">Non</p>
-              <p className="text-2xl font-bold text-red-400">
-                {memos.filter(m => m.statut === 'no').length}
-              </p>
-            </div>
-            <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-4">
-              <p className="text-xs text-gray-400">Discuss</p>
-              <p className="text-2xl font-bold text-yellow-400">
-                {memos.filter(m => m.statut === 'discuss').length}
-              </p>
-            </div>
-            <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
-              <p className="text-xs text-gray-400">Playlist</p>
-              <p className="text-2xl font-bold text-blue-400">
-                {memos.filter(m => m.playlist === 1).length}
-              </p>
-            </div>
-          </div>
-
-          {/* Liste des memos */}
-          {filteredMemos.length === 0 ? (
-            <p className="text-center text-gray-400 py-10">Aucun memo trouve</p>
+          {/* Liste des memos filtres */}
+          {activeFilter === null ? (
+            <p className="text-center text-gray-400 py-10">Cliquez sur un encart pour afficher les videos</p>
+          ) : filteredMemos.length === 0 ? (
+            <p className="text-center text-gray-400 py-10">Aucune video avec ce statut</p>
           ) : (
             <div className="space-y-4">
               {filteredMemos.map((memo) => (
@@ -284,23 +217,16 @@ const Selector = () => {
                           </p>
                         </div>
 
-                        {/* Badges statut et playlist */}
-                        <div className="flex gap-2">
-                          {memo.statut && (
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              memo.statut === 'yes' ? 'bg-green-500/20 text-green-400' :
-                              memo.statut === 'no' ? 'bg-red-500/20 text-red-400' :
-                              'bg-yellow-500/20 text-yellow-400'
-                            }`}>
-                              {memo.statut === 'yes' ? 'Oui' : memo.statut === 'no' ? 'Non' : 'A discuter'}
-                            </span>
-                          )}
-                          {memo.playlist === 1 && (
-                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400">
-                              Playlist
-                            </span>
-                          )}
-                        </div>
+                        {/* Badge statut */}
+                        {memo.statut && (
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            memo.statut === 'yes' ? 'bg-green-500/20 text-green-400' :
+                            memo.statut === 'no' ? 'bg-red-500/20 text-red-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {memo.statut === 'yes' ? 'Oui' : memo.statut === 'no' ? 'Non' : 'A discuter'}
+                          </span>
+                        )}
                       </div>
 
                       {/* Note */}

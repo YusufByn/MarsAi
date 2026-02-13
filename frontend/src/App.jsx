@@ -21,6 +21,7 @@ import AdminJury from './pages/admin/admin.jury';
 import AdminEvents from './pages/admin/admin.events';
 import AdminConfig from './pages/admin/admin.config';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
+import AdminUsers from './pages/admin/admin.users';
 
 function AppContent() {
   const location = useLocation();
@@ -52,6 +53,7 @@ function AppContent() {
             <Route path="events" element={<AdminEvents />} />
             <Route path="config" element={<AdminConfig />} />
             <Route path="newsletter" element={<NewsletterAdmin />} />
+            <Route path="users" element={<AdminUsers />} />
           </Route>
         </Routes>
       </main>

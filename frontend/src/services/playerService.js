@@ -55,6 +55,16 @@ export const playerService = {
     return response.json();
   },
 
+  async deleteRating(videoId, userId) {
+    const response = await fetch(`${API_URL}/api/rating/${videoId}/${userId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Erreur lors de la suppression de la note');
+    }
+    return response.json();
+  },
+
   async sendEmailToCreator(payload) {
     const response = await fetch(`${API_URL}/api/player/send-email`, {
       method: 'POST',

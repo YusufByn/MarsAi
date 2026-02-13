@@ -434,6 +434,17 @@ const Player = () => {
         comment: memos[videoId] || '',
       });
 
+      // Si "Non", supprimer le rating existant
+      if (newStatus === 'no' && ratings[videoId]) {
+        await playerService.deleteRating(videoId, userId);
+        setRatings(prev => {
+          const next = { ...prev };
+          delete next[videoId];
+          return next;
+        });
+        console.log('[PLAYER] Rating cleared for video:', videoId);
+      }
+
       console.log('[PLAYER] Status saved:', newStatus);
 
       // Afficher message de succès selon le statut

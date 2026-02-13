@@ -6,9 +6,14 @@ function readAuthFromStorage() {
   const storedUser = localStorage.getItem('auth_user');
   if (storedUser) {
     const authUser = JSON.parse(storedUser);
-    return { user: authUser, isJury: authUser.role === 'jury' };
+    const role = authUser.role;
+    return {
+      user: authUser,
+      isSelector: role === 'jury' || role === 'admin' || role === 'superadmin',
+      isAdmin: role === 'admin' || role === 'superadmin',
+    };
   }
-  return { user: null, isJury: false };
+  return { user: null, isSelector: false, isAdmin: false };
 }
 
 const Navbar = () => {
@@ -17,7 +22,7 @@ const Navbar = () => {
   const [logoutFlag, setLogoutFlag] = useState(false);
 
   // Re-read auth from localStorage on every render (triggered by location or logoutFlag change)
-  const { user, isJury } = logoutFlag ? { user: null, isJury: false } : readAuthFromStorage();
+  const { user, isSelector, isAdmin } = logoutFlag ? { user: null, isSelector: false, isAdmin: false } : readAuthFromStorage();
 
   // Ensure logoutFlag is consumed (location is used to trigger re-renders on route change)
   void location;
@@ -54,8 +59,8 @@ const Navbar = () => {
             </svg>
           </Link>
 
-          {/* Liens spécifiques aux jurys (sélecteurs) */}
-          {isJury && (
+          {/* Liens selector (jury, admin, superadmin) */}
+          {isSelector && (
             <>
               {/* Liste des vidéos */}
               <Link to="/videos" className="text-gray-400 hover:text-white transition-colors" title="Liste des vidéos">
@@ -73,12 +78,22 @@ const Navbar = () => {
               </Link>
 
               {/* Profil Selector */}
-              <Link to="/selector" className="text-gray-400 hover:text-white transition-colors" title="Mon profil sélecteur">
+              <Link to="/selector" className="text-gray-400 hover:text-white transition-colors" title="Mon profil selecteur">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </Link>
             </>
+          )}
+
+          {/* Dashboard admin (admin, superadmin) */}
+          {isAdmin && (
+            <Link to="/admin/dashboard" className="text-gray-400 hover:text-white transition-colors" title="Administration">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </Link>
           )}
         </div>
 
