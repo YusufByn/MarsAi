@@ -3,16 +3,14 @@ import pool from '../config/db.js';
 export const videoModel = {
 
     async findAll({ limit = 10, offset = 0, search = '', status = '' }) {
-        // 1. Sécurisation des entiers pour l'injection directe (évite l'erreur 1210)
         const limitInt = parseInt(limit) || 10;
         const offsetInt = parseInt(offset) || 0;
 
-        // 2. Construction de la condition WHERE dynamique
         let whereClause = 'WHERE 1=1';
         const params = [];
 
         if (status) {
-            whereClause += ' AND v.status = ?';
+            whereClause += ' AND COALESCE(av.statut, \'pending\') = ?';
             params.push(status);
         }
 
@@ -22,19 +20,17 @@ export const videoModel = {
             params.push(term, term, term);
         }
 
-        // 3. Requête principale
-        // NOTE: On injecte ${limitInt} et ${offsetInt} directement car '?' pose problème avec execute() sur LIMIT
         const query = `
-            SELECT 
-                v.id, 
+            SELECT
+                v.id,
                 v.user_id,
                 u.email as submitter_email,
                 u.name as submitter_name,
-                v.title, 
-                v.cover as poster_url, 
-                v.realisator_name, 
+                v.title,
+                v.cover as poster_url,
+                v.realisator_name,
                 v.realisator_lastname,
-                v.status, 
+                COALESCE(av.statut, 'pending') as statut,
                 v.created_at,
                 v.country,
                 v.duration,
@@ -43,19 +39,22 @@ export const videoModel = {
                 v.youtube_url
             FROM video v
             LEFT JOIN user u ON v.user_id = u.id
+            LEFT JOIN admin_video av ON av.video_id = v.id
             ${whereClause}
-            ORDER BY v.created_at DESC 
+            ORDER BY v.created_at DESC
             LIMIT ${limitInt} OFFSET ${offsetInt}
         `;
 
-        // On exécute avec les params (qui ne contiennent plus limit/offset)
         const [rows] = await pool.execute(query, params);
-        
-        // 4. Requête pour le compteur total (doit respecter les mêmes filtres WHERE)
-        const countQuery = `SELECT COUNT(*) as total FROM video v ${whereClause}`;
+
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM video v
+            LEFT JOIN admin_video av ON av.video_id = v.id
+            ${whereClause}
+        `;
         const [countResult] = await pool.execute(countQuery, params);
-        
-        // 5. Formatage des données
+
         const formattedRows = rows.map(row => ({
             id: row.id,
             title: row.title,
@@ -63,7 +62,7 @@ export const videoModel = {
             video_url: row.youtube_url,
             director: `${row.realisator_name || ''} ${row.realisator_lastname || ''}`.trim(),
             submitter: row.submitter_email || 'Inconnu',
-            status: row.status,
+            status: row.statut,
             created_at: row.created_at,
             country: row.country,
             duration: row.duration,
@@ -74,15 +73,104 @@ export const videoModel = {
         return { videos: formattedRows, total: countResult[0].total };
     },
 
-    async updateStatus(id, status) {
-        const validStatuses = ['pending', 'approved', 'rejected'];
-        if (!validStatuses.includes(status)) return false;
+    async getDashboardStats() {
+        const connection = await pool.getConnection();
 
-        const [result] = await pool.execute(
-            'UPDATE video SET status = ? WHERE id = ?', 
-            [status, id]
-        );
-        return result.affectedRows > 0;
+        try {
+            await connection.beginTransaction();
+
+            const [videoCounts] = await connection.query(
+                `SELECT COALESCE(av.statut, 'pending') as statut, COUNT(*) as count
+                 FROM video v
+                 LEFT JOIN admin_video av ON av.video_id = v.id
+                 GROUP BY statut`
+            );
+
+            const [recentVideos] = await connection.query(
+                `SELECT v.id, v.title, v.cover as poster_url, v.realisator_name, v.realisator_lastname,
+                        COALESCE(av.statut, 'pending') as statut, v.created_at, v.country, v.duration, v.classification
+                 FROM video v
+                 LEFT JOIN admin_video av ON av.video_id = v.id
+                 ORDER BY v.created_at DESC LIMIT 5`
+            );
+
+            const [eventCount] = await connection.query(
+                'SELECT COUNT(*) as total FROM event'
+            );
+
+            const [juryCount] = await connection.query(
+                'SELECT COUNT(*) as total FROM jury'
+            );
+
+            const [newsletterCount] = await connection.query(
+                'SELECT COUNT(*) as total FROM newsletter WHERE unsubscribed_at IS NULL'
+            );
+
+            await connection.commit();
+
+            const counts = { total: 0, pending: 0, validated: 0, rejected: 0 };
+            for (const row of videoCounts) {
+                const c = Number(row.count);
+                counts.total += c;
+                if (row.statut === 'pending') counts.pending += c;
+                else if (row.statut === 'validated') counts.validated += c;
+                else if (row.statut === 'rejected') counts.rejected += c;
+            }
+
+            const formattedVideos = recentVideos.map(row => ({
+                id: row.id,
+                title: row.title,
+                poster_url: row.poster_url,
+                director: `${row.realisator_name || ''} ${row.realisator_lastname || ''}`.trim(),
+                status: row.statut,
+                created_at: row.created_at,
+                country: row.country,
+                duration: Number(row.duration) || 0,
+                classification: row.classification,
+            }));
+
+            return {
+                total_videos: counts.total,
+                pending_videos: counts.pending,
+                validated_videos: counts.validated,
+                rejected_videos: counts.rejected,
+                recent_videos: formattedVideos,
+                total_events: Number(eventCount[0].total) || 0,
+                total_jury: Number(juryCount[0].total) || 0,
+                total_newsletter: Number(newsletterCount[0].total) || 0,
+            };
+
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    },
+
+    async updateStatus(videoId, statut, adminUserId) {
+        const validStatuses = ['draft', 'pending', 'validated', 'rejected', 'banned'];
+        if (!validStatuses.includes(statut)) return false;
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            await connection.execute(
+                `INSERT INTO admin_video (video_id, user_id, statut)
+                 VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE statut = ?, user_id = ?, updated_at = NOW()`,
+                [videoId, adminUserId, statut, statut, adminUserId]
+            );
+
+            await connection.commit();
+            return true;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     },
 
     async delete(id) {

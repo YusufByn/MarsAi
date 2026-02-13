@@ -1,5 +1,13 @@
 const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/newsletter`;
 
+function authHeaders() {
+  const token = localStorage.getItem('auth_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
 export const newsletterService = {
   async subscribe(email) {
     const response = await fetch(`${API_URL}/subscribe`, {
@@ -54,9 +62,7 @@ export const newsletterService = {
   async previewRecipients(recipients) {
     const response = await fetch(`${API_URL}/campaign/preview`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders(),
       body: JSON.stringify({ recipients }),
     });
 
@@ -75,9 +81,7 @@ export const newsletterService = {
   async sendCampaign(subject, message, recipients) {
     const response = await fetch(`${API_URL}/campaign/send`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders(),
       body: JSON.stringify({ subject, message, recipients }),
     });
 

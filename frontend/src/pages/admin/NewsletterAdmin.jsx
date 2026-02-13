@@ -157,7 +157,7 @@ const NewsletterAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans p-6 md:p-12 relative overflow-hidden">
+    <div className="text-white font-sans relative overflow-hidden">
         {/* Background Glows */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-mars-primary/10 blur-[150px] rounded-full pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-mars-secondary/10 blur-[150px] rounded-full pointer-events-none"></div>

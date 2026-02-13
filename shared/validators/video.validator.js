@@ -14,12 +14,14 @@ import { z } from 'zod';
  * Tous les champs obligatoires doivent être présents
  */
 export const createVideoSchema = z.object({
-  // Titres (obligatoires)
+  // Titre version originale (optionnel)
   title: z
-    .string({ required_error: 'Le titre en version originale est requis' })
+    .string()
     .trim()
     .min(2, 'Le titre doit contenir au moins 2 caractères')
-    .max(255, 'Le titre ne doit pas dépasser 255 caractères'),
+    .max(255, 'Le titre ne doit pas dépasser 255 caractères')
+    .optional()
+    .or(z.literal('')),
 
   title_en: z
     .string({ required_error: 'Le titre en anglais est requis' })
@@ -107,10 +109,14 @@ export const createVideoSchema = z.object({
 
   // Coordonnées (optionnelles)
   birthday: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Format de date invalide (YYYY-MM-DD)')
-    .optional()
-    .or(z.date().optional()),
+    .union([
+      z.literal('0'),
+      z.literal('1'),
+      z.literal(0),
+      z.literal(1),
+      z.boolean()
+    ])
+    .optional(),
 
   mobile_number: z
     .string()
@@ -266,10 +272,14 @@ export const updateVideoSchema = z.object({
 
   // Coordonnées
   birthday: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Format de date invalide (YYYY-MM-DD)')
-    .optional()
-    .or(z.date().optional()),
+    .union([
+      z.literal('0'),
+      z.literal('1'),
+      z.literal(0),
+      z.literal(1),
+      z.boolean()
+    ])
+    .optional(),
 
   mobile_number: z
     .string()

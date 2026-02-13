@@ -43,6 +43,7 @@ const FormDirector = () => {
       videoFile: null,
       subtitle: null,
       rightsAccepted: false,
+      newsletterSubscription: false,
     }
   });
 

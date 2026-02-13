@@ -244,6 +244,37 @@ export const addTagsToVideo = async (videoId, tagIds) => {
   return rows;
 };
 
+export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
+  if (!Array.isArray(socialLinks) || socialLinks.length === 0) {
+    return [];
+  }
+
+  const createdLinks = [];
+
+  for (const link of socialLinks) {
+    const platform = String(link?.platform || '').trim().toLowerCase();
+    const url = String(link?.url || '').trim();
+
+    if (!platform || !url) continue;
+
+    const [socialResult] = await pool.execute(
+      `INSERT INTO social_media (platform, url) VALUES (?, ?)`,
+      [platform, url]
+    );
+
+    const socialMediaId = socialResult.insertId;
+
+    await pool.execute(
+      `INSERT INTO video_social_media (video_id, social_media_id) VALUES (?, ?)`,
+      [videoId, socialMediaId]
+    );
+
+    createdLinks.push({ id: socialMediaId, platform, url });
+  }
+
+  return createdLinks;
+};
+
 // nouvelle fonction d'ajout on test, imax
 export const createVideo = async (payload) => {
   const query = `
@@ -252,8 +283,8 @@ export const createVideo = async (payload) => {
       title, title_en, synopsis, synopsis_en, language, country, duration,
       classification, tech_resume, creative_resume,
       realisator_name, realisator_lastname, realisator_gender,
-      email, birthday, mobile_number, fixe_number, address, acquisition_source
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      email, birthday, mobile_number, fixe_number, address, acquisition_source, rights_accepted
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const values = [
@@ -261,7 +292,8 @@ export const createVideo = async (payload) => {
     payload.video_file_name ?? null,
     payload.srt_file_name ?? null,
     payload.cover ?? null,
-    payload.title ?? null,
+    // Keep title optional at API level while satisfying NOT NULL DB schema.
+    payload.title ?? '',
     payload.title_en ?? null,
     payload.synopsis ?? null,
     payload.synopsis_en ?? null,
@@ -279,7 +311,8 @@ export const createVideo = async (payload) => {
     payload.mobile_number ?? null,
     payload.fixe_number ?? null,
     payload.address ?? null,
-    payload.acquisition_source ?? null
+    payload.acquisition_source ?? null,
+    payload.rights_accepted ? 1 : 0
   ];
 
   const [rows] = await pool.execute(query, values);

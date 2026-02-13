@@ -1,9 +1,42 @@
 import { normalizeTags, upsertTags } from "../models/tag.model.js";
-import { addTagsToVideo } from "../models/video.model.js";
+import { addSocialMediaToVideo, addTagsToVideo } from "../models/video.model.js";
 import { createStills } from "../models/image.model.js";
 import { createVideo } from "../models/video.model.js";
 import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import pool from "../config/db.js";
+
+const ALLOWED_SOCIAL_PLATFORMS = new Set([
+  "facebook",
+  "instagram",
+  "x",
+  "linkedin",
+  "youtube",
+  "tiktok",
+  "website",
+]);
+
+const parseSocialNetworks = (rawSocialNetworks) => {
+  if (!rawSocialNetworks) return [];
+
+  let parsedValue = rawSocialNetworks;
+
+  if (typeof parsedValue === "string") {
+    try {
+      parsedValue = JSON.parse(parsedValue);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  if (!Array.isArray(parsedValue)) return [];
+
+  return parsedValue
+    .map((entry) => ({
+      platform: String(entry?.platform || "").trim().toLowerCase(),
+      url: String(entry?.url || "").trim(),
+    }))
+    .filter((entry) => entry.url && ALLOWED_SOCIAL_PLATFORMS.has(entry.platform));
+};
 
 export const uploadVideo = async (req, res) => {
 
@@ -22,6 +55,7 @@ export const uploadVideo = async (req, res) => {
 
     // normalisation des tags(trim, lowercase)
     const cleanTags = normalizeTags(tags);
+    const socialNetworks = parseSocialNetworks(req.body.social_networks);
 
     // ionsersation des tags qui n'existent pas en bdd
     const newTags = await upsertTags(cleanTags, pool)
@@ -82,7 +116,8 @@ export const uploadVideo = async (req, res) => {
       mobile_number: req.body.mobile_number ?? null,
       fixe_number: req.body.fixe_number ?? null,
       address: req.body.address ?? null,
-      acquisition_source: req.body.acquisition_source ?? null
+      acquisition_source: req.body.acquisition_source ?? null,
+      rights_accepted: req.body.rights_accepted
     });
     
     // on recup l'id de la vidéo crée, on va la renvoyer dans la response
@@ -105,6 +140,8 @@ export const uploadVideo = async (req, res) => {
       await addTagsToVideo(videoId, tagIds);
     }
 
+    const insertedSocialNetworks = await addSocialMediaToVideo(videoId, socialNetworks);
+
     return res.status(201).json({
       success:true,
       message: "video uploaded successfully",
@@ -113,6 +150,7 @@ export const uploadVideo = async (req, res) => {
         youtube_url,
         stills,
         tags: newTags,
+        social_networks: insertedSocialNetworks,
         srt_file_name,
         title: req.body.title ?? null,
         title_en: req.body.title_en ?? null,

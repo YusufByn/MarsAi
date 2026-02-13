@@ -1,119 +1,180 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
+import { adminService } from '../../services/adminService';
 
 export default function AdminConfig() {
-    // État local pour stocker la config (normalement fetché depuis l'API)
-    const [sections, setSections] = useState({
-        general: {
-            title: "INFORMATIONS GÉNÉRALES",
-            data: { festival_name: "Mars.AI", year: "2026", primary_color: "#246BAD", secondary_color: "#FF5845" }
-        },
-        hero: {
-            title: "HERO SECTION",
-            data: { badge: "FESTIVAL INTERNATIONAL DU FILM IA", main_title: "IMAGINEZ DES", sub_title: "FUTURS SOUHAITABLES", bg_image: "" }
-        },
-        // ... Ajoute les autres sections (Projet, Partenaires...) ici selon tes besoins
-    });
+  const [sections, setSections] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
 
-    const handleChange = (sectionKey, field, value) => {
-        setSections(prev => ({
-            ...prev,
-            [sectionKey]: {
-                ...prev[sectionKey],
-                data: { ...prev[sectionKey].data, [field]: value }
-            }
-        }));
+  useEffect(() => {
+    const loadCms = async () => {
+      try {
+        const data = await adminService.getCms();
+        setSections(data);
+      } catch (error) {
+        console.error('[ADMIN CONFIG] Erreur chargement CMS:', error);
+      } finally {
+        setLoading(false);
+      }
     };
+    loadCms();
+  }, []);
 
-    const handleSave = async () => {
-        // Logique de sauvegarde vers API (PUT /api/admin/cms)
-        alert("Configuration sauvegardée !");
-    };
+  const handleChange = (sectionKey, field, value) => {
+    setSections(prev => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev[sectionKey],
+        data: { ...prev[sectionKey]?.data, [field]: value },
+      },
+    }));
+  };
 
+  const handleTitleChange = (sectionKey, field, value) => {
+    setSections(prev => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev[sectionKey],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage('');
+    try {
+      const promises = Object.entries(sections).map(([sectionType, sectionData]) =>
+        adminService.updateCms(sectionType, {
+          title: sectionData.title || '',
+          sub_title: sectionData.sub_title || '',
+          data: sectionData.data || {},
+        })
+      );
+      await Promise.all(promises);
+      setMessage('Configuration sauvegardee');
+    } catch (error) {
+      console.error('[ADMIN CONFIG] Erreur sauvegarde:', error);
+      setMessage('Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  if (loading) {
     return (
-        <div className="p-8 bg-gray-50 min-h-screen ml-64">
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <p className="text-xs font-bold text-orange-500 mb-2 uppercase tracking-wide">CMS & IDENTITÉ</p>
-                    <h1 className="text-4xl font-bold text-gray-900">CONFIGURATION FESTIVAL</h1>
-                    <p className="text-gray-500 mt-2">Personnalisez chaque section pour une réutilisation totale de l'outil.</p>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-400">Chargement...</p>
+      </div>
+    );
+  }
+
+  const sectionKeys = Object.keys(sections);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Configuration CMS</h1>
+          <p className="text-sm text-gray-400 mt-1">Personnalisez les sections du site</p>
+        </div>
+        <div className="flex items-center gap-4">
+          {message && (
+            <span className={`text-sm ${message.includes('Erreur') ? 'text-red-400' : 'text-green-400'}`}>
+              {message}
+            </span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            <Save size={16} />
+            {saving ? 'Sauvegarde...' : 'Publier les modifications'}
+          </button>
+        </div>
+      </div>
+
+      {sectionKeys.length === 0 ? (
+        <p className="text-center text-gray-400 py-10">Aucune section CMS configuree</p>
+      ) : (
+        <div className="space-y-6">
+          {sectionKeys.map((key) => {
+            const section = sections[key];
+            const dataFields = section.data ? Object.entries(section.data) : [];
+
+            return (
+              <div key={key} className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold uppercase">{key}</h2>
                 </div>
-                <button 
-                    onClick={handleSave}
-                    className="bg-gray-800 text-white px-6 py-3 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-gray-900"
-                >
-                    <Save size={16} /> PUBLIER LES MODIFICATIONS
-                </button>
-            </div>
 
-            <div className="space-y-8">
-                {/* --- SECTION GÉNÉRALE (Couleurs) --- */}
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold">🎨</div>
-                        <h2 className="text-xl font-bold text-gray-900">{sections.general.title}</h2>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6 mb-6">
-                        <InputGroup label="NOM DU FESTIVAL" value={sections.general.data.festival_name} onChange={(v) => handleChange('general', 'festival_name', v)} />
-                        <InputGroup label="ÉDITION / ANNÉE" value={sections.general.data.year} onChange={(v) => handleChange('general', 'year', v)} />
-                    </div>
-
-                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-4">IDENTITÉ VISUELLE</h3>
-                    <div className="grid grid-cols-3 gap-6">
-                        <ColorPicker label="COULEUR PRINCIPALE" color={sections.general.data.primary_color} onChange={(v) => handleChange('general', 'primary_color', v)} />
-                        <ColorPicker label="COULEUR SECONDAIRE" color={sections.general.data.secondary_color} onChange={(v) => handleChange('general', 'secondary_color', v)} />
-                    </div>
+                {/* Title & Subtitle */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-400">Titre de la section</label>
+                    <input
+                      type="text"
+                      value={section.title || ''}
+                      onChange={(e) => handleTitleChange(key, 'title', e.target.value)}
+                      className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-400">Sous-titre</label>
+                    <input
+                      type="text"
+                      value={section.sub_title || ''}
+                      onChange={(e) => handleTitleChange(key, 'sub_title', e.target.value)}
+                      className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    />
+                  </div>
                 </div>
 
-                {/* --- SECTION HERO --- */}
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold">🖼️</div>
-                        <h2 className="text-xl font-bold text-gray-900">{sections.hero.title}</h2>
-                    </div>
-
-                    <div className="space-y-6">
-                        <InputGroup label="BADGE" value={sections.hero.data.badge} onChange={(v) => handleChange('hero', 'badge', v)} />
-                        <div className="grid grid-cols-2 gap-6">
-                            <InputGroup label="TITRE PRINCIPAL" value={sections.hero.data.main_title} onChange={(v) => handleChange('hero', 'main_title', v)} />
-                            <InputGroup label="TITRE ACCENT" value={sections.hero.data.sub_title} onChange={(v) => handleChange('hero', 'sub_title', v)} />
+                {/* Data fields */}
+                {dataFields.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-3">Donnees de configuration</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {dataFields.map(([field, value]) => (
+                        <div key={field} className="space-y-2">
+                          <label className="text-xs text-gray-400">{field.replace(/_/g, ' ').toUpperCase()}</label>
+                          {typeof value === 'string' && value.startsWith('#') && value.length === 7 ? (
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="color"
+                                value={value}
+                                onChange={(e) => handleChange(key, field, e.target.value)}
+                                className="w-10 h-10 rounded border-none cursor-pointer"
+                              />
+                              <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => handleChange(key, field, e.target.value)}
+                                className="flex-1 rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                              />
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={typeof value === 'string' ? value : JSON.stringify(value)}
+                              onChange={(e) => handleChange(key, field, e.target.value)}
+                              className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                            />
+                          )}
                         </div>
+                      ))}
                     </div>
-                </div>
-            </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-    );
-}
-
-// Composants utilitaires pour le style
-function InputGroup({ label, value, onChange }) {
-    return (
-        <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">{label}</label>
-            <input 
-                type="text" 
-                value={value} 
-                onChange={(e) => onChange(e.target.value)}
-                className="w-full bg-gray-100 border-none rounded-lg p-3 text-gray-700 font-medium focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-        </div>
-    );
-}
-
-function ColorPicker({ label, color, onChange }) {
-    return (
-        <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">{label}</label>
-            <div className="bg-gray-100 rounded-lg p-2 flex items-center gap-3">
-                <input 
-                    type="color" 
-                    value={color} 
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-10 h-10 rounded border-none cursor-pointer"
-                />
-                <span className="text-xs font-bold text-gray-500 uppercase">{color}</span>
-            </div>
-        </div>
-    );
+      )}
+    </div>
+  );
 }

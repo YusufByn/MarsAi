@@ -87,11 +87,12 @@ export const login = async (req, res) => {
 
         const token = jwtConfig.generateToken(userSafe);
 
-        console.log("Login - Success !");
-        res.status(200).json({ 
-            message: "Success", 
+        console.log("[AUTH] Login - Success for:", email);
+        res.status(200).json({
+            message: "Success",
             success: true,
-            token: token
+            token: token,
+            user: userSafe
         });
 
     } catch (err) {
