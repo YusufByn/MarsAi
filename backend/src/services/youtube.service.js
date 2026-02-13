@@ -71,10 +71,12 @@ export const uploadVideoToYoutube = async (filePath, metadata = {}) => {
   });
 
   const videoId = response?.data?.id;
-  
+
   if(!videoId) {
     throw new Error('Failed to upload video to YouTube');
   }
+
+  console.log('thumbnailPath', thumbnailPath);
 
   if (thumbnailPath) {
     await youtube.thumbnails.set({
@@ -84,6 +86,8 @@ export const uploadVideoToYoutube = async (filePath, metadata = {}) => {
       }
     });
   }
+
+
   
   // si le chemin du fichier srt existe, on upload le sous-titre
   if (srtPath) {
@@ -105,6 +109,7 @@ export const uploadVideoToYoutube = async (filePath, metadata = {}) => {
   }
 
   console.log('videoId', videoId);
+  console.log('upload status:', response?.data?.status);
   console.log('video', response.data);
 
   //retourner l'id et l'url de la video

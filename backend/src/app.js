@@ -33,21 +33,12 @@ app.use(compression());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.use('/upload', express.static(path.join(__dirname, 'upload')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // toutes les routes
 app.use('/api', routes);
 
-// Log des routes montées (dev seulement)
-if (process.env.NODE_ENV !== 'production') {
-  console.log('✅ Routes API montées sous /api');
-  console.log('   - /api/player/videos');
-  console.log('   - /api/player/videos/:id');
-  console.log('   - /api/player/stream/:filename');
-}
-
 // middleware pour gérer les erreurs
-
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({

@@ -38,6 +38,7 @@ export const uploadVideo = async (req, res) => {
     const video_file_name = videoFiles.filename;
     const cover = coverFile?.filename;
     const srt_file_name = srtFile?.filename;
+    console.log('coverFile', coverFile);
 
     // upload de la video sur youtube
     // on passe le chemin du fichier video, et les metadata
