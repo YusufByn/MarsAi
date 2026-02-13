@@ -12,8 +12,11 @@ const Selector = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Filtre actif (null = aucun encart selectionne, pas de liste affichee)
+  // Filtre actif (null = tous, sinon filtre par statut)
   const [activeFilter, setActiveFilter] = useState(null);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 20;
 
 
   useEffect(() => {
@@ -57,14 +60,27 @@ const Selector = () => {
 
   const handleCardClick = (statut) => {
     setActiveFilter(prev => prev === statut ? null : statut);
+    setPage(1);
   };
 
   const filteredMemos = useMemo(() => {
-    if (!activeFilter) return [];
+    const term = search.toLowerCase().trim();
     return memos
-      .filter(memo => memo.statut === activeFilter)
+      .filter(memo => {
+        if (activeFilter) return memo.statut === activeFilter;
+        return true;
+      })
+      .filter(memo => {
+        if (!term) return true;
+        const title = (memo.title || '').toLowerCase();
+        const director = `${memo.realisator_name || ''} ${memo.realisator_lastname || ''}`.toLowerCase();
+        return title.includes(term) || director.includes(term);
+      })
       .sort((a, b) => (b.updated_at > a.updated_at ? 1 : -1));
-  }, [memos, activeFilter]);
+  }, [memos, activeFilter, search]);
+
+  const totalPages = Math.ceil(filteredMemos.length / PER_PAGE);
+  const paginatedMemos = filteredMemos.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   if (loading) {
     return (
@@ -185,14 +201,23 @@ const Selector = () => {
             })}
           </div>
 
+          {/* Barre de recherche */}
+          <div className="mb-6">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              placeholder="Rechercher par titre ou realisateur..."
+              className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors"
+            />
+          </div>
+
           {/* Liste des memos filtres */}
-          {activeFilter === null ? (
-            <p className="text-center text-gray-400 py-10">Cliquez sur un encart pour afficher les videos</p>
-          ) : filteredMemos.length === 0 ? (
-            <p className="text-center text-gray-400 py-10">Aucune video avec ce statut</p>
+          {filteredMemos.length === 0 ? (
+            <p className="text-center text-gray-400 py-10">Aucune video trouvee</p>
           ) : (
             <div className="space-y-4">
-              {filteredMemos.map((memo) => (
+              {paginatedMemos.map((memo) => (
                 <div
                   key={memo.id}
                   onClick={() => navigate(`/video/player?videoId=${memo.video_id}`)}
@@ -258,6 +283,29 @@ const Selector = () => {
                   </div>
                 </div>
               ))}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-6">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30 hover:bg-white/20 transition-colors"
+                  >
+                    Precedent
+                  </button>
+                  <span className="text-sm text-gray-400 px-4">
+                    {page} / {totalPages} ({filteredMemos.length} videos)
+                  </span>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30 hover:bg-white/20 transition-colors"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

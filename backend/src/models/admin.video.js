@@ -106,6 +106,18 @@ export const videoModel = {
                 'SELECT COUNT(*) as total FROM newsletter WHERE unsubscribed_at IS NULL'
             );
 
+            const [userCount] = await connection.query(
+                'SELECT COUNT(*) as total FROM user'
+            );
+
+            const [usersByRole] = await connection.query(
+                `SELECT role, COUNT(*) as count FROM user GROUP BY role`
+            );
+
+            const [selectorMemoCount] = await connection.query(
+                'SELECT COUNT(*) as total FROM selector_memo'
+            );
+
             await connection.commit();
 
             const counts = { total: 0, pending: 0, validated: 0, rejected: 0 };
@@ -129,6 +141,11 @@ export const videoModel = {
                 classification: row.classification,
             }));
 
+            const roles = {};
+            for (const row of usersByRole) {
+                roles[row.role] = Number(row.count);
+            }
+
             return {
                 total_videos: counts.total,
                 pending_videos: counts.pending,
@@ -138,6 +155,9 @@ export const videoModel = {
                 total_events: Number(eventCount[0].total) || 0,
                 total_jury: Number(juryCount[0].total) || 0,
                 total_newsletter: Number(newsletterCount[0].total) || 0,
+                total_users: Number(userCount[0].total) || 0,
+                users_by_role: roles,
+                total_evaluations: Number(selectorMemoCount[0].total) || 0,
             };
 
         } catch (error) {
