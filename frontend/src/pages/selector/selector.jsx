@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { userService } from '../../services/userService';
 import { selectorMemoService } from '../../services/selectorMemoService';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 const Selector = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -12,6 +14,7 @@ const Selector = () => {
 
   // Filtre actif (null = aucun encart selectionne, pas de liste affichee)
   const [activeFilter, setActiveFilter] = useState(null);
+
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -192,14 +195,15 @@ const Selector = () => {
               {filteredMemos.map((memo) => (
                 <div
                   key={memo.id}
-                  className="rounded-xl border border-white/10 bg-black/40 p-4 hover:border-white/20 transition-colors"
+                  onClick={() => navigate(`/video/player?videoId=${memo.video_id}`)}
+                  className="rounded-xl border border-white/10 bg-black/40 p-4 hover:border-white/20 transition-colors cursor-pointer"
                 >
                   <div className="flex flex-col md:flex-row gap-4">
                     {/* Miniature video */}
                     {memo.cover && (
                       <div className="w-full md:w-48 h-28 rounded-lg overflow-hidden flex-shrink-0">
                         <img
-                          src={memo.cover}
+                          src={`${API_URL}/uploads/covers/${memo.cover}`}
                           alt={memo.title}
                           className="w-full h-full object-cover"
                         />
@@ -258,6 +262,7 @@ const Selector = () => {
           )}
         </div>
       </div>
+
     </div>
   );
 };
