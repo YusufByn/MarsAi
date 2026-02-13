@@ -6,6 +6,10 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const inputBaseClass = 'bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-sm text-white transition-colors';
+  const inputBorderClass = (hasError) => hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
+  const fieldWrapperClass = 'w-full max-w-md';
+  const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
 
   // Gestion des changements de champs
   const handleChange = (e) => {
@@ -110,31 +114,32 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
   };
 
   return (
-    <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center">
-      <h2 className="p-2">Video Data</h2>
+    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
+      <h2 className="text-2xl font-semibold tracking-tight">Video Data</h2>
+      <p className="text-xs text-gray-400 mt-1">Step 2 - Describe your project</p>
       
-      <div className="text-center flex flex-raw space-between justify-center gap-2">
-        <div className="border rounded-full w-7 h-7">
+      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           1
         </div>
-        <div className="border rounded-full w-7 h-7 bg-purple-500">
+        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
           2
         </div>
-        <div className="border rounded-full w-7 h-7">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           3
         </div>
       </div>
 
       <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
+        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
 
           {/* Title EN */}
-          <div className="w-60">
-            <label htmlFor="titleEN" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="titleEN" className={labelClass}>
               Title EN <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.titleEN ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.titleEN)}`}
               type="text"
               name="titleEN"
               id="titleEN"
@@ -142,16 +147,16 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               onChange={handleChange}
               placeholder="Title EN"
             />
-            {errors.titleEN && <p className="text-red-500 text-sm mt-1">{errors.titleEN}</p>}
+            {errors.titleEN && <p className="text-rose-400 text-xs mt-1 text-left">{errors.titleEN}</p>}
           </div>
 
           {/* Title */}
-          <div className="w-60">
-            <label htmlFor="title" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="title" className={labelClass}>
               Title
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.title ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.title)}`}
               type="text"
               name="title"
               id="title"
@@ -159,16 +164,16 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               onChange={handleChange}
               placeholder="Title"
             />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            {errors.title && <p className="text-rose-400 text-xs mt-1 text-left">{errors.title}</p>}
           </div>
 
           {/* Language */}
-          <div className="w-60">
-            <label htmlFor="language" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="language" className={labelClass}>
               Language <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.language ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.language)}`}
               type="text"
               name="language"
               id="language"
@@ -176,16 +181,16 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               onChange={handleChange}
               placeholder="Language"
             />
-            {errors.language && <p className="text-red-500 text-sm mt-1">{errors.language}</p>}
+            {errors.language && <p className="text-rose-400 text-xs mt-1 text-left">{errors.language}</p>}
           </div>
 
           {/* Synopsis EN */}
-          <div className="w-60">
-            <label htmlFor="synopsisEN" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="synopsisEN" className={labelClass}>
               Synopsis EN <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsisEN ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.synopsisEN)}`}
               name="synopsisEN"
               id="synopsisEN"
               value={formData.synopsisEN}
@@ -193,16 +198,16 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               placeholder="Synopsis EN"
               rows="4"
             />
-            {errors.synopsisEN && <p className="text-red-500 text-sm mt-1">{errors.synopsisEN}</p>}
+            {errors.synopsisEN && <p className="text-rose-400 text-xs mt-1 text-left">{errors.synopsisEN}</p>}
           </div>
 
           {/* Synopsis */}
-          <div className="w-60">
-            <label htmlFor="synopsis" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="synopsis" className={labelClass}>
               Synopsis
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsis ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.synopsis)}`}
               name="synopsis"
               id="synopsis"
               value={formData.synopsis}
@@ -210,16 +215,16 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               placeholder="Synopsis"
               rows="4"
             />
-            {errors.synopsis && <p className="text-red-500 text-sm mt-1">{errors.synopsis}</p>}
+            {errors.synopsis && <p className="text-rose-400 text-xs mt-1 text-left">{errors.synopsis}</p>}
           </div>
 
           {/* Tech Resume */}
-          <div className="w-60">
-            <label htmlFor="techResume" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="techResume" className={labelClass}>
               Technical Resume <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.techResume ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.techResume)}`}
               name="techResume"
               id="techResume"
               value={formData.techResume}
@@ -227,16 +232,16 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               placeholder="Technical Resume"
               rows="4"
             />
-            {errors.techResume && <p className="text-red-500 text-sm mt-1">{errors.techResume}</p>}
+            {errors.techResume && <p className="text-rose-400 text-xs mt-1 text-left">{errors.techResume}</p>}
           </div>
 
           {/* Creative Resume */}
-          <div className="w-60">
-            <label htmlFor="creativeResume" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="creativeResume" className={labelClass}>
               Creative Resume <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.creativeResume ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.creativeResume)}`}
               name="creativeResume"
               id="creativeResume"
               value={formData.creativeResume}
@@ -244,15 +249,15 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               placeholder="Creative Resume"
               rows="4"
             />
-            {errors.creativeResume && <p className="text-red-500 text-sm mt-1">{errors.creativeResume}</p>}
+            {errors.creativeResume && <p className="text-rose-400 text-xs mt-1 text-left">{errors.creativeResume}</p>}
           </div>
 
           {/* Classification */}
-          <div className="w-60">
-            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label className={labelClass}>
               Classification <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center justify-center gap-6 p-2">
+            <div className="flex items-center justify-center gap-6 p-3 rounded-xl bg-[#0f0f14] border border-white/15">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   className="w-4 h-4"
@@ -276,12 +281,12 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
                 <span className="text-sm">Full AI</span>
               </label>
             </div>
-            {errors.classification && <p className="text-red-500 text-sm mt-1">{errors.classification}</p>}
+            {errors.classification && <p className="text-rose-400 text-xs mt-1 text-left">{errors.classification}</p>}
           </div>
 
           {/* Tags */}
-          <div className="w-60">
-            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label className={labelClass}>
               Tags
             </label>
             <TagInput
@@ -293,23 +298,23 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
           {/* Message d'erreur général */}
           {submitError && (
-            <div className="w-60 text-red-500 text-center">
+            <div className="w-full max-w-md text-rose-400 text-xs text-center">
               {submitError}
             </div>
           )}
 
           {/* Buttons */}
-          <div className="flex gap-4 m-5 p-1 place-self-centered">
+          <div className="flex gap-3 mt-4 p-1 place-self-center">
             <button 
               type="button"
               onClick={() => setEtape(1)}
-              className="bg-gray-700 hover:bg-gray-600 border rounded-xl p-2 px-8 transition-colors">
+              className="bg-white/5 hover:bg-white/10 border border-white/15 rounded-xl px-7 py-2.5 transition-colors text-sm font-medium">
               Back
             </button>
             <button 
               type="submit"
               disabled={isSubmitting}
-              className="bg-linear-to-r from-purple-500 to-pink-500 border rounded-xl p-2 px-8 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="bg-linear-to-r from-violet-600 to-fuchsia-600 border border-white/10 rounded-xl px-7 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-fuchsia-500 shadow-[0_8px_24px_rgba(168,85,247,0.35)] transition-all">
               {isSubmitting ? 'Loading...' : 'Next'}
             </button>
           </div>

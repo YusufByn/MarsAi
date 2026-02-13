@@ -24,7 +24,7 @@ const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsD
 
   return createPortal(
     <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="relative bg-[#050505] border border-white/10 rounded-xl p-4 max-w-xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+      <div className="relative bg-[#07070a] border border-white/10 rounded-2xl p-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
         {/* Bouton de fermeture */}
         <button 
           onClick={onClose}
@@ -59,7 +59,7 @@ const SocialNetworksModal = ({ isOpen, onClose, realisatorSocialNetworks, setRea
 
   return createPortal(
     <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="relative bg-[#050505] border border-white/10 rounded-xl p-4 max-w-xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+      <div className="relative bg-[#07070a] border border-white/10 rounded-2xl p-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
         {/* Bouton de fermeture */}
         <button 
           onClick={onClose}
@@ -97,6 +97,10 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     other: '',
   });
   const [isSocialNetworksModalOpen, setIsSocialNetworksModalOpen] = useState(false);
+  const inputBaseClass = 'bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-sm text-white transition-colors';
+  const inputBorderClass = (hasError) => hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
+  const fieldWrapperClass = 'w-full max-w-md';
+  const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
 
   // Gestion des changements de champs
   const handleChange = (e) => {
@@ -228,27 +232,28 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
   };
 
   return (
-    <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center ">
-      <h2 className="p-2">Personnal Data</h2>
+    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
+      <h2 className="text-2xl font-semibold tracking-tight">Personnal Data</h2>
+      <p className="text-xs text-gray-400 mt-1">Step 1 - Tell us about yourself</p>
       
-      <div className="text-center flex flex-raw space-between justify-center gap-2">
-        <div className="border rounded-full w-7 h-7 bg-purple-500">
+      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
+        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
           1
         </div>
-        <div className="border rounded-full w-7 h-7">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           2
         </div>
-        <div className="border rounded-full w-7 h-7">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           3
         </div>
       </div>
 
       <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
+        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
 
           {/* Civility */}
-          <div className="w-60">
-            <label htmlFor="gender" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="gender" className={labelClass}>
               Gender <span className="text-red-500">*</span>
             </label>
             <select 
@@ -256,22 +261,22 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               id="gender"
               value={formData.gender}
               onChange={handleChange}
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.gender ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.gender)}`}
             >
               <option value="">Select your gender</option>
               <option value="women">Women</option>
               <option value="man">Man</option>
               <option value="other">Other</option>
             </select>
-            {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
+            {errors.gender && <p className="text-rose-400 text-xs mt-1 text-left">{errors.gender}</p>}
           </div>
 
-          <div className="w-60">
-            <label htmlFor="firstName" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="firstName" className={labelClass}>
               First Name <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.firstName ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.firstName)}`}
               type="text"
               name="firstName"
               id="firstName"
@@ -279,15 +284,15 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               onChange={handleChange}
               placeholder="First Name"
             />
-            {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+            {errors.firstName && <p className="text-rose-400 text-xs mt-1 text-left">{errors.firstName}</p>}
           </div>
 
-          <div className="w-60">
-            <label htmlFor="lastName" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="lastName" className={labelClass}>
               Last Name <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.lastName ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.lastName)}`}
               type="text"
               name="lastName"
               id="lastName"
@@ -295,16 +300,16 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               onChange={handleChange}
               placeholder="Last Name"
             />
-            {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+            {errors.lastName && <p className="text-rose-400 text-xs mt-1 text-left">{errors.lastName}</p>}
           </div>
 
           {/* Email */}
-          <div className="w-60">
-            <label htmlFor="email" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="email" className={labelClass}>
               Email <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.email ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.email)}`}
               type="email"
               name="email"
               id="email"
@@ -312,15 +317,15 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               onChange={handleChange}
               placeholder="email"
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.email && <p className="text-rose-400 text-xs mt-1 text-left">{errors.email}</p>}
           </div>
 
-          <div className="w-60">
-            <label htmlFor="country" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="country" className={labelClass}>
               Country <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.country ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.country)}`}
               type="text"
               name="country"
               id="country"
@@ -328,12 +333,12 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               onChange={handleChange}
               placeholder="Country"
             />
-            {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+            {errors.country && <p className="text-rose-400 text-xs mt-1 text-left">{errors.country}</p>}
           </div>
 
           {/* Phones */}
-          <div className="w-60">
-            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label className={labelClass}>
               Phone Number
             </label>
             <PhoneInput
@@ -341,14 +346,14 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               defaultCountry="FR"
               value={formData.phoneNumber}
               onChange={(value) => handlePhoneChange('phoneNumber', value)}
-              className={`bg-black/50 border rounded-xl p-2 ${errors.phoneNumber ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.phoneNumber)}`}
               placeholder="Phone Number"
             />
-            {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
+            {errors.phoneNumber && <p className="text-rose-400 text-xs mt-1 text-left">{errors.phoneNumber}</p>}
           </div>
           
-          <div className="w-60">
-            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label className={labelClass}>
               Mobile Number <span className="text-red-500">*</span>
             </label>
             <PhoneInput
@@ -356,19 +361,19 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               defaultCountry="FR"
               value={formData.mobileNumber}
               onChange={(value) => handlePhoneChange('mobileNumber', value)}
-              className={`bg-black/50 border rounded-xl p-2 ${errors.mobileNumber ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.mobileNumber)}`}
               placeholder="Mobile Number"
             />
-            {errors.mobileNumber && <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>}
+            {errors.mobileNumber && <p className="text-rose-400 text-xs mt-1 text-left">{errors.mobileNumber}</p>}
           </div>
 
           {/* Address */}
-          <div className="w-60">
-            <label htmlFor="address" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="address" className={labelClass}>
               Address <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.address ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.address)}`}
               type="text"
               name="address"
               id="address"
@@ -376,16 +381,16 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               onChange={handleChange}
               placeholder="Address"
             />
-            {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+            {errors.address && <p className="text-rose-400 text-xs mt-1 text-left">{errors.address}</p>}
           </div>
 
           {/* Acquisition source */}
-          <div className="w-60">
-            <label htmlFor="acquisitionSource" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="acquisitionSource" className={labelClass}>
               How did you hear about us? <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.acquisitionSource ? 'border-red-500' : 'border-white/10'}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSource)}`}
               type="text"
               name="acquisitionSource"
               id="acquisitionSource"
@@ -393,13 +398,13 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               onChange={handleChange}
               placeholder="How did you hear about us?"
             />
-            {errors.acquisitionSource && <p className="text-red-500 text-sm mt-1">{errors.acquisitionSource}</p>}
+            {errors.acquisitionSource && <p className="text-rose-400 text-xs mt-1 text-left">{errors.acquisitionSource}</p>}
           </div>
 
-          <div className="w-60">
+          <div className={fieldWrapperClass}>
             <label className="flex items-center gap-2">
               <input 
-                className={`bg-black/50 border rounded p-2 ${errors.ageVerificator ? 'border-red-500' : 'border-white/10'}`}
+                className={`bg-black/50 border rounded p-2 ${errors.ageVerificator ? 'border-rose-500' : 'border-white/10'}`}
                 type="checkbox"
                 name="ageVerificator"
                 id="ageVerificator"
@@ -408,11 +413,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
               />
               <span className="text-sm">Are you 18 years old or older? <span className="text-red-500">*</span></span>
             </label>
-            {errors.ageVerificator && <p className="text-red-500 text-sm mt-1">{errors.ageVerificator}</p>}
+            {errors.ageVerificator && <p className="text-rose-400 text-xs mt-1 text-left">{errors.ageVerificator}</p>}
           </div>
           
-          <span>Do you have contributors ?</span>
-          <div className="w-60">
+          <span className="text-sm text-gray-300">Do you have contributors ?</span>
+          <div className={fieldWrapperClass}>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -427,11 +432,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
                 }}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fuchsia-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-violet-600 peer-checked:to-fuchsia-600"></div>
             </label>
           </div>
-          <span>Do you have social networks ?</span>
-          <div className="w-60">
+          <span className="text-sm text-gray-300">Do you have social networks ?</span>
+          <div className={fieldWrapperClass}>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -446,23 +451,23 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
                 }}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fuchsia-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-violet-600 peer-checked:to-fuchsia-600"></div>
             </label>
           </div>
 
           {/* Message d'erreur général */}
           {submitError && (
-            <div className="w-60 text-red-500 text-center">
+            <div className="w-full max-w-md text-rose-400 text-xs text-center">
               {submitError}
             </div>
           )}
 
           {/* Button */}
-          <div className="m-5 p-1 gap-5 place-self-centered">
+          <div className="mt-4 p-1 place-self-centered">
             <button 
               type="submit"
               disabled={isSubmitting}
-              className="bg-linear-to-r from-purple-500 to-pink-500 border rounded-xl p-2 px-8 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="bg-linear-to-r from-violet-600 to-fuchsia-600 border border-white/10 rounded-xl px-7 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-fuchsia-500 shadow-[0_8px_24px_rgba(168,85,247,0.35)] transition-all">
               {isSubmitting ? 'Loading...' : 'Next'}
             </button>
           </div>

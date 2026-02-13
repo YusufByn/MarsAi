@@ -142,23 +142,23 @@ const TagInput = ({ value = [], onChange, error }) => {
   };
 
   return (
-    <div className="w-60">
+    <div className="w-full max-w-md">
       {/* Container des tags + input */}
-      <div className={`bg-black/50 border rounded-xl p-2 w-60 flex flex-wrap gap-2 items-center min-h-[42px] ${
-        showError ? 'border-red-500' : error ? 'border-red-500' : ''
+      <div className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full flex flex-wrap gap-2 items-center min-h-[46px] transition-colors ${
+        showError ? 'border-rose-500' : error ? 'border-rose-500' : 'border-white/15 focus-within:border-fuchsia-400/70'
       }`}>
         
         {/* Tags existants */}
         {tags.map((tag, index) => (
           <span
             key={index}
-            className="inline-flex items-center gap-1 bg-sky-400 text-black text-sm px-3 py-1 rounded-full"
+            className="inline-flex items-center gap-1 bg-fuchsia-500/15 border border-fuchsia-400/40 text-fuchsia-100 text-xs px-2.5 py-1 rounded-full"
           >
             {tag}
             <button
               type="button"
               onClick={() => removeTag(index)}
-              className="hover:text-red-600 font-bold text-lg leading-none"
+              className="hover:text-rose-400 font-bold text-base leading-none transition-colors"
               aria-label={`Remove tag ${tag}`}
             >
               ×
@@ -173,7 +173,7 @@ const TagInput = ({ value = [], onChange, error }) => {
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder={tags.length === 0 ? "Add tags (Enter or comma)" : ""}
-          className="flex-1 min-w-[120px] bg-transparent outline-none text-white placeholder-gray-500 text-sm"
+          className="flex-1 min-w-[120px] bg-transparent outline-none text-white placeholder:text-gray-500 text-sm"
           disabled={tags.length >= 10}
         />
       </div>
@@ -184,7 +184,7 @@ const TagInput = ({ value = [], onChange, error }) => {
       </p>
 
       {/* Message d'erreur */}
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-rose-400 text-xs mt-1">{error}</p>}
     </div>
   );
 };
