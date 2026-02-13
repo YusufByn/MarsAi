@@ -134,6 +134,10 @@ export const createVideo = async (videoData, recaptchaToken) => {
       formData.append('social_networks', JSON.stringify(socialNetworks));
     }
 
+    if (Array.isArray(step1.contributors) && step1.contributors.length > 0) {
+      formData.append('contributors', JSON.stringify(step1.contributors));
+    }
+
     // Fichiers (noms de champs attendus par multer backend)
     const normalizedVideo = normalizeFileForUpload(step3.videoFile, 'video/mp4');
     const normalizedCover = normalizeFileForUpload(step3.coverImage, 'image/jpeg');
