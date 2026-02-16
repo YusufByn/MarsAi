@@ -41,8 +41,9 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
   // État pour le token reCAPTCHA
   const [recaptchaToken, setRecaptchaToken] = useState(null);
 
-  // Référence pour le composant reCAPTCHA
+  // Références pour le composant reCAPTCHA et les inputs file
   const captchaRef = useRef(null);
+  const fileInputRefs = useRef({});
 
   // État pour la soumission du formulaire
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -186,7 +187,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     setErrors(prev => ({ ...prev, [fieldName]: null }));
     
     // Réinitialiser l'input file
-    const input = document.getElementById(fieldName);
+    const input = fileInputRefs.current[fieldName];
     if (input) input.value = '';
   };
 
@@ -467,7 +468,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                 </div>
               ) : errors.coverImage ? (
                 <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">❌</span>
+                  <span className="text-red-500 text-xl">X</span>
                   <span className="text-red-500 text-xs">{errors.coverImage}</span>
                 </div>
               ) : previews.coverImage ? (
@@ -486,6 +487,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               accept="image/jpg, image/jpeg, image/png"
               name="coverImage"
               id="coverImage"
+              ref={(el) => { fileInputRefs.current.coverImage = el; }}
               onChange={(e) => handleImageChange(e, 'coverImage')}
             />
           </div>
@@ -501,7 +503,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                 </div>
               ) : errors.still1 ? (
                 <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">❌</span>
+                  <span className="text-red-500 text-xl">X</span>
                   <span className="text-red-500 text-xs">{errors.still1}</span>
                 </div>
               ) : previews.still1 ? (
@@ -532,6 +534,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               accept="image/jpeg, image/jpg, image/png"
               name="still1"
               id="still1"
+              ref={(el) => { fileInputRefs.current.still1 = el; }}
               onChange={(e) => handleImageChange(e, 'still1')}
             />
           </div>
@@ -547,7 +550,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                 </div>
               ) : errors.still2 ? (
                 <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">❌</span>
+                  <span className="text-red-500 text-xl">X</span>
                   <span className="text-red-500 text-xs">{errors.still2}</span>
                 </div>
               ) : previews.still2 ? (
@@ -578,6 +581,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               accept="image/jpeg, image/jpg, image/png"
               name="still2"
               id="still2"
+              ref={(el) => { fileInputRefs.current.still2 = el; }}
               onChange={(e) => handleImageChange(e, 'still2')}
             />
           </div>
@@ -593,7 +597,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                 </div>
               ) : errors.still3 ? (
                 <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">❌</span>
+                  <span className="text-red-500 text-xl">X</span>
                   <span className="text-red-500 text-xs">{errors.still3}</span>
                 </div>
               ) : previews.still3 ? (
@@ -624,6 +628,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               accept="image/jpeg, image/jpg, image/png"
               name="still3"
               id="still3"
+              ref={(el) => { fileInputRefs.current.still3 = el; }}
               onChange={(e) => handleImageChange(e, 'still3')}
             />
           </div>
@@ -703,7 +708,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           {/* Messages de succès et d'erreur */}
           {submitSuccess && (
             <div className="w-60 mx-auto mb-3 p-3 bg-green-500/20 border border-green-500 rounded-xl text-green-400 text-sm text-center">
-              ✅ Your video has been successfully submitted!
+              Your video has been successfully submitted!
               <br />
               <span className="text-xs">Redirecting...</span>
             </div>
@@ -711,7 +716,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           
           {submitError && (
             <div className="w-60 mx-auto mb-3 p-3 bg-red-500/20 border border-red-500 rounded-xl text-red-400 text-sm text-center">
-              ❌ {submitError}
+              {submitError}
             </div>
           )}
 

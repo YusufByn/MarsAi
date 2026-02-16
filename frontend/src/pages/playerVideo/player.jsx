@@ -6,6 +6,7 @@ import RatingModal from './selectorOption/RatingModal';
 import QuickNotePanel from './selectorOption/QuickNotePanel';
 import EmailPanel from './selectorOption/EmailPanel';
 import { playerService } from '../../services/playerService';
+import { API_URL } from '../../config';
 
 const Player = () => {
   const { t } = useTranslation();
@@ -42,8 +43,7 @@ const Player = () => {
   // Récupérer l'ID utilisateur réel depuis localStorage
   const [userId, setUserId] = useState(null);
 
-  // URL du backend
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  // URL du backend (importée depuis config.js)
 
   // Charger l'utilisateur connecté
   useEffect(() => {
@@ -430,7 +430,7 @@ const Player = () => {
 
   const handleVideoError = (e, video) => {
     const videoElement = e.target;
-    console.error('Erreur de lecture vidéo:', {
+    console.error('[PLAYER ERROR] Erreur de lecture video:', {
       video: video.video_file_name || video.filename || video.id,
       src: videoElement.src,
       error: videoElement.error,
@@ -570,7 +570,7 @@ const Player = () => {
 
       setMemos(prev => ({ ...prev, [videoId]: note }));
     } catch (error) {
-      console.error('Erreur sauvegarde note:', error);
+      console.error('[PLAYER ERROR] Erreur sauvegarde note:', error);
       throw error;
     }
   };

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 export function useModeration() {
     const [films, setFilms] = useState([]);
@@ -11,13 +12,13 @@ export function useModeration() {
         try {
             // Remplace par ton URL réelle
             const query = new URLSearchParams(filters).toString();
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/admin/videos?${query}`, {
+            const res = await fetch(`${API_URL}/api/admin/videos?${query}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
             });
             const data = await res.json();
             setFilms(data.films || []);
         } catch (err) {
-            console.error("Erreur chargement films", err);
+            console.error("[MODERATION] Erreur chargement films", err);
         } finally {
             setLoading(false);
         }
@@ -26,7 +27,7 @@ export function useModeration() {
     // Mettre à jour un statut
     const updateStatus = async (id, newStatus) => {
         try {
-            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/admin/videos/${id}/status`, {
+            await fetch(`${API_URL}/api/admin/videos/${id}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ export function useModeration() {
             // Mise à jour optimiste de l'UI
             setFilms(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
         } catch (err) {
-            console.error("Erreur update", err);
+            console.error("[MODERATION] Erreur update", err);
         }
     };
 

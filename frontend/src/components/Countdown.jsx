@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 
 const Countdown = () => {
   const { t } = useTranslation();
@@ -16,7 +17,7 @@ const Countdown = () => {
 
     const fetchHomepage = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cms/homepage`);
+        const response = await fetch(`${API_URL}/api/cms/homepage`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -30,7 +31,7 @@ const Countdown = () => {
           setPhaseDate(null);
         }
       } catch (error) {
-        console.error('Error fetching homepage:', error);
+        console.error('[COUNTDOWN] Error fetching homepage:', error);
         setPhaseDate(null);
       } finally {
         setLoading(false);

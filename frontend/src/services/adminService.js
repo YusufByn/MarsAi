@@ -1,12 +1,6 @@
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/admin`;
+import { API_URL as BASE_URL, authHeaders } from '../config';
 
-function authHeaders() {
-  const token = localStorage.getItem('auth_token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
+const API_URL = `${BASE_URL}/api/admin`;
 
 export const adminService = {
   // --- Dashboard ---
