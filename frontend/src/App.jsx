@@ -11,6 +11,7 @@ import Register from './pages/auth/Register';
 import EditVideo from './pages/EditVideo';
 import Selector from './pages/selector/selector';
 import Videos from './pages/Videos';
+import CGU from './pages/CGU';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 
@@ -45,6 +46,7 @@ function AppContent() {
           <Route path="/video/edit/:id" element={<EditVideo />} />
           <Route path="/selector" element={<Selector />} />
           <Route path="/videos" element={<Videos />} />
+          <Route path="/mentions" element={<CGU />} />
 
           {/* Admin */}
           <Route path="/admin" element={<AdminLayout />}>
