@@ -6,6 +6,7 @@ import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import pool from "../config/db.js";
 import { youtube } from "googleapis/build/src/apis/youtube/index.js";
 
+// liste des plateformes sociales autorisées
 const ALLOWED_SOCIAL_PLATFORMS = new Set([
   "facebook",
   "instagram",
@@ -16,6 +17,7 @@ const ALLOWED_SOCIAL_PLATFORMS = new Set([
   "website",
 ]);
 
+// fonction pour parser les réseaux sociaux
 const parseSocialNetworks = (rawSocialNetworks) => {
   if (!rawSocialNetworks) return [];
 
@@ -28,7 +30,7 @@ const parseSocialNetworks = (rawSocialNetworks) => {
       return [];
     }
   }
-
+// si parsedValue n'est pas un tableau, on retourne un tableau vide
   if (!Array.isArray(parsedValue)) return [];
 
   return parsedValue
@@ -58,6 +60,7 @@ const parseContributors = (rawContributors) => {
 
   const seenEmails = new Set();
 
+  // on map le tableau de contributors pour enlever les contributors qui n'ont pas de firstName, lastName, email, productionRole
   return parsedValue
     .map((entry) => {
       const gender = String(entry?.gender || "").trim().toLowerCase() || null;
@@ -135,7 +138,7 @@ export const uploadVideo = async (req, res) => {
       srt_file_name,
       cover,
     
-      // champs texte déjà existants dans ton req.body
+      // champs texte déjà existants dans le req.body
       title: req.body.title ?? null,
       title_en: req.body.title_en ?? null,
       synopsis: req.body.synopsis ?? null,

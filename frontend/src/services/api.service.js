@@ -18,6 +18,7 @@ const MIME_BY_EXTENSION = {
   '.srt': 'text/plain',
 };
 
+
 const normalizeFileForUpload = (file, fallbackMimeType = '') => {
   if (!file) return null;
 

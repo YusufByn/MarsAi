@@ -244,6 +244,7 @@ export const addTagsToVideo = async (videoId, tagIds) => {
   return rows;
 };
 
+// fonction pour ajouter les réseaux sociaux à la vidéo
 export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
   if (!Array.isArray(socialLinks) || socialLinks.length === 0) {
     return [];
@@ -275,11 +276,13 @@ export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
   return createdLinks;
 };
 
+// fonction pour ajouter les contributeurs à la vidéo
 export const addContributorsToVideo = async (videoId, contributors = []) => {
   if (!Array.isArray(contributors) || contributors.length === 0) {
     return [];
   }
 
+  // on map le tableau de contributors pour enlever les contributors qui n'ont pas de firstName, lastName, email, productionRole
   const sanitizedContributors = contributors
     .map((contributor) => {
       const firstName = String(contributor?.firstName || "").trim();
@@ -304,6 +307,7 @@ export const addContributorsToVideo = async (videoId, contributors = []) => {
     return [];
   }
 
+  // on crée un map pour enlever les contributors qui ont le même email
   const uniqueByEmail = new Map();
   sanitizedContributors.forEach((contributor) => {
     if (!uniqueByEmail.has(contributor.email)) {
@@ -332,6 +336,7 @@ export const addContributorsToVideo = async (videoId, contributors = []) => {
     return [];
   }
 
+  // on crée un tableau de valeurs pour les contributeurs à insérer
   const values = contributorsToInsert.flatMap((contributor) => [
     videoId,
     contributor.firstName,
