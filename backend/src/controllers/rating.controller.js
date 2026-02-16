@@ -45,4 +45,14 @@ export const ratingController = {
       next(error);
     }
   },
+
+  async deleteRating(req, res, next) {
+    try {
+      const { videoId, userId } = req.params;
+      await ratingModel.clearRating(userId, videoId);
+      res.json({ success: true, message: 'Rating cleared' });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

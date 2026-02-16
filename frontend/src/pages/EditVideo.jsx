@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { API_URL } from '../config';
 
 const EditVideo = () => {
   const { id } = useParams();
@@ -64,7 +65,7 @@ const EditVideo = () => {
   const validateToken = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/upload/${id}/validate-token?token=${token}`
+        `${API_URL}/api/upload/${id}/validate-token?token=${token}`
       );
 
       const data = await response.json();
@@ -105,7 +106,7 @@ const EditVideo = () => {
       setTokenValid(true);
       setLoading(false);
     } catch (err) {
-      console.error('Erreur validation token:', err);
+      console.error('[EDIT VIDEO] Erreur validation token:', err);
       setError(err.message);
       setTokenValid(false);
       setLoading(false);
@@ -152,7 +153,7 @@ const EditVideo = () => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/upload/${id}/update?token=${token}`,
+        `${API_URL}/api/upload/${id}/update?token=${token}`,
         {
           method: 'PUT',
           body: formDataToSend
@@ -173,7 +174,7 @@ const EditVideo = () => {
         navigate('/');
       }, 2000);
     } catch (err) {
-      console.error('Erreur soumission:', err);
+      console.error('[EDIT VIDEO] Erreur soumission:', err);
       setStatus('error');
       setMessage(err.message);
     }

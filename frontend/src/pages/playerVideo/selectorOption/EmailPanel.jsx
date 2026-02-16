@@ -23,7 +23,7 @@ const EmailPanel = ({
             setMessage('');
             onClose();
         } catch (error) {
-            console.error('Erreur envoi email:', error);
+            console.error('[EMAIL] Erreur envoi email:', error);
             alert(t('emailPanel.alertSendError'));
         } finally {
             setIsSending(false);

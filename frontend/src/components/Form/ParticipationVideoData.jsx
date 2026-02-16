@@ -101,7 +101,6 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
     if (validateForm()) {
       // Formulaire valide, passer à l'étape suivante
-      console.log('Form data:', formData);
       setEtape(3);
     } else {
       setSubmitError('Please correct the errors before continuing');

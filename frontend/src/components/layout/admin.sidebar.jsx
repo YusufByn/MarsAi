@@ -1,6 +1,10 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Film, Users, Calendar, Settings, Mail, LogOut } from 'lucide-react';
+<<<<<<< HEAD
+import { LayoutDashboard, Film, Users, Calendar, Settings, Mail, UserCog, LogOut, Home } from 'lucide-react';
+=======
+import { LayoutDashboard, Film, Users, Calendar, Settings, Mail, UserCog, Home, LogOut } from 'lucide-react';
+>>>>>>> origin/WILLIAM_FIX_UX_PLAYER
 
 export default function AdminSidebar({ user }) {
   const location = useLocation();
@@ -13,6 +17,7 @@ export default function AdminSidebar({ user }) {
     { label: 'EVENEMENTS', path: '/admin/events', icon: <Calendar size={20} /> },
     { label: 'CONFIGURATION', path: '/admin/config', icon: <Settings size={20} /> },
     { label: 'NEWSLETTER', path: '/admin/newsletter', icon: <Mail size={20} /> },
+    { label: 'UTILISATEURS', path: '/admin/users', icon: <UserCog size={20} /> },
   ];
 
   const handleLogout = () => {
@@ -60,6 +65,13 @@ export default function AdminSidebar({ user }) {
             <p className="text-xs text-gray-500">{user?.role?.toUpperCase()}</p>
           </div>
         </div>
+        <Link
+          to="/"
+          className="flex items-center gap-2 px-4 py-2 w-full rounded-lg text-xs text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+        >
+          <Home size={16} />
+          <span>Retour au site</span>
+        </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 px-4 py-2 w-full rounded-lg text-xs text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"

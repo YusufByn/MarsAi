@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+import { API_URL } from '../config';
 
 const parseResponse = async (response) => {
   const data = await response.json().catch(() => ({}));
@@ -6,6 +6,21 @@ const parseResponse = async (response) => {
     throw new Error(data?.message || 'Erreur serveur');
   }
   return data;
+};
+
+export const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
+
+export const clearAuth = () => {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_user');
 };
 
 export const authService = {

@@ -13,7 +13,7 @@ const buildVideoPayload = (video) => {
   return {
     ...video,
     author: fullName || null,
-    video_url: video.video_file_name ? `/uploads/${video.video_file_name}` : null,
+    video_url: video.video_file_name ? `/uploads/videos/${video.video_file_name}` : null,
   };
 };
 

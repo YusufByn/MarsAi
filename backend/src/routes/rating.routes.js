@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get('/:videoId/:userId', ratingController.getOne);
 router.post('/', validateRatingUpsert, ratingController.upsert);
+router.delete('/:videoId/:userId', ratingController.deleteRating);
 
 export default router;

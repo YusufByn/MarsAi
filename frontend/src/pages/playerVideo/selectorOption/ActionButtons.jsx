@@ -22,41 +22,6 @@ const ActionButtons = ({
                      style={{ height: '200px', bottom: 0 }}
                 />
 
-                {/* Indicateur d'état permanent au-dessus des boutons */}
-                <div className="relative flex items-center justify-center pb-2">
-                    <div className={`px-4 py-2 rounded-full backdrop-blur-md text-sm font-semibold transition-all ${
-                        currentStatus === 'yes' ? 'bg-green-500/90 text-white' :
-                        currentStatus === 'discuss' ? 'bg-amber-500/90 text-white' :
-                        currentStatus === 'no' ? 'bg-red-500/70 text-white' :
-                        'bg-white/20 text-white'
-                    }`}>
-                        {currentStatus === 'yes' ? (
-                            <span className="flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                                {t('actionButtons.selected')} {rating > 0 && `(${rating}/10)`}
-                            </span>
-                        ) : currentStatus === 'discuss' ? (
-                            <span className="flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                                </svg>
-                                {t('actionButtons.toDiscuss')}
-                            </span>
-                        ) : currentStatus === 'no' ? (
-                            <span className="flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                                {t('actionButtons.rejected')}
-                            </span>
-                        ) : (
-                            t('actionButtons.notRated')
-                        )}
-                    </div>
-                </div>
-
                 {/* Container des boutons en ligne (desktop) */}
                 <div className="relative flex items-center justify-center gap-3 sm:gap-4 px-4 pb-6 pt-2">
                 {/* Bouton NON */}
@@ -157,24 +122,6 @@ const ActionButtons = ({
 
         {/* Mobile : Boutons sur le cote droit style TikTok */}
         <div className="md:hidden absolute right-4 bottom-20 z-30 flex flex-col gap-4 items-center">
-            {/* Indicateur d'état en haut des boutons mobiles */}
-            <div className={`px-3 py-1.5 rounded-full backdrop-blur-md text-xs font-semibold transition-all ${
-                currentStatus === 'yes' ? 'bg-green-500/90 text-white' :
-                currentStatus === 'discuss' ? 'bg-amber-500/90 text-white' :
-                currentStatus === 'no' ? 'bg-red-500/70 text-white' :
-                'bg-white/20 text-white'
-            }`}>
-                {currentStatus === 'yes' ? (
-                    <span>{rating > 0 ? `${rating}/10` : '✓'}</span>
-                ) : currentStatus === 'discuss' ? (
-                    <span>💬</span>
-                ) : currentStatus === 'no' ? (
-                    <span>✕</span>
-                ) : (
-                    <span>?</span>
-                )}
-            </div>
-
             {/* Bouton OUI */}
             <button
                 onClick={() => onStatusClick('yes')}

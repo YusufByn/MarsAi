@@ -30,7 +30,7 @@ const RatingModal = ({
             await onSave(rating);
             onClose();
         } catch (error) {
-            console.error('Erreur sauvegarde:', error);
+            console.error('[RATING] Erreur sauvegarde:', error);
         } finally {
             setIsSaving(false);
         }

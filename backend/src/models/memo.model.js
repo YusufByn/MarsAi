@@ -12,7 +12,7 @@ export const memoModel = {
   async getAllByUser(userId) {
     const [rows] = await pool.execute(
       `SELECT sm.id, sm.user_id, sm.video_id, sm.rating, sm.statut, sm.playlist, sm.comment, sm.created_at, sm.updated_at,
-              v.title, v.cover, v.duration, v.classification
+              v.title, v.cover, v.duration, v.classification, v.video_file_name, v.realisator_name, v.realisator_lastname
        FROM selector_memo sm
        LEFT JOIN video v ON sm.video_id = v.id
        WHERE sm.user_id = ?

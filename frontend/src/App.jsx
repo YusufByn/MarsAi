@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import FormDirector from './pages/user/FormDirector';
 import JuryDetails from './pages/user/JuryDetails';
@@ -21,6 +22,7 @@ import AdminJury from './pages/admin/admin.jury';
 import AdminEvents from './pages/admin/admin.events';
 import AdminConfig from './pages/admin/admin.config';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
+import AdminUsers from './pages/admin/admin.users';
 
 function AppContent() {
   const location = useLocation();
@@ -52,6 +54,7 @@ function AppContent() {
             <Route path="events" element={<AdminEvents />} />
             <Route path="config" element={<AdminConfig />} />
             <Route path="newsletter" element={<NewsletterAdmin />} />
+            <Route path="users" element={<AdminUsers />} />
           </Route>
         </Routes>
       </main>
@@ -62,9 +65,11 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

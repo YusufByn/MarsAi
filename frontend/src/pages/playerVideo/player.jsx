@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ActionButtons from './selectorOption/ActionButtons';
 import RatingModal from './selectorOption/RatingModal';
 import QuickNotePanel from './selectorOption/QuickNotePanel';
 import EmailPanel from './selectorOption/EmailPanel';
-import KeyboardShortcuts from './selectorOption/KeyboardShortcuts';
 import { playerService } from '../../services/playerService';
+import { API_URL } from '../../config';
 
 const Player = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const targetVideoId = searchParams.get('videoId');
   const [videos, setVideos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,8 +43,7 @@ const Player = () => {
   // Récupérer l'ID utilisateur réel depuis localStorage
   const [userId, setUserId] = useState(null);
 
-  // URL du backend
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  // URL du backend (importée depuis config.js)
 
   // Charger l'utilisateur connecté
   useEffect(() => {
@@ -76,9 +77,9 @@ const Player = () => {
           const memoResponse = await playerService.getMemo(video.id, userIdToUse);
           if (memoResponse?.data) {
             memosData[video.id] = memoResponse.data.comment || '';
-            statusesData[video.id] = memoResponse.data.statut || 'no';
+            statusesData[video.id] = memoResponse.data.statut || null;
           } else {
-            statusesData[video.id] = 'no';
+            statusesData[video.id] = null;
           }
 
           // Charger le rating
@@ -88,7 +89,7 @@ const Player = () => {
           }
         } catch (err) {
           console.log('[PLAYER] Error loading data for video', video.id, err.message);
-          statusesData[video.id] = 'no';
+          statusesData[video.id] = null;
         }
       }
 
@@ -100,6 +101,18 @@ const Player = () => {
       console.error('[PLAYER ERROR] Loading ratings/memos:', error);
     }
   };
+
+  // Construire l'URL complete pour une video
+  const buildVideoData = (video) => ({
+    ...video,
+    video_url: video.video_url
+      ? `${API_URL}${video.video_url}`
+      : video.video_file_name
+        ? `${API_URL}/uploads/videos/${video.video_file_name}`
+        : null,
+    author: video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' '),
+    description: video.description || video.synopsis || '',
+  });
 
   // Récupérer les vidéos depuis le backend
   useEffect(() => {
@@ -118,23 +131,44 @@ const Player = () => {
         }
 
         const result = await response.json();
-        const videos = result.data || result;
+        const videoList = result.data || result;
 
-        console.log('[PLAYER] Videos loaded:', videos.length);
+        console.log('[PLAYER] Videos loaded:', videoList.length);
 
-        // Construire l'URL complete pour chaque video
-        const videosWithFullUrl = Array.isArray(videos) ? videos.map(video => ({
-          ...video,
-          video_url: video.video_url
-            ? `${API_URL}${video.video_url}`
-            : video.video_file_name
-              ? `${API_URL}/upload/${video.video_file_name}`
-              : null,
-          author: video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' '),
-          description: video.description || video.synopsis || '',
-        })) : [];
+        let videosWithFullUrl = Array.isArray(videoList) ? videoList.map(buildVideoData) : [];
+
+        // Si on arrive avec un videoId cible (depuis le selector), charger cette vidéo si absente
+        if (targetVideoId) {
+          const alreadyInList = videosWithFullUrl.some(v => v.id === parseInt(targetVideoId));
+          if (!alreadyInList) {
+            try {
+              const targetResponse = await fetch(`${API_URL}/api/player/videos/${targetVideoId}`);
+              if (targetResponse.ok) {
+                const targetResult = await targetResponse.json();
+                const targetVideo = buildVideoData(targetResult.data || targetResult);
+                videosWithFullUrl = [targetVideo, ...videosWithFullUrl];
+              }
+            } catch (err) {
+              console.log('[PLAYER] Could not load target video:', err.message);
+            }
+          }
+        }
 
         setVideos(videosWithFullUrl);
+
+        // Scroller vers la vidéo cible si présente
+        if (targetVideoId) {
+          const targetIndex = videosWithFullUrl.findIndex(v => v.id === parseInt(targetVideoId));
+          if (targetIndex >= 0) {
+            setCurrentIndex(targetIndex);
+            setTimeout(() => {
+              containerRef.current?.scrollTo({
+                top: targetIndex * window.innerHeight,
+                behavior: 'instant',
+              });
+            }, 200);
+          }
+        }
 
         // Charger les ratings et memos pour chaque vidéo (si userId disponible)
         if (videosWithFullUrl.length > 0 && userId) {
@@ -150,7 +184,7 @@ const Player = () => {
     };
 
     fetchVideos();
-  }, [API_URL, userId]);
+  }, [API_URL, userId, targetVideoId]);
 
   // Gestion des raccourcis clavier
   useEffect(() => {
@@ -287,7 +321,9 @@ const Player = () => {
     const currentVideoId = videos[currentIndex]?.id;
     if (!currentVideoId) return true;
     const status = statuses[currentVideoId];
-    return status && status !== undefined;
+    // null = pas encore évalué, on autorise la navigation
+    if (status === null || status === undefined) return true;
+    return true;
   };
 
   // Etat pour l'indicateur "choisissez un statut"
@@ -394,7 +430,7 @@ const Player = () => {
 
   const handleVideoError = (e, video) => {
     const videoElement = e.target;
-    console.error('Erreur de lecture vidéo:', {
+    console.error('[PLAYER ERROR] Erreur de lecture video:', {
       video: video.video_file_name || video.filename || video.id,
       src: videoElement.src,
       error: videoElement.error,
@@ -434,6 +470,17 @@ const Player = () => {
         comment: memos[videoId] || '',
       });
 
+      // Si "Non", supprimer le rating existant
+      if (newStatus === 'no' && ratings[videoId]) {
+        await playerService.deleteRating(videoId, userId);
+        setRatings(prev => {
+          const next = { ...prev };
+          delete next[videoId];
+          return next;
+        });
+        console.log('[PLAYER] Rating cleared for video:', videoId);
+      }
+
       console.log('[PLAYER] Status saved:', newStatus);
 
       // Afficher message de succès selon le statut
@@ -449,7 +496,7 @@ const Player = () => {
       console.error('[PLAYER ERROR] Saving status:', error);
       showNotification('Erreur lors de la sauvegarde', 'error');
       // Remettre l'ancien statut en cas d'erreur
-      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || 'no' }));
+      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || null }));
     }
   };
 
@@ -501,7 +548,7 @@ const Player = () => {
       showNotification('Erreur lors de la notation', 'error');
       // Remettre les anciens états en cas d'erreur
       setRatings(prev => ({ ...prev, [videoId]: oldRating || 0 }));
-      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || 'no' }));
+      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || null }));
       throw error;
     } finally {
       setSaving(false);
@@ -517,13 +564,13 @@ const Player = () => {
       await playerService.saveMemo({
         user_id: userId,
         video_id: videoId,
-        statut: statuses[videoId] || 'no',
+        statut: statuses[videoId] || null,
         comment: note,
       });
 
       setMemos(prev => ({ ...prev, [videoId]: note }));
     } catch (error) {
-      console.error('Erreur sauvegarde note:', error);
+      console.error('[PLAYER ERROR] Erreur sauvegarde note:', error);
       throw error;
     }
   };
@@ -667,21 +714,27 @@ const Player = () => {
             </div>
 
             {/* Badge statut de la vidéo */}
-            {statuses[video.id] && statuses[video.id] !== 'no' && (
-              <div className={`px-3 py-1.5 backdrop-blur-md rounded-full flex items-center gap-2 ${
+            {statuses[video.id] && (
+              <div className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center ${
                 statuses[video.id] === 'yes' ? 'bg-green-500/70' :
                 statuses[video.id] === 'discuss' ? 'bg-amber-500/70' :
-                'bg-red-500/70'
+                statuses[video.id] === 'no' ? 'bg-red-500/70' :
+                'bg-gray-500/70'
               }`}>
-                <span className="text-white text-xs font-semibold">
-                  {statuses[video.id] === 'yes' ? t('player.selected') :
-                   statuses[video.id] === 'discuss' ? t('player.toReview') :
-                   t('player.notSelected')}
-                </span>
-                {ratings[video.id] > 0 && statuses[video.id] === 'yes' && (
-                  <span className="text-white text-xs font-bold">
-                    {ratings[video.id]}/10
-                  </span>
+                {statuses[video.id] === 'yes' && (
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {statuses[video.id] === 'discuss' && (
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {statuses[video.id] === 'no' && (
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
                 )}
               </div>
             )}
@@ -690,7 +743,7 @@ const Player = () => {
           {/* Boutons d'action dans le slide */}
           <ActionButtons
             key={`actions-${video.id}-${index}`}
-            currentStatus={statuses[video.id] || 'no'}
+            currentStatus={statuses[video.id] || null}
             rating={ratings[video.id] || 0}
             onStatusClick={handleStatusClick}
             onNoteClick={() => setShowNotePanel(true)}
@@ -711,8 +764,6 @@ const Player = () => {
         </div>
       ))}
 
-      {/* Aide raccourcis clavier (global) */}
-      <KeyboardShortcuts />
 
       {/* Indicateur "choisissez un statut" */}
       {showStatusWarning && (
