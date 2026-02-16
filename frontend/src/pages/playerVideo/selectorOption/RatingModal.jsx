@@ -6,18 +6,21 @@ const RatingModal = ({
     onClose,
     videoData,
     initialRating = 0,
+    initialNote = '',
     onSave
 }) => {
     const { t } = useTranslation();
     const [rating, setRating] = useState(initialRating);
     const [hoverRating, setHoverRating] = useState(0);
+    const [note, setNote] = useState(initialNote);
     const [isSaving, setIsSaving] = useState(false);
 
     const activeRating = hoverRating || rating;
 
     useEffect(() => {
         setRating(initialRating);
-    }, [initialRating, isOpen]);
+        setNote(initialNote);
+    }, [initialRating, initialNote, isOpen]);
 
     const handleSave = async () => {
         if (rating === 0) {
@@ -27,7 +30,7 @@ const RatingModal = ({
 
         setIsSaving(true);
         try {
-            await onSave(rating);
+            await onSave(rating, note);
             onClose();
         } catch (error) {
             console.error('[RATING] Erreur sauvegarde:', error);
@@ -66,11 +69,11 @@ const RatingModal = ({
 
                 {/* Content */}
                 <div className="p-4 sm:p-6 space-y-6">
-                    {/* Info vidéo */}
-                    <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-white font-semibold text-sm">{videoData?.title || t('ratingModal.noTitle')}</p>
+                    {/* Info video - titre en grand sans contour */}
+                    <div className="text-center">
+                        <h2 className="text-white font-bold text-2xl">{videoData?.title || t('ratingModal.noTitle')}</h2>
                         {videoData?.author && (
-                            <p className="text-gray-400 text-xs mt-1">{t('ratingModal.by', { author: videoData.author })}</p>
+                            <p className="text-gray-400 text-sm mt-1">{videoData.author}</p>
                         )}
                     </div>
 
@@ -104,6 +107,23 @@ const RatingModal = ({
                                 <span className="text-gray-500">{t('ratingModal.selectRating')}</span>
                             )}
                         </p>
+                    </div>
+
+                    {/* Commentaire personnel */}
+                    <div className="space-y-2">
+                        <label className="block text-white font-semibold text-sm">
+                            {t('quickNote.title')}
+                        </label>
+                        <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder={t('quickNote.placeholder')}
+                            rows={4}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                        />
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>{note.length} {t('quickNote.characters')}</span>
+                        </div>
                     </div>
 
                     {/* Info */}
