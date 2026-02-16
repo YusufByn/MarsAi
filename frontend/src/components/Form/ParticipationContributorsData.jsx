@@ -1,4 +1,30 @@
 import React, { useState } from 'react';
+import {
+  validateGender,
+  validateFirstName,
+  validateLastName,
+  validateEmail,
+} from '../../services/formService';
+
+const ROLE_PATTERN = /^[a-zA-Z0-9À-ÿ\s'(),.-]+$/;
+
+const validateProductionRole = (value) => {
+  const trimmedValue = String(value || '').trim();
+
+  if (!trimmedValue) return 'Role is required';
+  if (trimmedValue.length < 2) return 'Role must be at least 2 characters';
+  if (trimmedValue.length > 80) return 'Role is too long';
+  if (!ROLE_PATTERN.test(trimmedValue)) return 'Role contains invalid characters';
+  return null;
+};
+
+const normalizeContributorInput = (contributor = {}) => ({
+  gender: String(contributor.gender || '').trim(),
+  firstName: String(contributor.firstName || '').trim(),
+  lastName: String(contributor.lastName || '').trim(),
+  email: String(contributor.email || '').trim().toLowerCase(),
+  productionRole: String(contributor.productionRole || '').trim(),
+});
 
 const ParticipationContributorsData = ({ contributorsData, setContributorsData, onSave }) => {
   // contributorsData devrait être un tableau
@@ -15,36 +41,63 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentContributor({
-      ...currentContributor,
-      [name]: value
-    });
-    // Effacer l'erreur du champ modifié
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: null });
+  const validateContributorField = (fieldName, value) => {
+    switch (fieldName) {
+      case 'gender':
+        return validateGender(value);
+      case 'firstName':
+        return validateFirstName(value);
+      case 'lastName':
+        return validateLastName(value);
+      case 'email':
+        return validateEmail(value);
+      case 'productionRole':
+        return validateProductionRole(value);
+      default:
+        return null;
     }
   };
 
-  const validateContributor = () => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const nextContributor = {
+      ...currentContributor,
+      [name]: value
+    };
+    setCurrentContributor(nextContributor);
+
+    const normalizedValue = normalizeContributorInput(nextContributor)[name];
+    const fieldError = validateContributorField(name, normalizedValue);
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: fieldError,
+    }));
+  };
+
+  const validateContributor = (contributor) => {
     const newErrors = {};
-    
-    if (!currentContributor.gender) newErrors.gender = 'Gender is required';
-    if (!currentContributor.firstName?.trim()) newErrors.firstName = 'First name is required';
-    if (!currentContributor.lastName?.trim()) newErrors.lastName = 'Last name is required';
-    if (!currentContributor.email?.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentContributor.email)) {
-      newErrors.email = 'Invalid email';
-    }
-    if (!currentContributor.productionRole?.trim()) newErrors.productionRole = 'Role is required';
+
+    ['gender', 'firstName', 'lastName', 'email', 'productionRole'].forEach((fieldName) => {
+      const fieldError = validateContributorField(fieldName, contributor[fieldName]);
+      if (fieldError) {
+        newErrors[fieldName] = fieldError;
+      }
+    });
 
     return newErrors;
   };
 
   const addContributor = () => {
-    const newErrors = validateContributor();
+    const normalizedContributor = normalizeContributorInput(currentContributor);
+    const newErrors = validateContributor(normalizedContributor);
+    const contributorAlreadyExists = contributors.some(
+      (contributor) => String(contributor.email || '').trim().toLowerCase() === normalizedContributor.email
+    );
+
+    if (contributorAlreadyExists) {
+      newErrors.email = 'This email is already added';
+    }
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -53,7 +106,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
 
     // Ajouter le contributeur à la liste
     const updatedContributors = [...contributors, { 
-      ...currentContributor, 
+      ...normalizedContributor, 
       id: Date.now() // ID temporaire
     }];
     setContributorsData(updatedContributors);
@@ -172,7 +225,10 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
           <div className="flex justify-center my-2">
             <button
               type="button"
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                setGlobalError('');
+                setShowForm(true);
+              }}
             className="w-full max-w-md bg-violet-600/15 hover:bg-violet-600/25 border-2 border-dashed border-violet-400/40 hover:border-violet-400/70 rounded-xl p-3 text-violet-200 hover:text-violet-100 transition-all flex items-center justify-center gap-2 font-medium text-sm"
             >
               <span className="text-xl">+</span>
