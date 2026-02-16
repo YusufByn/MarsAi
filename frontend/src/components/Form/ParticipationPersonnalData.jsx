@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PhoneInput from 'react-phone-number-input';
+import Select from 'react-select';
+import countryList from 'react-select-country-list';
 import 'react-phone-number-input/style.css';
 import './PhoneInputStyles.css';
 import { validateGender, validateFirstName, validateLastName, validateEmail, validateCountry, validateAcquisitionSource, validateAgeVerification, validatePhoneNumber, validateMobileNumber } from '../../services/formService';
@@ -81,11 +83,49 @@ const SocialNetworksModal = ({ isOpen, onClose, realisatorSocialNetworks, setRea
   );
 };
 
+const normalizeCountryText = (value = '') =>
+  String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+const customCountryFilter = (option, inputValue) => {
+  if (!inputValue) return true;
+
+  const normalizedInput = normalizeCountryText(inputValue);
+  const normalizedLabel = normalizeCountryText(option.label);
+  const normalizedValue = normalizeCountryText(option.value);
+
+  return normalizedLabel.includes(normalizedInput) || normalizedValue.includes(normalizedInput);
+};
+
+const formatCountryOption = (option) => {
+  const iso = String(option?.value || '').toLowerCase();
+  const flagSrc = iso ? `https://flagcdn.com/w20/${iso}.png` : '';
+
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+      {flagSrc ? (
+        <img
+          src={flagSrc}
+          alt=""
+          width={18}
+          height={13}
+          style={{ borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }}
+          loading="lazy"
+        />
+      ) : null}
+      <span>{option?.label || ''}</span>
+    </span>
+  );
+};
+
 const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isAddressCountryAutoFilled, setIsAddressCountryAutoFilled] = useState(false);
+  const [isPhoneAutoFilled, setIsPhoneAutoFilled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contributorsData, setContributorsData] = useState([]);
   const [realisatorSocialNetworks, setRealisatorSocialNetworks] = useState({
@@ -115,6 +155,14 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     ...emptyAddressParts,
     ...(formData.addressParts || {}),
   });
+  const countryOptions = useMemo(() => countryList().getData(), []);
+  const selectedCountryOption = useMemo(
+    () => countryOptions.find(
+      (option) => option.label.toLowerCase() === String(formData.country || '').trim().toLowerCase()
+    ) || null,
+    [countryOptions, formData.country]
+  );
+  const selectedPhoneCountry = selectedCountryOption?.value?.toUpperCase() || 'FR';
 
   const buildAddressFromParts = (parts = {}) => {
     const normalizedParts = {
@@ -180,7 +228,11 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
     if (name === 'country') {
       const currentAddressParts = getAddressParts();
-      const shouldAutofillAddressCountry = !String(currentAddressParts.country || '').trim();
+      const currentAddressCountry = String(currentAddressParts.country || '').trim();
+      const previousCountry = String(formData.country || '').trim();
+      const shouldAutofillAddressCountry = !currentAddressCountry
+        || isAddressCountryAutoFilled
+        || currentAddressCountry.toLowerCase() === previousCountry.toLowerCase();
       const nextAddressParts = shouldAutofillAddressCountry
         ? { ...currentAddressParts, country: fieldValue }
         : currentAddressParts;
@@ -212,13 +264,51 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
   // Gestion spécifique pour les champs PhoneInput
   const handlePhoneChange = (fieldName, value) => {
+    const nextValue = value || '';
+
+    if (fieldName === 'mobileNumber') {
+      const currentPhoneNumber = String(formData.phoneNumber || '').trim();
+      const previousMobileNumber = String(formData.mobileNumber || '').trim();
+      const shouldAutofillPhoneNumber = !currentPhoneNumber
+        || isPhoneAutoFilled
+        || currentPhoneNumber === previousMobileNumber;
+      const nextPhoneNumber = shouldAutofillPhoneNumber ? nextValue : (formData.phoneNumber || '');
+
+      setFormDataProp({
+        ...formData,
+        mobileNumber: nextValue,
+        phoneNumber: nextPhoneNumber,
+      });
+      setIsPhoneAutoFilled(shouldAutofillPhoneNumber);
+
+      validateField('mobileNumber', nextValue);
+      if (shouldAutofillPhoneNumber) {
+        validateField('phoneNumber', nextPhoneNumber);
+      }
+      return;
+    }
+
+    if (fieldName === 'phoneNumber') {
+      setIsPhoneAutoFilled(false);
+    }
+
     setFormDataProp({
       ...formData,
-      [fieldName]: value || ''
+      [fieldName]: nextValue
     });
 
     // Validation en temps réel
-    validateField(fieldName, value || '');
+    validateField(fieldName, nextValue);
+  };
+
+  const handleCountrySelect = (selectedOption) => {
+    handleChange({
+      target: {
+        name: 'country',
+        value: selectedOption?.label || '',
+        type: 'text',
+      },
+    });
   };
 
   const handleAddressPartChange = (fieldName, value) => {
@@ -489,14 +579,58 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
             <label htmlFor="country" className={labelClass}>
               Country <span className="text-red-500">*</span>
             </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.country)}`}
-              type="text"
+            <Select
+              inputId="country"
               name="country"
-              id="country"
-              value={formData.country}
-              onChange={handleChange}
+              options={countryOptions}
+              value={countryOptions.find((option) => option.label === formData.country) || null}
+              onChange={handleCountrySelect}
+              isSearchable
+              filterOption={customCountryFilter}
+              formatOptionLabel={formatCountryOption}
               placeholder="Country"
+              className="text-sm"
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  minHeight: '42px',
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#0f0f14',
+                  borderColor: errors.country
+                    ? '#f43f5e'
+                    : state.isFocused
+                      ? 'rgba(217, 70, 239, 0.7)'
+                      : 'rgba(255, 255, 255, 0.15)',
+                  boxShadow: 'none',
+                  '&:hover': {
+                    borderColor: errors.country ? '#f43f5e' : 'rgba(217, 70, 239, 0.7)',
+                  },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: '#0f0f14',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? 'rgba(168, 85, 247, 0.22)' : '#0f0f14',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                }),
+                singleValue: (base) => ({
+                  ...base,
+                  color: '#ffffff',
+                }),
+                input: (base) => ({
+                  ...base,
+                  color: '#ffffff',
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  color: '#9ca3af',
+                }),
+              }}
             />
             {errors.country && <p className="text-rose-400 text-xs mt-1 text-left">{errors.country}</p>}
           </div>
@@ -508,7 +642,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
             </label>
             <PhoneInput
               international
-              defaultCountry="FR"
+              defaultCountry={selectedPhoneCountry}
               value={formData.phoneNumber}
               onChange={(value) => handlePhoneChange('phoneNumber', value)}
               className={`${inputBaseClass} ${inputBorderClass(errors.phoneNumber)}`}
@@ -523,7 +657,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
             </label>
             <PhoneInput
               international
-              defaultCountry="FR"
+              defaultCountry={selectedPhoneCountry}
               value={formData.mobileNumber}
               onChange={(value) => handlePhoneChange('mobileNumber', value)}
               className={`${inputBaseClass} ${inputBorderClass(errors.mobileNumber)}`}

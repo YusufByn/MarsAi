@@ -6,10 +6,20 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const inputBaseClass = 'bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-sm text-white transition-colors';
-  const inputBorderClass = (hasError) => hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
-  const fieldWrapperClass = 'w-full max-w-md';
+  
   const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
+  const fieldWrapperClass = 'w-full max-w-md';
+
+  // Fonction pour générer les classes dynamiques (fond change si rempli)
+  const getFieldClass = (value, hasError, isTextarea = false) => {
+    const isFilled = value && String(value).trim() !== '';
+    // Changement de couleur de fond : #0f0f14 (vide) -> #1c1c24 (rempli)
+    const baseBg = isFilled ? 'bg-[#1c1c24]' : 'bg-[#0f0f14]';
+    const borderColor = hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
+    const minHeight = isTextarea ? 'min-h-28' : '';
+    
+    return `${baseBg} border rounded-xl px-3 py-2.5 w-full text-sm text-white transition-colors ${borderColor} ${minHeight}`;
+  };
 
   // Gestion des changements de champs
   const handleChange = (e) => {
@@ -138,7 +148,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               Title EN <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.titleEN)}`}
+              className={getFieldClass(formData.titleEN, errors.titleEN)}
               type="text"
               name="titleEN"
               id="titleEN"
@@ -155,7 +165,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               Title
             </label>
             <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.title)}`}
+              className={getFieldClass(formData.title, errors.title)}
               type="text"
               name="title"
               id="title"
@@ -172,7 +182,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               Language <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.language)}`}
+              className={getFieldClass(formData.language, errors.language)}
               type="text"
               name="language"
               id="language"
@@ -189,7 +199,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               Synopsis EN <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.synopsisEN)}`}
+              className={getFieldClass(formData.synopsisEN, errors.synopsisEN, true)}
               name="synopsisEN"
               id="synopsisEN"
               value={formData.synopsisEN}
@@ -206,7 +216,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               Synopsis
             </label>
             <textarea 
-              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.synopsis)}`}
+              className={getFieldClass(formData.synopsis, errors.synopsis, true)}
               name="synopsis"
               id="synopsis"
               value={formData.synopsis}
@@ -223,7 +233,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               Technical Resume <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.techResume)}`}
+              className={getFieldClass(formData.techResume, errors.techResume, true)}
               name="techResume"
               id="techResume"
               value={formData.techResume}
@@ -240,7 +250,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               Creative Resume <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`${inputBaseClass} min-h-28 ${inputBorderClass(errors.creativeResume)}`}
+              className={getFieldClass(formData.creativeResume, errors.creativeResume, true)}
               name="creativeResume"
               id="creativeResume"
               value={formData.creativeResume}
@@ -256,10 +266,12 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
             <label className={labelClass}>
               Classification <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center justify-center gap-6 p-3 rounded-xl bg-[#0f0f14] border border-white/15">
+            <div className={`flex items-center justify-center gap-6 p-3 rounded-xl border transition-colors ${
+              formData.classification ? 'bg-[#1c1c24]' : 'bg-[#0f0f14]'
+            } ${errors.classification ? 'border-rose-500' : 'border-white/15'}`}>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
-                  className="w-4 h-4"
+                  className="w-4 h-4 accent-purple-500"
                   type="radio"
                   name="classification"
                   value="hybrid"
@@ -270,7 +282,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
-                  className="w-4 h-4"
+                  className="w-4 h-4 accent-purple-500"
                   type="radio"
                   name="classification"
                   value="ia"
