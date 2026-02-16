@@ -17,6 +17,11 @@ function getRoleOptions(currentRole) {
   return ['jury'];
 }
 
+const roleLabels = {
+  jury: 'Selector',
+  admin: 'Admin',
+};
+
 const roleBadge = {
   jury: 'bg-purple-500/20 text-purple-400',
   admin: 'bg-blue-500/20 text-blue-400',
@@ -214,7 +219,7 @@ export default function AdminUsers() {
                   className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 >
                   {roleOptions.map(r => (
-                    <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                    <option key={r} value={r}>{roleLabels[r] || r}</option>
                   ))}
                 </select>
               </div>
@@ -265,7 +270,7 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 text-gray-400">{user.email}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-bold ${roleBadge[user.role] || 'bg-gray-500/20 text-gray-400'}`}>
-                      {user.role}
+                      {roleLabels[user.role] || user.role}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-400">

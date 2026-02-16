@@ -1,12 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-
-function authHeaders() {
-  const token = localStorage.getItem('auth_token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
+import { API_URL, authHeaders } from '../config';
 
 export const juryService = {
   async getAll() {

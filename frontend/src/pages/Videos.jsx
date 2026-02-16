@@ -22,9 +22,11 @@ const Videos = () => {
 
         const authUser = JSON.parse(storedUser);
 
-        // Vérifier que l'utilisateur a le rôle jury ou admin
-        if (authUser.role !== 'jury' && authUser.role !== 'admin' && authUser.role !== 'superadmin') {
+        // Vérifier que l'utilisateur a un rôle autorisé
+        const allowedRoles = ['jury', 'admin', 'superadmin'];
+        if (!allowedRoles.includes(authUser.role)) {
           setError('Acces reserve aux membres du jury');
+          setLoading(false);
           return;
         }
 
