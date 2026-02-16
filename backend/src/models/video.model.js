@@ -26,11 +26,36 @@ export const videoModel = {
     const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 50) : 10;
     const [rows] = await pool.execute(
       `SELECT id, title, cover, youtube_url, video_file_name, duration,
+              classification, country, synopsis, language,
               realisator_name, realisator_lastname, created_at
        FROM video
        ORDER BY created_at DESC
        LIMIT ${safeLimit}`
     );
+
+    // Joindre les tags pour chaque video
+    if (rows.length > 0) {
+      const videoIds = rows.map(v => v.id);
+      const placeholders = videoIds.map(() => '?').join(',');
+      const [tagRows] = await pool.execute(
+        `SELECT vt.video_id, t.id AS tag_id, t.name
+         FROM video_tag vt
+         JOIN tag t ON t.id = vt.tag_id
+         WHERE vt.video_id IN (${placeholders})`,
+        videoIds
+      );
+
+      const tagsByVideo = {};
+      for (const row of tagRows) {
+        if (!tagsByVideo[row.video_id]) tagsByVideo[row.video_id] = [];
+        tagsByVideo[row.video_id].push({ id: row.tag_id, name: row.name });
+      }
+
+      for (const video of rows) {
+        video.tags = tagsByVideo[video.id] || [];
+      }
+    }
+
     return rows;
   },
 
@@ -39,7 +64,30 @@ export const videoModel = {
       `SELECT * FROM video WHERE id = ?`,
       [id]
     );
-    return rows[0];
+    const video = rows[0];
+    if (!video) return null;
+
+    // Joindre les tags
+    const [tagRows] = await pool.execute(
+      `SELECT t.id, t.name
+       FROM video_tag vt
+       JOIN tag t ON t.id = vt.tag_id
+       WHERE vt.video_id = ?`,
+      [id]
+    );
+    video.tags = tagRows;
+
+    // Joindre les reseaux sociaux
+    const [socialRows] = await pool.execute(
+      `SELECT sm.id, sm.platform, sm.url
+       FROM video_social_media vsm
+       JOIN social_media sm ON sm.id = vsm.social_media_id
+       WHERE vsm.video_id = ?`,
+      [id]
+    );
+    video.social_media = socialRows;
+
+    return video;
   },
 
   /**

@@ -22,4 +22,15 @@ export const videoService = {
     }
     return response.json();
   },
+
+  /**
+   * Récupérer tous les tags
+   */
+  async getAllTags() {
+    const response = await fetch(`${API_URL}/api/tags`);
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des tags');
+    }
+    return response.json();
+  },
 };
