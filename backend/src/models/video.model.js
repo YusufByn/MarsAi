@@ -227,6 +227,7 @@ export const videoModel = {
   }
 };
 
+// nouvelle fonction d'ajout de tags a la vidéo
 export const addTagsToVideo = async (videoId, tagIds) => {
 
   // variable placeholder pour pour ajuster les placeholders dans la requête
@@ -243,6 +244,7 @@ export const addTagsToVideo = async (videoId, tagIds) => {
 
   return rows;
 };
+
 
 export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
   if (!Array.isArray(socialLinks) || socialLinks.length === 0) {
@@ -275,8 +277,10 @@ export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
   return createdLinks;
 };
 
-// nouvelle fonction d'ajout on test, imax
+// nouvelle fonction d'ajout de vidéo avec payload en parametre au lieu de passer 22323 params
 export const createVideo = async (payload) => {
+
+  // requete preparee
   const query = `
     INSERT INTO video (
       youtube_url, video_file_name, srt_file_name, cover,
@@ -287,6 +291,7 @@ export const createVideo = async (payload) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
+  // valeurs a injecter dans la requete
   const values = [
     payload.youtube_url ?? null,
     payload.video_file_name ?? null,
@@ -315,6 +320,9 @@ export const createVideo = async (payload) => {
     payload.rights_accepted ? 1 : 0
   ];
 
+  // execution de la requete
   const [rows] = await pool.execute(query, values);
+
+  // retourner la vidéo créée
   return rows;
 };
