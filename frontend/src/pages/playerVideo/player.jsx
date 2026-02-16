@@ -501,7 +501,7 @@ const Player = () => {
   };
 
   // Sauvegarder la notation depuis le modal
-  const handleSaveRating = async (rating) => {
+  const handleSaveRating = async (rating, note) => {
     const videoId = videos[currentIndex]?.id;
     if (!videoId || !userId) {
       console.error('[PLAYER ERROR] Missing videoId or userId');
@@ -514,10 +514,14 @@ const Player = () => {
     // Sauvegarder les anciens états
     const oldRating = ratings[videoId];
     const oldStatus = statuses[videoId];
+    const oldMemo = memos[videoId];
 
     // Mettre à jour les états immédiatement pour feedback visuel
     setRatings(prev => ({ ...prev, [videoId]: rating }));
     setStatuses(prev => ({ ...prev, [videoId]: 'yes' }));
+    if (note !== undefined) {
+      setMemos(prev => ({ ...prev, [videoId]: note }));
+    }
 
     try {
       // Sauvegarder le rating
@@ -527,13 +531,13 @@ const Player = () => {
         rating: rating,
       });
 
-      // Sauvegarder le statut "yes"
+      // Sauvegarder le statut "yes" + commentaire
       await playerService.saveMemo({
         user_id: userId,
         video_id: videoId,
         statut: 'yes',
         playlist: 0,
-        comment: memos[videoId] || '',
+        comment: note !== undefined ? note : (memos[videoId] || ''),
       });
 
       console.log('[PLAYER] Rating saved:', rating);
@@ -549,6 +553,7 @@ const Player = () => {
       // Remettre les anciens états en cas d'erreur
       setRatings(prev => ({ ...prev, [videoId]: oldRating || 0 }));
       setStatuses(prev => ({ ...prev, [videoId]: oldStatus || null }));
+      setMemos(prev => ({ ...prev, [videoId]: oldMemo || '' }));
       throw error;
     } finally {
       setSaving(false);
@@ -784,6 +789,7 @@ const Player = () => {
             author: videos[currentIndex]?.author,
           }}
           initialRating={ratings[videos[currentIndex]?.id] || 0}
+          initialNote={memos[videos[currentIndex]?.id] || ''}
           onSave={handleSaveRating}
         />
       )}
