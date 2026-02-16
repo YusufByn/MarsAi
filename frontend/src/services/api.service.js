@@ -2,8 +2,9 @@
  * Service API pour gérer les appels au backend
  */
 
-// URL de base de l'API - à ajuster selon votre configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:4000/api';
+import { API_URL } from '../config';
+
+const API_BASE_URL = `${API_URL}/api`;
 
 const MIME_BY_EXTENSION = {
   '.mp4': 'video/mp4',
@@ -166,7 +167,7 @@ export const createVideo = async (videoData, recaptchaToken) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Erreur createVideo:', error);
+    console.error('[API] Erreur createVideo:', error);
     throw error;
   }
 };
@@ -194,7 +195,7 @@ export const uploadVideoFile = async (videoId, videoFile) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Erreur uploadVideoFile:', error);
+    console.error('[API] Erreur uploadVideoFile:', error);
     throw error;
   }
 };
@@ -222,7 +223,7 @@ export const uploadCover = async (videoId, coverFile) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Erreur uploadCover:', error);
+    console.error('[API] Erreur uploadCover:', error);
     throw error;
   }
 };
@@ -254,7 +255,7 @@ export const uploadStills = async (videoId, stillFiles) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Erreur uploadStills:', error);
+    console.error('[API] Erreur uploadStills:', error);
     throw error;
   }
 };
@@ -282,7 +283,7 @@ export const uploadSubtitles = async (videoId, subtitleFile) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Erreur uploadSubtitles:', error);
+    console.error('[API] Erreur uploadSubtitles:', error);
     throw error;
   }
 };
@@ -297,7 +298,7 @@ export const addContributors = async (videoId, contributors) => {
   try {
     // Vérifier que nous avons des contributeurs
     if (!contributors || contributors.length === 0) {
-      console.log('Aucun contributeur à ajouter');
+      console.log('[API] Aucun contributeur a ajouter');
       return { success: true, contributors: [] };
     }
     
@@ -316,7 +317,7 @@ export const addContributors = async (videoId, contributors) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Erreur addContributors:', error);
+    console.error('[API] Erreur addContributors:', error);
     throw error;
   }
 };
@@ -330,7 +331,7 @@ export const addContributors = async (videoId, contributors) => {
 export const addSocialMedia = async (videoId, socialMedia) => {
   try {
     if (!socialMedia || socialMedia.length === 0) {
-      console.log('Aucun réseau social à ajouter');
+      console.log('[API] Aucun reseau social a ajouter');
       return { success: true, social_media: [] };
     }
     
@@ -349,7 +350,7 @@ export const addSocialMedia = async (videoId, socialMedia) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Erreur addSocialMedia:', error);
+    console.error('[API] Erreur addSocialMedia:', error);
     throw error;
   }
 };
@@ -363,7 +364,7 @@ export const addSocialMedia = async (videoId, socialMedia) => {
 export const submitCompleteForm = async (formData, recaptchaToken) => {
   try {
     // Backend actuel: un seul endpoint gère métadonnées + fichiers
-    console.log('📤 Création de la vidéo (soumission unique)...');
+    console.log('[SUBMIT] Creation de la video (soumission unique)...');
     const videoResponse = await createVideo(formData, recaptchaToken);
 
     if (!videoResponse?.success) {
@@ -371,7 +372,7 @@ export const submitCompleteForm = async (formData, recaptchaToken) => {
     }
 
     const videoId = videoResponse?.data?.video || null;
-    console.log('✅ Soumission backend réussie. ID vidéo:', videoId);
+    console.log('[SUBMIT] Soumission backend reussie. ID video:', videoId);
 
     return {
       success: true,
@@ -380,7 +381,7 @@ export const submitCompleteForm = async (formData, recaptchaToken) => {
     };
     
   } catch (error) {
-    console.error('❌ Erreur lors de la soumission du formulaire:', error);
+    console.error('[SUBMIT ERROR] Erreur lors de la soumission du formulaire:', error);
     throw error;
   }
 };

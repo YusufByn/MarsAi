@@ -223,7 +223,6 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
     if (validateForm()) {
       // Formulaire valide, passer à l'étape suivante
-      console.log('Form data:', formData);
       setEtape(2);
     } else {
       setSubmitError('Please correct the errors before continuing');

@@ -22,7 +22,7 @@ const QuickNotePanel = ({
             await onSave(note);
             onClose();
         } catch (error) {
-            console.error('Erreur sauvegarde note:', error);
+            console.error('[NOTE] Erreur sauvegarde note:', error);
         } finally {
             setIsSaving(false);
         }

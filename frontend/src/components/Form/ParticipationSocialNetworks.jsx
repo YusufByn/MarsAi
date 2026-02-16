@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SocialIcon } from 'react-social-icons';
 
 const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSocialNetworks, onSave }) => {
   // S'assurer que realisatorSocialNetworks est un objet
@@ -60,13 +61,13 @@ const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSo
   };
 
   const socialNetworksList = [
-    { key: 'facebook', label: 'Facebook', icon: '📘', placeholder: 'https://facebook.com/yourprofile' },
-    { key: 'instagram', label: 'Instagram', icon: '📷', placeholder: 'https://instagram.com/yourprofile' },
-    { key: 'X', label: 'X (Twitter)', icon: '🐦', placeholder: 'https://x.com/yourprofile' },
-    { key: 'LinkedIn', label: 'LinkedIn', icon: '💼', placeholder: 'https://linkedin.com/in/yourprofile' },
-    { key: 'youtube', label: 'YouTube', icon: '🎥', placeholder: 'https://youtube.com/@yourchannel' },
-    { key: 'TikTok', label: 'TikTok', icon: '🎵', placeholder: 'https://tiktok.com/@yourprofile' },
-    { key: 'other', label: 'Other', icon: '🔗', placeholder: 'https://yourwebsite.com' },
+    { key: 'facebook', label: 'Facebook', network: 'facebook', placeholder: 'https://facebook.com/yourprofile' },
+    { key: 'instagram', label: 'Instagram', network: 'instagram', placeholder: 'https://instagram.com/yourprofile' },
+    { key: 'X', label: 'X (Twitter)', network: 'x', placeholder: 'https://x.com/yourprofile' },
+    { key: 'LinkedIn', label: 'LinkedIn', network: 'linkedin', placeholder: 'https://linkedin.com/in/yourprofile' },
+    { key: 'youtube', label: 'YouTube', network: 'youtube', placeholder: 'https://youtube.com/@yourchannel' },
+    { key: 'TikTok', label: 'TikTok', network: 'tiktok', placeholder: 'https://tiktok.com/@yourprofile' },
+    { key: 'other', label: 'Other', network: 'sharethis', placeholder: 'https://yourwebsite.com' },
   ];
 
   return (
@@ -78,12 +79,18 @@ const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSo
 
       <section className="FormSocialNetworks">
         <div className="grid grid-cols-1 justify-items-center m-2 gap-3">
-          {socialNetworksList.map(({ key, icon, placeholder }) => (
+          {socialNetworksList.map(({ key, network, placeholder }) => (
             <div key={key} className="w-full max-w-md">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg">
-                  {icon}
-                </span>
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <SocialIcon
+                    network={network}
+                    url={socialNetworks[key] || undefined}
+                    bgColor="transparent"
+                    fgColor="#ffffff"
+                    style={{ width: 20, height: 20 }}
+                  />
+                </div>
                 <input 
                   className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full pl-12 text-white text-sm transition-colors ${
                     errors[key] ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'

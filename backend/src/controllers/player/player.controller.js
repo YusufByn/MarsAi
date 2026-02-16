@@ -29,14 +29,28 @@ const PlayerVideoController = {
 
       const videos = await videoModel.findForPlayer(parseInt(userId));
 
-      const videosWithUrl = videos.map(video => ({
+      // Filtrer les vidéos dont les fichiers existent réellement
+      const validVideos = [];
+      for (const video of videos) {
+        if (video.video_file_name) {
+          const videoPath = path.join(__dirname, '../../uploads/videos', video.video_file_name);
+          try {
+            await fs.access(videoPath);
+            validVideos.push(video);
+          } catch (err) {
+            console.log('[PLAYER] Fichier video introuvable:', video.video_file_name);
+          }
+        }
+      }
+
+      const videosWithUrl = validVideos.map(video => ({
         ...video,
-        video_url: video.video_file_name ? `/upload/${video.video_file_name}` : null,
+        video_url: video.video_file_name ? `/uploads/videos/${video.video_file_name}` : null,
         author: [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' '),
         description: video.synopsis || '',
       }));
 
-      console.log('[PLAYER] Videos trouvees:', videosWithUrl.length);
+      console.log('[PLAYER] Videos trouvees:', videosWithUrl.length, '/', videos.length);
 
       res.json({
         success: true,
@@ -75,7 +89,7 @@ const PlayerVideoController = {
 
       const videoWithUrl = {
         ...video,
-        video_url: video.video_file_name ? `/upload/${video.video_file_name}` : null,
+        video_url: video.video_file_name ? `/uploads/videos/${video.video_file_name}` : null,
         author: [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' '),
         description: video.synopsis || '',
       };
@@ -102,7 +116,7 @@ const PlayerVideoController = {
   async streamVideo(req, res) {
     try {
       const { filename } = req.params;
-      const videoPath = path.join(__dirname, '../../upload', filename);
+      const videoPath = path.join(__dirname, '../../uploads/videos', filename);
 
       try {
         await fs.access(videoPath);

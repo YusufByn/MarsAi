@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+import { API_URL } from '../config';
 
 export const playerService = {
   async getVideoFeed(userId, limit = 10) {
@@ -51,6 +51,16 @@ export const playerService = {
     });
     if (!response.ok) {
       throw new Error('Erreur lors de la sauvegarde de la note');
+    }
+    return response.json();
+  },
+
+  async deleteRating(videoId, userId) {
+    const response = await fetch(`${API_URL}/api/rating/${videoId}/${userId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Erreur lors de la suppression de la note');
     }
     return response.json();
   },
