@@ -22,16 +22,23 @@ export const register = async (req, res) => {
         const newUser = await userModel.registerUser({ 
             email, 
             passwordHash, 
-            role: role || 'user', 
+            role: role || 'selector', 
             firstName, 
             lastName 
         });
 
-        console.log("Register - Success :", newUser);
+        const safeUser = {
+            id: newUser.id,
+            email: newUser.email,
+            role: newUser.role,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName
+        }
+
         res.status(201).json({ 
             success: true,
             message: "User created", 
-            user: newUser 
+            user: safeUser 
         });
 
     } catch (err) {
@@ -57,8 +64,6 @@ export const login = async (req, res) => {
                 message: "Credentials incorrect" 
             });
         }
-
-        console.log("INSPECTION USER DB :", user);
 
         const hashInDb = user.password_hash || user.password;
 
