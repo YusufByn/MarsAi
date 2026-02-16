@@ -18,6 +18,10 @@ const Player = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
+  // États pour le son (global, persiste entre les vidéos)
+  const [isMuted, setIsMuted] = useState(true);
+  const [volume, setVolume] = useState(0.5);
+
   // États pour les modals/panels
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showNotePanel, setShowNotePanel] = useState(false);
@@ -29,6 +33,9 @@ const Player = () => {
   const [statuses, setStatuses] = useState({});
   const [_saving, setSaving] = useState(false);
 
+  // État pour le panneau "afficher plus"
+  const [expandedVideoId, setExpandedVideoId] = useState(null);
+
   // États pour les notifications et feedback visuel
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const [actionFeedback, setActionFeedback] = useState({ show: false, type: '' });
@@ -39,6 +46,7 @@ const Player = () => {
   const observerRef = useRef(null);
   const tabCountRef = useRef(0);
   const tabTimerRef = useRef(null);
+  const currentIndexRef = useRef(0);
 
   // Récupérer l'ID utilisateur réel depuis localStorage
   const [userId, setUserId] = useState(null);
@@ -261,8 +269,18 @@ const Player = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showRatingModal, showNotePanel, showEmailPanel, videos, currentIndex]);
 
-  // Reset tab count quand on change de vidéo
+  // Synchroniser le volume sur toutes les vidéos
   useEffect(() => {
+    Object.values(videosRef.current).forEach((videoEl) => {
+      if (videoEl) {
+        videoEl.volume = volume;
+      }
+    });
+  }, [volume]);
+
+  // Synchroniser le ref avec le state
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
     tabCountRef.current = 0;
     if (videos[currentIndex]) {
       console.log('[PLAYER] CurrentIndex changed to:', currentIndex, 'Video ID:', videos[currentIndex].id);
@@ -393,9 +411,10 @@ const Player = () => {
 
   // Passer à la vidéo suivante
   const goToNextVideo = () => {
-    if (currentIndex < videos.length - 1) {
+    const idx = currentIndexRef.current;
+    if (idx < videos.length - 1) {
       setTimeout(() => {
-        goToVideo(currentIndex + 1);
+        goToVideo(idx + 1);
       }, 1000);
     } else {
       showNotification('Derniere video atteinte', 'success');
@@ -415,6 +434,31 @@ const Player = () => {
     } else {
       videoElement.pause();
       setIsPaused(true);
+    }
+  };
+
+  // Plein ecran mobile
+  const handleFullscreen = (index) => {
+    const videoEl = videosRef.current[index];
+    if (!videoEl) return;
+    if (videoEl.requestFullscreen) {
+      videoEl.requestFullscreen();
+    } else if (videoEl.webkitEnterFullscreen) {
+      videoEl.webkitEnterFullscreen();
+    }
+  };
+
+  // Gestion du son
+  const handleToggleMute = () => {
+    setIsMuted(prev => !prev);
+  };
+
+  const handleVolumeChange = (newVolume) => {
+    setVolume(newVolume);
+    if (newVolume > 0 && isMuted) {
+      setIsMuted(false);
+    } else if (newVolume === 0) {
+      setIsMuted(true);
     }
   };
 
@@ -441,8 +485,9 @@ const Player = () => {
 
   // Gestion du clic sur les boutons de statut
   const handleStatusClick = async (newStatus) => {
-    const videoId = videos[currentIndex]?.id;
-    console.log('[PLAYER] handleStatusClick - currentIndex:', currentIndex, 'videoId:', videoId, 'status:', newStatus);
+    const idx = currentIndexRef.current;
+    const videoId = videos[idx]?.id;
+    console.log('[PLAYER] handleStatusClick - currentIndex:', idx, 'videoId:', videoId, 'status:', newStatus);
 
     if (!videoId || !userId) {
       console.error('[PLAYER ERROR] Missing videoId or userId', { videoId, userId, currentIndex });
@@ -502,7 +547,8 @@ const Player = () => {
 
   // Sauvegarder la notation depuis le modal
   const handleSaveRating = async (rating, note) => {
-    const videoId = videos[currentIndex]?.id;
+    const idx = currentIndexRef.current;
+    const videoId = videos[idx]?.id;
     if (!videoId || !userId) {
       console.error('[PLAYER ERROR] Missing videoId or userId');
       showNotification('Erreur: utilisateur non connecte', 'error');
@@ -562,7 +608,7 @@ const Player = () => {
 
   // Sauvegarder la note rapide
   const handleSaveQuickNote = async (note) => {
-    const videoId = videos[currentIndex]?.id;
+    const videoId = videos[currentIndexRef.current]?.id;
     if (!videoId) return;
 
     try {
@@ -582,7 +628,7 @@ const Player = () => {
 
   // Envoyer un email au réalisateur
   const handleSendEmail = async (message) => {
-    const videoId = videos[currentIndex]?.id;
+    const videoId = videos[currentIndexRef.current]?.id;
     if (!videoId || !userId) {
       console.error('[PLAYER ERROR] Missing videoId or userId');
       showNotification('Erreur: utilisateur non connecte', 'error');
@@ -637,13 +683,13 @@ const Player = () => {
       onTouchEnd={handleTouchEnd}
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      {/* Bouton retour à la page selector - Desktop: centré en haut, Mobile: en haut à gauche */}
+      {/* Bouton retour a la page selector */}
       <button
         onClick={() => navigate('/selector')}
-        className="fixed top-6 left-6 md:left-1/2 md:-translate-x-1/2 z-[60] flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full bg-black/50 backdrop-blur-md hover:bg-black/70 transition-all shadow-2xl border border-white/10 hover:scale-105 active:scale-95"
-        title="Retour au profil sélecteur"
+        className="fixed top-3 left-3 md:top-6 md:left-1/2 md:-translate-x-1/2 z-[60] flex items-center gap-1.5 px-3 py-1.5 md:px-6 md:py-3 rounded-full bg-black/50 backdrop-blur-md hover:bg-black/70 transition-all shadow-2xl border border-white/10 active:scale-95"
+        title="Retour au profil selecteur"
       >
-        <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         <span className="hidden md:inline text-white text-sm font-semibold">Mon Profil Selector</span>
@@ -661,12 +707,14 @@ const Player = () => {
             ref={(el) => {
               if (el) {
                 videosRef.current[index] = el;
+                el.volume = volume;
               }
             }}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-contain bg-black"
             src={video.video_url || ''}
             playsInline
             loop
+            muted={isMuted}
             preload={index <= currentIndex + 1 ? 'auto' : 'metadata'}
             crossOrigin="anonymous"
             onEnded={() => handleVideoEnded(index)}
@@ -676,68 +724,124 @@ const Player = () => {
           {/* Indicateur pause */}
           {isPaused && currentIndex === index && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-              <div className="w-20 h-20 bg-black/50 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <div className="w-14 h-14 md:w-20 md:h-20 bg-black/50 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <svg className="w-7 h-7 md:w-10 md:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
             </div>
           )}
 
+          {/* Bouton plein ecran mobile - en haut a droite */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFullscreen(index);
+            }}
+            className="action-btn md:hidden absolute top-3 right-3 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 active:scale-95 transition-all"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+            <span className="text-white text-[10px] font-semibold">Plein ecran</span>
+          </button>
+
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
-          {/* Informations vidéo */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 pb-safe z-10 pointer-events-none">
-            <div className="pr-16">
-              <h3 className="text-white text-base font-semibold leading-tight mb-2 line-clamp-2">
+          {/* Informations video + afficher plus */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 pb-safe z-10">
+            <div className="pr-14 md:pr-16">
+              <h3 className="text-white text-sm md:text-base font-semibold leading-tight mb-1 md:mb-2 line-clamp-2">
                 {video.title}
               </h3>
               {video.author && (
-                <p className="text-white/90 text-sm flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold">
+                <p className="text-white/90 text-xs md:text-sm flex items-center gap-1.5 md:gap-2">
+                  <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] md:text-xs font-bold flex-shrink-0">
                     {video.author.charAt(0).toUpperCase()}
                   </span>
-                  {video.author}
+                  <span className="truncate">{video.author}</span>
                 </p>
               )}
+
+              {/* Description visible en desktop */}
               {video.description && (
-                <p className="text-white/80 text-xs mt-2 line-clamp-2">
+                <p className="hidden md:block text-white/80 text-xs mt-2 line-clamp-2">
                   {video.description}
                 </p>
               )}
+
+              {/* Bouton Afficher plus / Reduire (mobile uniquement) */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedVideoId(expandedVideoId === video.id ? null : video.id);
+                }}
+                className="action-btn md:hidden text-white/60 text-xs mt-2 hover:text-white transition-colors flex items-center gap-1"
+              >
+                {expandedVideoId === video.id ? 'Reduire' : 'Afficher plus'}
+                <svg
+                  className={`w-3 h-3 transition-transform ${expandedVideoId === video.id ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+
+              {/* Panneau deroulant synopsis + bouton details (mobile uniquement) */}
+              <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+                expandedVideoId === video.id ? 'max-h-60 opacity-100 mt-3' : 'max-h-0 opacity-0'
+              }`}>
+                {video.description && (
+                  <p className="text-white/80 text-xs leading-relaxed mb-3">
+                    {video.description}
+                  </p>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/videoDetails/${video.id}`);
+                  }}
+                  className="action-btn flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all"
+                >
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-white text-xs font-semibold">Page du film</span>
+                </button>
+              </div>
             </div>
           </div>
 
 
           {/* Indicateur de progression et statut */}
-          <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-            <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full">
-              <span className="text-white text-xs font-semibold">
+          <div className="absolute top-3 left-3 md:top-4 md:left-4 md:right-4 z-10 flex items-center gap-2">
+            <div className="px-2.5 py-1 md:px-3 md:py-1.5 bg-black/50 backdrop-blur-md rounded-full">
+              <span className="text-white text-[10px] md:text-xs font-semibold">
                 {index + 1} / {videos.length}
               </span>
             </div>
 
-            {/* Badge statut de la vidéo */}
+            {/* Badge statut de la video */}
             {statuses[video.id] && (
-              <div className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center ${
+              <div className={`w-7 h-7 md:w-10 md:h-10 backdrop-blur-md rounded-full flex items-center justify-center ${
                 statuses[video.id] === 'yes' ? 'bg-green-500/70' :
                 statuses[video.id] === 'discuss' ? 'bg-amber-500/70' :
                 statuses[video.id] === 'no' ? 'bg-red-500/70' :
                 'bg-gray-500/70'
               }`}>
                 {statuses[video.id] === 'yes' && (
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 )}
                 {statuses[video.id] === 'discuss' && (
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                   </svg>
                 )}
                 {statuses[video.id] === 'no' && (
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 )}
@@ -753,6 +857,11 @@ const Player = () => {
             onStatusClick={handleStatusClick}
             onNoteClick={() => setShowNotePanel(true)}
             onEmailClick={() => setShowEmailPanel(true)}
+            isMuted={isMuted}
+            volume={volume}
+            onToggleMute={handleToggleMute}
+            onVolumeChange={handleVolumeChange}
+            videoId={video.id}
           />
 
           {/* Barre de progression video */}
@@ -772,9 +881,9 @@ const Player = () => {
 
       {/* Indicateur "choisissez un statut" */}
       {showStatusWarning && (
-        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[70] animate-bounce">
-          <div className="px-6 py-3 rounded-2xl bg-white/90 backdrop-blur-md shadow-2xl">
-            <span className="text-black text-sm font-bold">Choisissez un statut pour continuer</span>
+        <div className="fixed bottom-24 md:bottom-32 left-1/2 -translate-x-1/2 z-[70] animate-bounce max-w-[85vw]">
+          <div className="px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-white/90 backdrop-blur-md shadow-2xl">
+            <span className="text-black text-xs md:text-sm font-bold">Choisissez un statut pour continuer</span>
           </div>
         </div>
       )}
@@ -828,7 +937,7 @@ const Player = () => {
           <div className={`transform transition-all duration-500 ease-out ${
             actionFeedback.show ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
           }`}>
-            <div className={`w-32 h-32 rounded-full flex items-center justify-center shadow-2xl ${
+            <div className={`w-20 h-20 md:w-32 md:h-32 rounded-full flex items-center justify-center shadow-2xl ${
               actionFeedback.type === 'success'
                 ? 'bg-green-500'
                 : actionFeedback.type === 'error'
@@ -836,11 +945,11 @@ const Player = () => {
                 : 'bg-amber-500'
             }`}>
               {actionFeedback.type === 'success' ? (
-                <svg className="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-12 h-12 md:w-20 md:h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <svg className="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-12 h-12 md:w-20 md:h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               )}
@@ -850,25 +959,25 @@ const Player = () => {
       )}
 
       {/* Notification Toast en haut */}
-      <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[70] transition-all duration-300 ${
+      <div className={`fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-[70] transition-all duration-300 max-w-[90vw] ${
         notification.show ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'
       }`}>
-        <div className={`px-6 py-4 rounded-2xl backdrop-blur-md shadow-2xl border-2 ${
+        <div className={`px-4 py-2.5 md:px-6 md:py-4 rounded-xl md:rounded-2xl backdrop-blur-md shadow-2xl border md:border-2 ${
           notification.type === 'success'
             ? 'bg-green-500/95 border-green-400 text-white'
             : 'bg-red-500/95 border-red-400 text-white'
         }`}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {notification.type === 'success' ? (
-              <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 md:w-6 md:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
             ) : (
-              <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 md:w-6 md:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             )}
-            <span className="text-base font-bold">{notification.message}</span>
+            <span className="text-xs md:text-base font-bold">{notification.message}</span>
           </div>
         </div>
       </div>
