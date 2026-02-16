@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import './PhoneInputStyles.css';
-import { validateGender, validateFirstName, validateLastName, validateEmail, validateCountry, validateAddress, validateAcquisitionSource, validateAgeVerification, validatePhoneNumber, validateMobileNumber } from '../../services/formService';
+import { validateGender, validateFirstName, validateLastName, validateEmail, validateCountry, validateAcquisitionSource, validateAgeVerification, validatePhoneNumber, validateMobileNumber } from '../../services/formService';
 import ParticipationContributorsData from './ParticipationContributorsData';
 import ParticipationSocialNetworks from './ParticipationSocialNetworks';
 import { createPortal } from 'react-dom';
@@ -85,6 +85,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [isAddressCountryAutoFilled, setIsAddressCountryAutoFilled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contributorsData, setContributorsData] = useState([]);
   const [realisatorSocialNetworks, setRealisatorSocialNetworks] = useState({
@@ -101,11 +102,104 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
   const inputBorderClass = (hasError) => hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
   const fieldWrapperClass = 'w-full max-w-md';
   const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
+  const emptyAddressParts = {
+    street: '',
+    street2: '',
+    zipcode: '',
+    city: '',
+    stateRegion: '',
+    country: '',
+  };
+
+  const getAddressParts = () => ({
+    ...emptyAddressParts,
+    ...(formData.addressParts || {}),
+  });
+
+  const buildAddressFromParts = (parts = {}) => {
+    const normalizedParts = {
+      ...emptyAddressParts,
+      ...parts,
+    };
+
+    return [
+      normalizedParts.street,
+      normalizedParts.street2,
+      normalizedParts.city,
+      normalizedParts.stateRegion,
+      normalizedParts.zipcode,
+      normalizedParts.country,
+    ]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  const validateAddressPart = (fieldName, value) => {
+    const trimmedValue = String(value || '').trim();
+
+    if (fieldName === 'zipcode') {
+      if (!trimmedValue) return 'Zip code is required';
+      if (trimmedValue.length > 20) return 'Zip code is too long';
+      return null;
+    }
+
+    if (!trimmedValue) return null;
+    if (trimmedValue.length > 120) return `${fieldName} is too long`;
+    return null;
+  };
+
+  const validateAddressParts = (addressParts) => ({
+    'addressParts.street': validateAddressPart('street', addressParts.street),
+    'addressParts.street2': validateAddressPart('street2', addressParts.street2),
+    'addressParts.zipcode': validateAddressPart('zipcode', addressParts.zipcode),
+    'addressParts.city': validateAddressPart('city', addressParts.city),
+    'addressParts.stateRegion': validateAddressPart('state/region', addressParts.stateRegion),
+    'addressParts.country': validateAddressPart('country', addressParts.country),
+  });
+
+  useEffect(() => {
+    if (formData.addressParts) return;
+
+    const initialAddressParts = { ...emptyAddressParts };
+    if (formData.address) {
+      initialAddressParts.street = formData.address;
+    }
+
+    setFormDataProp({
+      ...formData,
+      addressParts: initialAddressParts,
+      address: buildAddressFromParts(initialAddressParts) || formData.address || '',
+    });
+  }, [formData, setFormDataProp]);
 
   // Gestion des changements de champs
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const fieldValue = type === 'checkbox' ? checked : value;
+
+    if (name === 'country') {
+      const currentAddressParts = getAddressParts();
+      const shouldAutofillAddressCountry = !String(currentAddressParts.country || '').trim();
+      const nextAddressParts = shouldAutofillAddressCountry
+        ? { ...currentAddressParts, country: fieldValue }
+        : currentAddressParts;
+      const composedAddress = buildAddressFromParts(nextAddressParts);
+
+      setFormDataProp({
+        ...formData,
+        country: fieldValue,
+        addressParts: nextAddressParts,
+        address: composedAddress,
+      });
+      setIsAddressCountryAutoFilled(shouldAutofillAddressCountry);
+
+      validateField('country', fieldValue);
+      if (shouldAutofillAddressCountry) {
+        validateField('addressParts.country', fieldValue);
+      }
+      return;
+    }
     
     setFormDataProp({
       ...formData,
@@ -125,6 +219,27 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
     // Validation en temps réel
     validateField(fieldName, value || '');
+  };
+
+  const handleAddressPartChange = (fieldName, value) => {
+    const currentAddressParts = getAddressParts();
+    const nextAddressParts = {
+      ...currentAddressParts,
+      [fieldName]: value,
+    };
+    const composedAddress = buildAddressFromParts(nextAddressParts);
+
+    setFormDataProp({
+      ...formData,
+      addressParts: nextAddressParts,
+      address: composedAddress,
+    });
+
+    if (fieldName === 'country') {
+      setIsAddressCountryAutoFilled(false);
+    }
+
+    validateField(`addressParts.${fieldName}`, value);
   };
 
   // Validation d'un champ spécifique
@@ -154,7 +269,15 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
         error = validateMobileNumber(value);
         break;
       case 'address':
-        error = validateAddress(value);
+        error = null;
+        break;
+      case 'addressParts.street':
+      case 'addressParts.street2':
+      case 'addressParts.zipcode':
+      case 'addressParts.city':
+      case 'addressParts.stateRegion':
+      case 'addressParts.country':
+        error = validateAddressPart(fieldName.replace('addressParts.', ''), value);
         break;
       case 'acquisitionSource':
         error = validateAcquisitionSource(value);
@@ -174,6 +297,10 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
   // Validation complète du formulaire
   const validateForm = () => {
+    const addressParts = getAddressParts();
+    const composedAddress = buildAddressFromParts(addressParts);
+    const addressPartErrors = validateAddressParts(addressParts);
+
     const newErrors = {
       gender: validateGender(formData.gender),
       firstName: validateFirstName(formData.firstName),
@@ -181,7 +308,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       email: validateEmail(formData.email),
       country: validateCountry(formData.country),
       mobileNumber: validateMobileNumber(formData.mobileNumber),
-      address: validateAddress(formData.address),
+      ...addressPartErrors,
       acquisitionSource: validateAcquisitionSource(formData.acquisitionSource),
       ageVerificator: validateAgeVerification(formData.ageVerificator),
     };
@@ -194,7 +321,12 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     setErrors(newErrors);
 
     // Retourne true si aucune erreur
-    return !Object.values(newErrors).some(error => error !== null);
+    const isValid = !Object.values(newErrors).some(error => error !== null);
+    return {
+      isValid,
+      addressParts,
+      composedAddress,
+    };
   };
 
   // Fonction pour sauvegarder les données des contributeurs
@@ -215,13 +347,45 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     setIsSocialNetworksModalOpen(false);
   };
 
+  const handleCloseContributorsModal = () => {
+    const hasContributors = Array.isArray(contributorsData) && contributorsData.length > 0;
+    setIsModalOpen(false);
+
+    if (!hasContributors && (formData.withContributors || false)) {
+      setFormDataProp({
+        ...formData,
+        withContributors: false,
+      });
+    }
+  };
+
+  const handleCloseSocialNetworksModal = () => {
+    const hasAnySocialValue = Object.values(realisatorSocialNetworks || {})
+      .some((value) => String(value || '').trim() !== '');
+    setIsSocialNetworksModalOpen(false);
+
+    if (!hasAnySocialValue && (formData.withSocialNetworks || false)) {
+      setFormDataProp({
+        ...formData,
+        withSocialNetworks: false,
+      });
+    }
+  };
+
   // Soumission du formulaire
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError('');
 
-    if (validateForm()) {
+    const { isValid, addressParts, composedAddress } = validateForm();
+
+    if (isValid) {
+      setFormDataProp({
+        ...formData,
+        addressParts,
+        address: composedAddress,
+      });
       // Formulaire valide, passer à l'étape suivante
       setEtape(2);
     } else {
@@ -229,6 +393,8 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       setIsSubmitting(false);
     }
   };
+
+  const addressParts = getAddressParts();
 
   return (
     <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
@@ -368,19 +534,99 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
           {/* Address */}
           <div className={fieldWrapperClass}>
-            <label htmlFor="address" className={labelClass}>
-              Address <span className="text-red-500">*</span>
+            <label htmlFor="street" className={labelClass}>
+              Street
             </label>
             <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.address)}`}
+              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.street'])}`}
               type="text"
-              name="address"
-              id="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Address"
+              name="street"
+              id="street"
+              value={addressParts.street}
+              onChange={(e) => handleAddressPartChange('street', e.target.value)}
+              placeholder="Street"
             />
-            {errors.address && <p className="text-rose-400 text-xs mt-1 text-left">{errors.address}</p>}
+            {errors['addressParts.street'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.street']}</p>}
+          </div>
+
+          <div className={fieldWrapperClass}>
+            <label htmlFor="street2" className={labelClass}>
+              Street 2
+            </label>
+            <input 
+              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.street2'])}`}
+              type="text"
+              name="street2"
+              id="street2"
+              value={addressParts.street2}
+              onChange={(e) => handleAddressPartChange('street2', e.target.value)}
+              placeholder="Street 2"
+            />
+            {errors['addressParts.street2'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.street2']}</p>}
+          </div>
+
+          <div className={fieldWrapperClass}>
+            <label htmlFor="zipcode" className={labelClass}>
+              Zip Code <span className="text-red-500">*</span>
+            </label>
+            <input 
+              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.zipcode'])}`}
+              type="text"
+              name="zipcode"
+              id="zipcode"
+              value={addressParts.zipcode}
+              onChange={(e) => handleAddressPartChange('zipcode', e.target.value)}
+              placeholder="Zip Code"
+            />
+            {errors['addressParts.zipcode'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.zipcode']}</p>}
+          </div>
+
+          <div className={fieldWrapperClass}>
+            <label htmlFor="city" className={labelClass}>
+              City
+            </label>
+            <input 
+              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.city'])}`}
+              type="text"
+              name="city"
+              id="city"
+              value={addressParts.city}
+              onChange={(e) => handleAddressPartChange('city', e.target.value)}
+              placeholder="City"
+            />
+            {errors['addressParts.city'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.city']}</p>}
+          </div>
+
+          <div className={fieldWrapperClass}>
+            <label htmlFor="stateRegion" className={labelClass}>
+              State / Region
+            </label>
+            <input 
+              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.stateRegion'])}`}
+              type="text"
+              name="stateRegion"
+              id="stateRegion"
+              value={addressParts.stateRegion}
+              onChange={(e) => handleAddressPartChange('stateRegion', e.target.value)}
+              placeholder="State / Region"
+            />
+            {errors['addressParts.stateRegion'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.stateRegion']}</p>}
+          </div>
+
+          <div className={fieldWrapperClass}>
+            <label htmlFor="countryAddress" className={labelClass}>
+              Country
+            </label>
+            <input 
+              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.country'])}`}
+              type="text"
+              name="countryAddress"
+              id="countryAddress"
+              value={addressParts.country}
+              onChange={(e) => handleAddressPartChange('country', e.target.value)}
+              placeholder={isAddressCountryAutoFilled ? 'Auto-filled from country field' : 'Country'}
+            />
+            {errors['addressParts.country'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.country']}</p>}
           </div>
 
           {/* Acquisition source */}
@@ -403,7 +649,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
           <div className={fieldWrapperClass}>
             <label className="flex items-center gap-2">
               <input 
-                className={`bg-black/50 border rounded p-2 ${errors.ageVerificator ? 'border-rose-500' : 'border-white/10'}`}
+                className={`bg-[#0f0f14] border rounded p-2 ${errors.ageVerificator ? 'border-rose-500' : 'border-white/10'}`}
                 type="checkbox"
                 name="ageVerificator"
                 id="ageVerificator"
@@ -477,7 +723,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       {/* Modal des contributeurs */}
       <ContributorsModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseContributorsModal}
         contributorsData={contributorsData}
         setContributorsData={setContributorsData}
         onSave={handleSaveContributor}
@@ -485,7 +731,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       {/* Modal des réseaux sociaux */}
       <SocialNetworksModal 
         isOpen={isSocialNetworksModalOpen}
-        onClose={() => setIsSocialNetworksModalOpen(false)}
+        onClose={handleCloseSocialNetworksModal}
         realisatorSocialNetworks={realisatorSocialNetworks}
         setRealisatorSocialNetworks={setRealisatorSocialNetworks}
         onSave={handleSaveSocialNetworks}

@@ -66,6 +66,26 @@ const normalizeSocialNetworks = (socialNetworks = {}) => {
     .filter(Boolean);
 };
 
+const buildAddressFromParts = (addressParts = {}) => {
+  if (!addressParts || typeof addressParts !== 'object') {
+    return '';
+  }
+
+  const orderedParts = [
+    addressParts.street,
+    addressParts.street2,
+    addressParts.city,
+    addressParts.stateRegion,
+    addressParts.zipcode,
+    addressParts.country,
+  ];
+
+  return orderedParts
+    .map((part) => String(part || '').trim())
+    .filter(Boolean)
+    .join(', ');
+};
+
 /**
  * Créer une vidéo (métadonnées uniquement, sans fichiers)
  * @param {Object} videoData - Données de la vidéo
@@ -78,6 +98,7 @@ export const createVideo = async (videoData, recaptchaToken) => {
     const step1 = videoData.step1 || {};
     const step2 = videoData.step2 || {};
     const step3 = videoData.step3 || {};
+    const normalizedAddress = buildAddressFromParts(step1.addressParts) || step1.address || '';
 
     const formData = new FormData();
 
@@ -92,7 +113,7 @@ export const createVideo = async (videoData, recaptchaToken) => {
       country: step1.country || '',
       fixe_number: step1.phoneNumber || '',
       mobile_number: step1.mobileNumber || '',
-      address: step1.address || '',
+      address: normalizedAddress,
       acquisition_source: step1.acquisitionSource || '',
       title: step2.title || '',
       title_en: step2.titleEN || '',
