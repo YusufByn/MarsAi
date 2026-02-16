@@ -115,6 +115,7 @@ export const createVideo = async (videoData, recaptchaToken) => {
       mobile_number: step1.mobileNumber || '',
       address: normalizedAddress,
       acquisition_source: step1.acquisitionSource || '',
+      acquisition_source_other: step1.acquisitionSourceOther || '',
       title: step2.title || '',
       title_en: step2.titleEN || '',
       language: step2.language || '',

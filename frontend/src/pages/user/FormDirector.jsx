@@ -28,6 +28,7 @@ const FormDirector = () => {
         country: '',
       },
       acquisitionSource: '',
+      acquisitionSourceOther: '',
       ageVerificator: false,
       contributors: [], // Ajout des contributeurs
     },

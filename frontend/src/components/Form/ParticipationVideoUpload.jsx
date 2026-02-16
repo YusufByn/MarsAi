@@ -9,9 +9,11 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
   const navigate = useNavigate();
   const fieldWrapperClass = 'w-full max-w-md';
   const fileInputClass = 'bg-[#0f0f14] border border-white/15 rounded-xl px-3 py-2.5 w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600/25 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-violet-100 hover:file:bg-violet-600/35';
+  const maxVideoPreviewSeconds = 6;
 
   // États locaux pour les previews (URLs temporaires)
   const [previews, setPreviews] = useState({
+    videoFile: null,
     coverImage: null,
     still1: null,
     still2: null,
@@ -206,6 +208,14 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     });
   };
 
+  const handleVideoPreviewTimeUpdate = (e) => {
+    const videoElement = e.currentTarget;
+    if (videoElement.currentTime >= maxVideoPreviewSeconds) {
+      videoElement.pause();
+      videoElement.currentTime = 0;
+    }
+  };
+
   /**
    * Gestion des fichiers non-images (video, subtitle)
    */
@@ -217,6 +227,10 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       setErrors(prev => ({ ...prev, [name]: null }));
       // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
+        if (previews.videoFile) {
+          URL.revokeObjectURL(previews.videoFile);
+        }
+        setPreviews(prev => ({ ...prev, videoFile: null }));
         setVideoDuration(null);
         setFormDataProp({ ...formData, [name]: null, duration: null });
       } else {
@@ -240,6 +254,10 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       e.target.value = '';
       // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
+        if (previews.videoFile) {
+          URL.revokeObjectURL(previews.videoFile);
+        }
+        setPreviews(prev => ({ ...prev, videoFile: null }));
         setVideoDuration(null);
         setFormDataProp({ ...formData, [name]: null, duration: null });
       } else {
@@ -250,18 +268,21 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
     // Fichier valide
     setErrors(prev => ({ ...prev, [name]: null }));
-    setFormDataProp({
-      ...formData,
-      [name]: file
-    });
 
     // Calculer la durée si c'est une vidéo
     if (name === 'videoFile') {
+      if (previews.videoFile) {
+        URL.revokeObjectURL(previews.videoFile);
+      }
+      const previewObjectUrl = URL.createObjectURL(file);
+      setPreviews(prev => ({ ...prev, videoFile: previewObjectUrl }));
+
       const video = document.createElement('video');
       video.preload = 'metadata';
+      const metadataObjectUrl = URL.createObjectURL(file);
       
       video.onloadedmetadata = function() {
-        window.URL.revokeObjectURL(video.src);
+        window.URL.revokeObjectURL(metadataObjectUrl);
         const duration = video.duration;
         const durationInSeconds = Math.floor(duration);
         
@@ -282,6 +303,10 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
         
         // Si la durée dépasse le maximum
         if (duration > maxDuration) {
+          if (previewObjectUrl) {
+            URL.revokeObjectURL(previewObjectUrl);
+          }
+          setPreviews(prev => ({ ...prev, videoFile: null }));
           setErrors(prev => ({ 
             ...prev, 
             videoFile: `Video too long (${formattedDuration}). Maximum duration: 2:30` 
@@ -298,12 +323,24 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       };
       
       video.onerror = function() {
-        window.URL.revokeObjectURL(video.src);
+        window.URL.revokeObjectURL(metadataObjectUrl);
+        if (previewObjectUrl) {
+          URL.revokeObjectURL(previewObjectUrl);
+        }
+        setPreviews(prev => ({ ...prev, videoFile: null }));
+        setErrors(prev => ({ ...prev, videoFile: 'Unable to read video file metadata' }));
+        setFormDataProp({ ...formData, videoFile: null, duration: null });
         setVideoDuration('Unable to read duration');
       };
       
-      video.src = URL.createObjectURL(file);
+      video.src = metadataObjectUrl;
+      return;
     }
+
+    setFormDataProp({
+      ...formData,
+      [name]: file
+    });
   };
 
   /**
@@ -457,6 +494,22 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               <p className="text-gray-400 text-xs mt-1 text-left">Calculating duration...</p>
             ) : (
               <p className="text-gray-400 text-xs mt-1 text-left">Duration will be displayed here</p>
+            )}
+            {previews.videoFile && !errors.videoFile && (
+              <div className="mt-2 border border-white/15 rounded-xl bg-[#0f0f14] overflow-hidden">
+                <video
+                  src={previews.videoFile}
+                  controls
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-auto max-h-64 object-contain"
+                  onTimeUpdate={handleVideoPreviewTimeUpdate}
+                />
+                <p className="text-[10px] text-gray-400 px-2 py-1 text-left">
+                  Preview is limited to {maxVideoPreviewSeconds} seconds.
+                </p>
+              </div>
             )}
           </div>
 

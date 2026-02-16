@@ -120,6 +120,33 @@ const formatCountryOption = (option) => {
   );
 };
 
+const ACQUISITION_MAIN_OPTIONS = ['social_networks', 'word_of_mouth', 'mobile_film_festival', 'search_engine', 'other'];
+const SOCIAL_NETWORK_OPTIONS = ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'x'];
+
+const parseAcquisitionSource = (sourceValue = '') => {
+  const normalizedSource = String(sourceValue || '').trim().toLowerCase();
+
+  if (!normalizedSource) {
+    return { main: '', social: '', legacyOther: '' };
+  }
+
+  if (normalizedSource.startsWith('social_networks:')) {
+    const socialValue = normalizedSource.slice('social_networks:'.length);
+    return {
+      main: 'social_networks',
+      social: SOCIAL_NETWORK_OPTIONS.includes(socialValue) ? socialValue : '',
+      legacyOther: '',
+    };
+  }
+
+  if (ACQUISITION_MAIN_OPTIONS.includes(normalizedSource)) {
+    return { main: normalizedSource, social: '', legacyOther: '' };
+  }
+
+  // Compatibilité avec d'anciennes valeurs en texte libre.
+  return { main: 'other', social: '', legacyOther: String(sourceValue || '').trim() };
+};
+
 const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -163,6 +190,46 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     [countryOptions, formData.country]
   );
   const selectedPhoneCountry = selectedCountryOption?.value?.toUpperCase() || 'FR';
+  const parsedAcquisition = useMemo(
+    () => parseAcquisitionSource(formData.acquisitionSource),
+    [formData.acquisitionSource]
+  );
+  const acquisitionMainValue = parsedAcquisition.main;
+  const acquisitionSocialValue = parsedAcquisition.social;
+  const acquisitionOtherValue = String(
+    formData.acquisitionSourceOther ?? parsedAcquisition.legacyOther
+  );
+
+  const validateAcquisitionSelection = (sourceValue, otherValue) => {
+    const { main, social, legacyOther } = parseAcquisitionSource(sourceValue);
+
+    if (!main) {
+      return {
+        acquisitionSource: 'Please tell us how you heard about us',
+        acquisitionSourceOther: null,
+      };
+    }
+
+    if (main === 'social_networks' && !social) {
+      return {
+        acquisitionSource: 'Please select a social network',
+        acquisitionSourceOther: null,
+      };
+    }
+
+    if (main === 'other') {
+      const normalizedOtherValue = String(otherValue || legacyOther || '').trim();
+      return {
+        acquisitionSource: null,
+        acquisitionSourceOther: validateAcquisitionSource(normalizedOtherValue),
+      };
+    }
+
+    return {
+      acquisitionSource: null,
+      acquisitionSourceOther: null,
+    };
+  };
 
   const buildAddressFromParts = (parts = {}) => {
     const normalizedParts = {
@@ -332,6 +399,66 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     validateField(`addressParts.${fieldName}`, value);
   };
 
+  const handleAcquisitionMainChange = (e) => {
+    const nextMain = e.target.value;
+    let nextAcquisitionSource = '';
+
+    if (nextMain === 'social_networks') {
+      nextAcquisitionSource = acquisitionSocialValue
+        ? `social_networks:${acquisitionSocialValue}`
+        : 'social_networks';
+    } else if (nextMain) {
+      nextAcquisitionSource = nextMain;
+    }
+
+    const acquisitionErrors = validateAcquisitionSelection(nextAcquisitionSource, acquisitionOtherValue);
+
+    setFormDataProp({
+      ...formData,
+      acquisitionSource: nextAcquisitionSource,
+      acquisitionSourceOther: acquisitionOtherValue,
+    });
+    setErrors((prev) => ({
+      ...prev,
+      acquisitionSource: acquisitionErrors.acquisitionSource,
+      acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
+    }));
+  };
+
+  const handleAcquisitionSocialChange = (e) => {
+    const nextSocial = String(e.target.value || '').trim().toLowerCase();
+    const nextAcquisitionSource = nextSocial
+      ? `social_networks:${nextSocial}`
+      : 'social_networks';
+    const acquisitionErrors = validateAcquisitionSelection(nextAcquisitionSource, acquisitionOtherValue);
+
+    setFormDataProp({
+      ...formData,
+      acquisitionSource: nextAcquisitionSource,
+      acquisitionSourceOther: acquisitionOtherValue,
+    });
+    setErrors((prev) => ({
+      ...prev,
+      acquisitionSource: acquisitionErrors.acquisitionSource,
+      acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
+    }));
+  };
+
+  const handleAcquisitionOtherChange = (e) => {
+    const nextOtherValue = e.target.value;
+    const acquisitionErrors = validateAcquisitionSelection(formData.acquisitionSource, nextOtherValue);
+
+    setFormDataProp({
+      ...formData,
+      acquisitionSourceOther: nextOtherValue,
+    });
+    setErrors((prev) => ({
+      ...prev,
+      acquisitionSource: acquisitionErrors.acquisitionSource,
+      acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
+    }));
+  };
+
   // Validation d'un champ spécifique
   const validateField = (fieldName, value) => {
     let error = null;
@@ -370,8 +497,25 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
         error = validateAddressPart(fieldName.replace('addressParts.', ''), value);
         break;
       case 'acquisitionSource':
-        error = validateAcquisitionSource(value);
-        break;
+        {
+          const acquisitionErrors = validateAcquisitionSelection(value, formData.acquisitionSourceOther);
+          setErrors((prev) => ({
+            ...prev,
+            acquisitionSource: acquisitionErrors.acquisitionSource,
+            acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
+          }));
+          return;
+        }
+      case 'acquisitionSourceOther':
+        {
+          const acquisitionErrors = validateAcquisitionSelection(formData.acquisitionSource, value);
+          setErrors((prev) => ({
+            ...prev,
+            acquisitionSource: acquisitionErrors.acquisitionSource,
+            acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
+          }));
+          return;
+        }
       case 'ageVerificator':
         error = validateAgeVerification(value);
         break;
@@ -390,6 +534,10 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     const addressParts = getAddressParts();
     const composedAddress = buildAddressFromParts(addressParts);
     const addressPartErrors = validateAddressParts(addressParts);
+    const acquisitionErrors = validateAcquisitionSelection(
+      formData.acquisitionSource,
+      formData.acquisitionSourceOther
+    );
 
     const newErrors = {
       gender: validateGender(formData.gender),
@@ -399,7 +547,8 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       country: validateCountry(formData.country),
       mobileNumber: validateMobileNumber(formData.mobileNumber),
       ...addressPartErrors,
-      acquisitionSource: validateAcquisitionSource(formData.acquisitionSource),
+      acquisitionSource: acquisitionErrors.acquisitionSource,
+      acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
       ageVerificator: validateAgeVerification(formData.ageVerificator),
     };
 
@@ -768,16 +917,58 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
             <label htmlFor="acquisitionSource" className={labelClass}>
               How did you hear about us? <span className="text-red-500">*</span>
             </label>
-            <input 
+            <select
               className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSource)}`}
-              type="text"
               name="acquisitionSource"
               id="acquisitionSource"
-              value={formData.acquisitionSource}
-              onChange={handleChange}
-              placeholder="How did you hear about us?"
-            />
+              value={acquisitionMainValue}
+              onChange={handleAcquisitionMainChange}
+            >
+              <option value="">Select an option</option>
+              <option value="social_networks">Social networks</option>
+              <option value="word_of_mouth">Word of mouth</option>
+              <option value="mobile_film_festival">Mobile Film Festival</option>
+              <option value="search_engine">Search engine</option>
+              <option value="other">Other</option>
+            </select>
             {errors.acquisitionSource && <p className="text-rose-400 text-xs mt-1 text-left">{errors.acquisitionSource}</p>}
+
+            {acquisitionMainValue === 'social_networks' && (
+              <div className="mt-2">
+                <select
+                  className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSource)}`}
+                  name="acquisitionSourceSocial"
+                  id="acquisitionSourceSocial"
+                  value={acquisitionSocialValue}
+                  onChange={handleAcquisitionSocialChange}
+                >
+                  <option value="">Select a social network</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="x">X</option>
+                </select>
+              </div>
+            )}
+
+            {acquisitionMainValue === 'other' && (
+              <div className="mt-2">
+                <input
+                  className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSourceOther)}`}
+                  type="text"
+                  name="acquisitionSourceOther"
+                  id="acquisitionSourceOther"
+                  value={acquisitionOtherValue}
+                  onChange={handleAcquisitionOtherChange}
+                  placeholder="Please specify"
+                />
+                {errors.acquisitionSourceOther && (
+                  <p className="text-rose-400 text-xs mt-1 text-left">{errors.acquisitionSourceOther}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className={fieldWrapperClass}>
