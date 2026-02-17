@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { validateTitle, validateTitleEN, validateLanguage, validateSynopsis, validateSynopsisEN, validateTechResume, validateCreativeResume, validateClassification, validateTags } from '../../services/formService';
+import { normalizeText } from '../../../../shared/validators/video.rules.js';
 import TagInput from './TagInput';
 
 const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataProp}) => {
@@ -9,6 +10,15 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
   
   const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
   const fieldWrapperClass = 'w-full max-w-md';
+  const normalizableFields = new Set([
+    'title',
+    'titleEN',
+    'language',
+    'synopsis',
+    'synopsisEN',
+    'techResume',
+    'creativeResume',
+  ]);
 
   // Fonction pour générer les classes dynamiques (fond change si rempli)
   const getFieldClass = (value, hasError, isTextarea = false) => {
@@ -32,6 +42,25 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
     // Validation en temps réel
     validateField(name, value);
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+
+    if (!normalizableFields.has(name)) {
+      return;
+    }
+
+    const normalizedValue = normalizeText(value);
+
+    if (normalizedValue !== value) {
+      setFormDataProp({
+        ...formData,
+        [name]: normalizedValue
+      });
+    }
+
+    validateField(name, normalizedValue);
   };
 
   // Gestion spécifique des tags
@@ -89,22 +118,37 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
   // Validation complète du formulaire
   const validateForm = () => {
+    const normalizedData = {
+      ...formData,
+      title: normalizeText(formData.title),
+      titleEN: normalizeText(formData.titleEN),
+      language: normalizeText(formData.language),
+      synopsis: normalizeText(formData.synopsis),
+      synopsisEN: normalizeText(formData.synopsisEN),
+      techResume: normalizeText(formData.techResume),
+      creativeResume: normalizeText(formData.creativeResume),
+      tags: Array.isArray(formData.tags) ? formData.tags.map((tag) => normalizeText(tag).toLowerCase()) : [],
+    };
+
     const newErrors = {
-      title: validateTitle(formData.title),
-      titleEN: validateTitleEN(formData.titleEN),
-      language: validateLanguage(formData.language),
-      synopsis: validateSynopsis(formData.synopsis),
-      synopsisEN: validateSynopsisEN(formData.synopsisEN),
-      techResume: validateTechResume(formData.techResume),
-      creativeResume: validateCreativeResume(formData.creativeResume),
-      classification: validateClassification(formData.classification),
-      tags: validateTags(formData.tags),
+      title: validateTitle(normalizedData.title),
+      titleEN: validateTitleEN(normalizedData.titleEN),
+      language: validateLanguage(normalizedData.language),
+      synopsis: validateSynopsis(normalizedData.synopsis),
+      synopsisEN: validateSynopsisEN(normalizedData.synopsisEN),
+      techResume: validateTechResume(normalizedData.techResume),
+      creativeResume: validateCreativeResume(normalizedData.creativeResume),
+      classification: validateClassification(normalizedData.classification),
+      tags: validateTags(normalizedData.tags),
     };
 
     setErrors(newErrors);
 
     // Retourne true si aucune erreur
-    return !Object.values(newErrors).some(error => error !== null);
+    return {
+      isValid: !Object.values(newErrors).some(error => error !== null),
+      normalizedData,
+    };
   };
 
   // Soumission du formulaire
@@ -113,7 +157,10 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
     setIsSubmitting(true);
     setSubmitError('');
 
-    if (validateForm()) {
+    const { isValid, normalizedData } = validateForm();
+
+    if (isValid) {
+      setFormDataProp(normalizedData);
       // Formulaire valide, passer à l'étape suivante
       setEtape(3);
     } else {
@@ -154,6 +201,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               id="titleEN"
               value={formData.titleEN}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Title EN"
             />
             {errors.titleEN && <p className="text-rose-400 text-xs mt-1 text-left">{errors.titleEN}</p>}
@@ -171,6 +219,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               id="title"
               value={formData.title}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Title"
             />
             {errors.title && <p className="text-rose-400 text-xs mt-1 text-left">{errors.title}</p>}
@@ -188,6 +237,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               id="language"
               value={formData.language}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Language"
             />
             {errors.language && <p className="text-rose-400 text-xs mt-1 text-left">{errors.language}</p>}
@@ -204,6 +254,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               id="synopsisEN"
               value={formData.synopsisEN}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Synopsis EN"
               rows="4"
             />
@@ -221,6 +272,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               id="synopsis"
               value={formData.synopsis}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Synopsis"
               rows="4"
             />
@@ -238,6 +290,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               id="techResume"
               value={formData.techResume}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Technical Resume"
               rows="4"
             />
@@ -255,6 +308,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               id="creativeResume"
               value={formData.creativeResume}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Creative Resume"
               rows="4"
             />

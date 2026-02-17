@@ -408,13 +408,18 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       setSubmitError("Please accept the rights");
       return;
     }
+
+    if (typeof formData.duration === 'number' && formData.duration > 150) {
+      setSubmitError("Video too long. Maximum duration: 2:30");
+      return;
+    }
     
     // Démarrer la soumission
     setIsSubmitting(true);
     
     try {
-      console.log("[SUBMIT] Soumission du formulaire complet...");
-      console.log("[SUBMIT] Form data:", allFormData);
+      // console.log("[SUBMIT] Soumission du formulaire complet...");
+      // console.log("[SUBMIT] Form data:", allFormData);
       
       // Envoyer toutes les données au backend
       const result = await submitCompleteForm(allFormData, token);
@@ -428,7 +433,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
         }
       }
       
-      console.log("[SUBMIT] Soumission reussie!", result);
+      // console.log("[SUBMIT] Soumission reussie!", result);
       
       // Afficher le succès
       setSubmitSuccess(true);

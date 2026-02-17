@@ -184,7 +184,20 @@ export const createVideo = async (videoData, recaptchaToken) => {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || errorData.message || 'Erreur lors de la création de la vidéo');
+      const durationError = Array.isArray(errorData?.errors)
+        ? errorData.errors.find((entry) => entry?.field === 'duration')?.message
+        : null;
+      const firstValidationError = Array.isArray(errorData?.errors) && errorData.errors.length > 0
+        ? errorData.errors[0]?.message
+        : null;
+
+      throw new Error(
+        durationError ||
+        firstValidationError ||
+        errorData.error ||
+        errorData.message ||
+        'Erreur lors de la création de la vidéo'
+      );
     }
     
     return await response.json();
