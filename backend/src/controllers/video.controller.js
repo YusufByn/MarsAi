@@ -119,25 +119,25 @@ export const uploadVideo = async (req, res) => {
 
     // upload de la video sur youtube
     // on passe le chemin du fichier video, et les metadata
-    const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
-      title,
-      description: description || "",
-      tags: cleanTags,
-      thumbnailPath: coverFile?.path,
-      srt_file_name: srtFile?.filename,
-      srtLanguage: req.body.srtLanguage || 'fr',
-      srtPath: srtFile?.path,
-      categoryId: categoryId || "22",
-      privacyStatus: privacyStatus || "unlisted"
-    });
+    // const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
+    //   title,
+    //   description: description || "",
+    //   tags: cleanTags,
+    //   thumbnailPath: coverFile?.path,
+    //   srt_file_name: srtFile?.filename,
+    //   srtLanguage: req.body.srtLanguage || 'fr',
+    //   srtPath: srtFile?.path,
+    //   categoryId: categoryId || "22",
+    //   privacyStatus: privacyStatus || "unlisted"
+    // });
 
     // dans youtube upload qui utilise le service youtube, on recup l'url youtube de la video
-    const youtube_url = youtubeUpload.youtubeUrl;
+    // const youtube_url = youtubeUpload.youtubeUrl;
 
 
     // on crée la video dans la bdd
     const video = await createVideo({
-      youtube_url,
+      // youtube_url,
       video_file_name,
       srt_file_name,
       cover,
@@ -203,7 +203,7 @@ export const uploadVideo = async (req, res) => {
       message: "video uploaded successfully",
       data: {
         video: videoId,
-        youtube_url,
+        // youtube_url,
         stills,
         tags: newTags,
         contributors: insertedContributors,

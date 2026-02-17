@@ -16,6 +16,7 @@ import VideoDetails from './pages/VideoDetails';
 import CGU from './pages/CGU';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import Sponsors from './pages/sponsors/Sponsors';
 
 // Admin
 import AdminLayout from './components/layout/AdminLayout';
@@ -51,6 +52,7 @@ function AppContent() {
           <Route path="/videoDetails/:id" element={<VideoDetails />} />
           <Route path="/mentions" element={<CGU />} />
           <Route path="/validatedparticipation" element={<ValidatedParticipation />} />
+          <Route path="/sponsors" element={<Sponsors />} />
           {/* Admin */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
