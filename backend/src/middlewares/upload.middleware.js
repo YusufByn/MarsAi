@@ -1,13 +1,18 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // dossier selon le type (cover, video etc)
+// Chemins absolus relatifs a src/uploads/ pour matcher express.static dans app.js
 const folders = {
-    video: "uploads/videos",
-    cover: "uploads/covers",
-    still: "uploads/stills",
-    srt: "uploads/srt"
+    video: path.join(__dirname, '..', 'uploads', 'videos'),
+    cover: path.join(__dirname, '..', 'uploads', 'covers'),
+    still: path.join(__dirname, '..', 'uploads', 'stills'),
+    srt: path.join(__dirname, '..', 'uploads', 'srt')
 }
 
 // si dossier n'existe pas, on le crée
