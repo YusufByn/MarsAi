@@ -90,9 +90,11 @@ export const uploadVideo = async (req, res) => {
       privacyStatus: privacyStatus || "unlisted"
     });
 
+    // dans youtube upload qui utilise le service youtube, on recup l'url youtube de la video
     const youtube_url = youtubeUpload.youtubeUrl;
 
 
+    // on crée la video dans la bdd
     const video = await createVideo({
       youtube_url,
       video_file_name,
@@ -127,9 +129,11 @@ export const uploadVideo = async (req, res) => {
 
     // les stills sont un tableau avec les noms des fichiers stills et leur ordre
     const stills = [
+      // si stillsFiles existe, on recup l'index 0 s'il existe et le nom du fichier
       { file_name: stillsFiles?.[0]?.filename, sort_order: 1 },
       { file_name: stillsFiles?.[1]?.filename, sort_order: 2 },
       { file_name: stillsFiles?.[2]?.filename, sort_order: 3 },
+      // on filtre les stills qui ont un nom de fichier
     ].filter(still => still.file_name);
 
     if (stills.length > 0) {
@@ -144,6 +148,7 @@ export const uploadVideo = async (req, res) => {
 
     const insertedSocialNetworks = await addSocialMediaToVideo(videoId, socialNetworks);
 
+    // on renvoie un 201 avec, id de videon url youtube, les images, tags, ainsi que le contenu de la vidéo (titre etc)
     return res.status(201).json({
       success:true,
       message: "video uploaded successfully",
@@ -154,25 +159,25 @@ export const uploadVideo = async (req, res) => {
         tags: newTags,
         social_networks: insertedSocialNetworks,
         srt_file_name,
-        title: req.body.title ?? null,
-        title_en: req.body.title_en ?? null,
-        synopsis: req.body.synopsis ?? null,
-        synopsis_en: req.body.synopsis_en ?? null,
-        language: req.body.language ?? null,
-        country: req.body.country ?? null,
+        title: video.title ?? null,
+        title_en: video.title_en ?? null,
+        synopsis: video.synopsis ?? null,
+        synopsis_en: video.synopsis_en ?? null,
+        language: video.language ?? null,
+        country: video.country ?? null,
         duration: duration ?? null,
-        classification: req.body.classification ?? "hybrid",
-        tech_resume: req.body.tech_resume ?? null,
-        creative_resume: req.body.creative_resume ?? null,
-        realisator_name: req.body.realisator_name ?? null,
-        realisator_lastname: req.body.realisator_lastname ?? null,
-        realisator_gender: req.body.realisator_gender ?? null,
-        email: req.body.email ?? null,
-        birthday: req.body.birthday ?? null,
-        mobile_number: req.body.mobile_number ?? null,
-        fixe_number: req.body.fixe_number ?? null,
-        address: req.body.address ?? null,
-        acquisition_source: req.body.acquisition_source ?? null
+        classification: video.classification ?? "hybrid",
+        tech_resume: video.tech_resume ?? null,
+        creative_resume: video.creative_resume ?? null,
+        realisator_name: video.realisator_name ?? null,
+        realisator_lastname: video.realisator_lastname ?? null,
+        realisator_gender: video.realisator_gender ?? null,
+        email: video.email ?? null,
+        birthday: video.birthday ?? null,
+        mobile_number: video.mobile_number ?? null,
+        fixe_number: video.fixe_number ?? null,
+        address: video.address ?? null,
+        acquisition_source: video.acquisition_source ?? null
       }
     })
     
