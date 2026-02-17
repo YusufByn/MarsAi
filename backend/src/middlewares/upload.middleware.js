@@ -7,12 +7,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // dossier selon le type (cover, video etc)
-// Chemins absolus relatifs a src/uploads/ pour matcher express.static dans app.js
+// Chemins absolus relatifs a ../uploads/ pour matcher express.static dans app.js
 const folders = {
-    video: path.join(__dirname, '..', 'uploads', 'videos'),
-    cover: path.join(__dirname, '..', 'uploads', 'covers'),
-    still: path.join(__dirname, '..', 'uploads', 'stills'),
-    srt: path.join(__dirname, '..', 'uploads', 'srt')
+    video: path.join(__dirname, '..','..', 'uploads', 'videos'),
+    cover: path.join(__dirname, '..','..', 'uploads', 'covers'),
+    still: path.join(__dirname, '..','..', 'uploads', 'stills'),
+    srt: path.join(__dirname, '..','..', 'uploads', 'srt')
 }
 
 // si dossier n'existe pas, on le crée
