@@ -8,9 +8,21 @@ const Navbar = () => {
   const location = useLocation();
   const { user, isSelector, isAdmin, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
 
   // location is used to trigger re-renders on route change
   void location;
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const trimmed = searchValue.trim();
+    if (!trimmed) return;
+    navigate(`/videos?q=${encodeURIComponent(trimmed)}`);
+    setSearchValue('');
+    setSearchOpen(false);
+    setMenuOpen(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -66,6 +78,35 @@ const Navbar = () => {
                 </svg>
               </Link>
             </>
+          )}
+
+          {isSelector && (
+            <div className="relative flex items-center">
+              {searchOpen ? (
+                <form onSubmit={handleSearch} className="flex items-center">
+                  <input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Titre, realisateur, tag..."
+                    autoFocus
+                    onBlur={() => { if (!searchValue) setSearchOpen(false); }}
+                    className="w-44 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-mars-primary/50"
+                  />
+                </form>
+              ) : (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  title="Rechercher un film"
+                  aria-label="Rechercher un film"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              )}
+            </div>
           )}
 
           {isAdmin && (
@@ -155,6 +196,22 @@ const Navbar = () => {
 
           {isSelector && (
             <>
+              {/* Recherche mobile */}
+              <form onSubmit={handleSearch} className="px-4 py-2">
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Titre, realisateur, tag..."
+                    className="w-full bg-white/10 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-mars-primary/50"
+                  />
+                </div>
+              </form>
+
               <Link to="/videos" onClick={closeMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />

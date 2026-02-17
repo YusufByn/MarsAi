@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { videoService } from '../services/videoService';
 import { API_URL } from '../config';
 
 const Videos = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [videos, setVideos] = useState([]);
-  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [filterClassification, setFilterClassification] = useState('all');
-  const [selectedTags, setSelectedTags] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -31,13 +30,8 @@ const Videos = () => {
           return;
         }
 
-        const [videosRes, tagsRes] = await Promise.all([
-          videoService.getAll(),
-          videoService.getAllTags().catch(() => ({ data: [] })),
-        ]);
-
+        const videosRes = await videoService.getAll();
         setVideos(videosRes.data);
-        setTags(tagsRes.data || []);
         setLoading(false);
       } catch (err) {
         console.log('[VIDEOS ERROR]', err);
@@ -49,11 +43,23 @@ const Videos = () => {
     loadData();
   }, [navigate]);
 
-  const toggleTag = (tagId) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
-    );
-  };
+  // Synchroniser le query param q avec le searchTerm
+  useEffect(() => {
+    if (searchTerm) {
+      setSearchParams({ q: searchTerm }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchTerm, setSearchParams]);
+
+  // Mettre a jour searchTerm si le query param change (navigation depuis la navbar)
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null && q !== searchTerm) {
+      setSearchTerm(q);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const filteredVideos = useMemo(() => {
     let result = [...videos];
@@ -65,7 +71,8 @@ const Videos = () => {
           video.title?.toLowerCase().includes(term) ||
           video.author?.toLowerCase().includes(term) ||
           video.realisator_name?.toLowerCase().includes(term) ||
-          video.realisator_lastname?.toLowerCase().includes(term)
+          video.realisator_lastname?.toLowerCase().includes(term) ||
+          (video.tags && video.tags.some((tag) => tag.name?.toLowerCase().includes(term)))
       );
     }
 
@@ -73,14 +80,8 @@ const Videos = () => {
       result = result.filter((video) => video.classification === filterClassification);
     }
 
-    if (selectedTags.length > 0) {
-      result = result.filter((video) =>
-        video.tags && selectedTags.every((tagId) => video.tags.some((t) => t.id === tagId))
-      );
-    }
-
     return result;
-  }, [videos, searchTerm, filterClassification, selectedTags]);
+  }, [videos, searchTerm, filterClassification]);
 
   const getCoverUrl = (cover) => {
     if (!cover) return null;
@@ -138,7 +139,7 @@ const Videos = () => {
         </div>
 
         {/* Barre de filtres */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Searchbar */}
           <div className="space-y-2">
             <label className="text-xs text-white/40">Rechercher</label>
@@ -150,7 +151,7 @@ const Videos = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Titre ou realisateur..."
+                placeholder="Titre, realisateur ou tag..."
                 className="w-full rounded-xl bg-white/5 border border-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-mars-primary/50 focus:border-mars-primary/50 transition"
               />
             </div>
@@ -173,32 +174,6 @@ const Videos = () => {
                   {opt.label}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Tags filter */}
-          <div className="space-y-2">
-            <label className="text-xs text-white/40">
-              Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
-            </label>
-            <div className="flex flex-wrap gap-1.5 max-h-[88px] overflow-y-auto rounded-xl bg-white/5 border border-white/10 p-2">
-              {tags.length === 0 ? (
-                <span className="text-white/30 text-xs px-2 py-1">Aucun tag</span>
-              ) : (
-                tags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    onClick={() => toggleTag(tag.id)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
-                      selectedTags.includes(tag.id)
-                        ? 'bg-mars-primary text-white'
-                        : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {tag.name}
-                  </button>
-                ))
-              )}
             </div>
           </div>
         </div>

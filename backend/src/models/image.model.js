@@ -7,7 +7,7 @@ export const createStills = async (videoId, stills = []) => {
     const values = stills.flatMap(s => [
         videoId,
         s.file_name,
-        `/uploads/${s.file_name}`,
+        `/uploads/stills/${s.file_name}`,
         s.sort_order 
     ]);
 
