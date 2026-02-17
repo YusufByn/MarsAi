@@ -305,14 +305,6 @@ export const updateVideoSchema = z.object({
     .max(100, 'La source d\'acquisition ne doit pas dépasser 100 caractères')
     .optional(),
 
-  // YouTube URL
-  youtube_url: z
-    .string()
-    .url('Format d\'URL YouTube invalide')
-    .max(500, 'L\'URL ne doit pas dépasser 500 caractères')
-    .optional()
-    .or(z.literal('')),
-
   // Noms de fichiers (mis à jour si nouveaux fichiers uploadés)
   video_file_name: z.string().optional(),
   cover: z.string().optional(),
@@ -326,12 +318,6 @@ export const updateVideoSchema = z.object({
 // MIDDLEWARES DE VALIDATION
 // ========================================
 
-/**
- * Middleware de validation pour la création de vidéo
- * @param {Object} req - Requête Express
- * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- */
 export const validateCreateVideo = (req, res, next) => {
   try {
     console.log('[VALIDATOR] Validation des données reçues');

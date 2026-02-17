@@ -100,7 +100,6 @@ export const uploadVideo = async (req, res) => {
       video_file_name,
       srt_file_name,
       cover,
-    
       // champs texte déjà existants dans ton req.body
       title: req.body.title ?? null,
       title_en: req.body.title_en ?? null,

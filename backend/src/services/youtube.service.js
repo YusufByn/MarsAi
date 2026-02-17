@@ -43,7 +43,7 @@ export const uploadVideoToYoutube = async (filePath, metadata = {}) => {
     tags = [],
     thumbnailPath = '',
     srt_file_name = 'sous-titre',
-    srtLanguage = '',
+    srtLanguage = 'fr',
     srtPath = '',
     categoryId = '22', 
     privacyStatus = 'unlisted' 
