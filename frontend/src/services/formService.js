@@ -19,6 +19,12 @@ import {
     lastNameSchema, 
     emailSchema 
 } from '../../../shared/validators/form.validator.js';
+import {
+    VIDEO_CLASSIFICATIONS,
+    VIDEO_LIMITS,
+    VIDEO_PATTERNS,
+    normalizeText
+} from '../../../shared/validators/video.rules.js';
 
 // Fonction de validation des numéros de téléphone internationaux
 import { isValidPhoneNumber } from 'react-phone-number-input';
@@ -265,6 +271,10 @@ function validateMobileNumber(value) {
     if (!value || value.trim() === '') {
         return "Mobile number is required";
     }
+
+    if (value.length > 20) {
+        return "Mobile number must not exceed 20 characters";
+    }
     
     try {
         // Utilise isValidPhoneNumber pour valider le format international
@@ -290,22 +300,22 @@ function validateMobileNumber(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateTitle(value) {
+    const normalizedValue = normalizeText(value);
+
     // Si le champ est vide, c'est valide (champ optionnel)
-    if (!value || value.trim() === '') {
+    if (!normalizedValue) {
         return null;
     }
     
-    if (value.length < 2) {
+    if (normalizedValue.length < VIDEO_LIMITS.title.min) {
         return "Title must be at least 2 characters";
     }
     
-    if (value.length > 255) {
+    if (normalizedValue.length > VIDEO_LIMITS.title.max) {
         return "Title must not exceed 255 characters";
     }
     
-    // Pattern pour titre (lettres, chiffres, ponctuation basique)
-    const titlePattern = /^[a-zA-Z0-9À-ÿ\s',.!?:()-]+$/;
-    if (!titlePattern.test(value)) {
+    if (!VIDEO_PATTERNS.title.test(normalizedValue)) {
         return "Title contains invalid characters";
     }
     
@@ -320,21 +330,21 @@ function validateTitle(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateTitleEN(value) {
-    if (!value || value.trim() === '') {
+    const normalizedValue = normalizeText(value);
+
+    if (!normalizedValue) {
         return "Title EN is required";
     }
     
-    if (value.length < 2) {
+    if (normalizedValue.length < VIDEO_LIMITS.titleEN.min) {
         return "Title EN must be at least 2 characters";
     }
     
-    if (value.length > 255) {
+    if (normalizedValue.length > VIDEO_LIMITS.titleEN.max) {
         return "Title EN must not exceed 255 characters";
     }
     
-    // Pattern pour titre (lettres, chiffres, ponctuation basique)
-    const titlePattern = /^[a-zA-Z0-9À-ÿ\s',.!?:()-]+$/;
-    if (!titlePattern.test(value)) {
+    if (!VIDEO_PATTERNS.title.test(normalizedValue)) {
         return "Title EN contains invalid characters";
     }
     
@@ -349,21 +359,21 @@ function validateTitleEN(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateLanguage(value) {
-    if (!value || value.trim() === '') {
+    const normalizedValue = normalizeText(value);
+
+    if (!normalizedValue) {
         return "Language is required";
     }
     
-    if (value.length < 2) {
+    if (normalizedValue.length < VIDEO_LIMITS.language.min) {
         return "Language must be at least 2 characters";
     }
     
-    if (value.length > 50) {
+    if (normalizedValue.length > VIDEO_LIMITS.language.max) {
         return "Language must not exceed 50 characters";
     }
     
-    // Pattern pour langue (lettres uniquement)
-    const languagePattern = /^[a-zA-ZÀ-ÿ\s-]+$/;
-    if (!languagePattern.test(value)) {
+    if (!VIDEO_PATTERNS.language.test(normalizedValue)) {
         return "Language can only contain letters";
     }
     
@@ -378,16 +388,18 @@ function validateLanguage(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateSynopsis(value) {
+    const normalizedValue = normalizeText(value);
+
     // Si le champ est vide, c'est valide (champ optionnel)
-    if (!value || value.trim() === '') {
+    if (!normalizedValue) {
         return null;
     }
     
-    if (value.length < 10) {
+    if (normalizedValue.length < VIDEO_LIMITS.synopsis.min) {
         return "Synopsis must be at least 10 characters";
     }
     
-    if (value.length > 500) {
+    if (normalizedValue.length > VIDEO_LIMITS.synopsis.max) {
         return "Synopsis must not exceed 500 characters";
     }
     
@@ -402,15 +414,17 @@ function validateSynopsis(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateSynopsisEN(value) {
-    if (!value || value.trim() === '') {
+    const normalizedValue = normalizeText(value);
+
+    if (!normalizedValue) {
         return "Synopsis EN is required";
     }
     
-    if (value.length < 10) {
+    if (normalizedValue.length < VIDEO_LIMITS.synopsisEN.min) {
         return "Synopsis EN must be at least 10 characters";
     }
     
-    if (value.length > 500) {
+    if (normalizedValue.length > VIDEO_LIMITS.synopsisEN.max) {
         return "Synopsis EN must not exceed 500 characters";
     }
     
@@ -424,15 +438,17 @@ function validateSynopsisEN(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateTechResume(value) {
-    if (!value || value.trim() === '') {
+    const normalizedValue = normalizeText(value);
+
+    if (!normalizedValue) {
         return "Technical resume is required";
     }
     
-    if (value.length < 10) {
+    if (normalizedValue.length < VIDEO_LIMITS.techResume.min) {
         return "Technical resume must be at least 10 characters";
     }
     
-    if (value.length > 500) {
+    if (normalizedValue.length > VIDEO_LIMITS.techResume.max) {
         return "Technical resume must not exceed 500 characters";
     }
     
@@ -446,15 +462,17 @@ function validateTechResume(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateCreativeResume(value) {
-    if (!value || value.trim() === '') {
+    const normalizedValue = normalizeText(value);
+
+    if (!normalizedValue) {
         return "Creative resume is required";
     }
     
-    if (value.length < 10) {
+    if (normalizedValue.length < VIDEO_LIMITS.creativeResume.min) {
         return "Creative resume must be at least 10 characters";
     }
     
-    if (value.length > 500) {
+    if (normalizedValue.length > VIDEO_LIMITS.creativeResume.max) {
         return "Creative resume must not exceed 500 characters";
     }
     
@@ -472,7 +490,7 @@ function validateClassification(value) {
         return "Classification is required";
     }
     
-    if (!["hybrid", "ia"].includes(value)) {
+    if (!VIDEO_CLASSIFICATIONS.includes(value)) {
         return "Invalid classification";
     }
     
@@ -497,20 +515,20 @@ function validateTags(value) {
     }
     
     // Maximum 10 tags
-    if (value.length > 10) {
+    if (value.length > VIDEO_LIMITS.tags.maxItems) {
         return "Maximum 10 tags allowed";
     }
     
-    // Vérifie que chaque tag contient uniquement des caractères valides
-    const tagPattern = /^[a-zA-Z0-9À-ÿ-]+$/;
     for (const tag of value) {
-        if (!tagPattern.test(tag)) {
+        const normalizedTag = normalizeText(tag).toLowerCase();
+
+        if (!VIDEO_PATTERNS.tag.test(normalizedTag)) {
             return "Tags can only contain letters, numbers, and hyphens";
         }
-        if (tag.length < 2) {
+        if (normalizedTag.length < VIDEO_LIMITS.tags.minLength) {
             return "Each tag must be at least 2 characters";
         }
-        if (tag.length > 20) {
+        if (normalizedTag.length > VIDEO_LIMITS.tags.maxLength) {
             return "Each tag must not exceed 20 characters";
         }
     }

@@ -7,9 +7,13 @@ import { newsletterService } from '../../services/newsletterService.js';
 
 const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataProp, allFormData}) => {
   const navigate = useNavigate();
+  const fieldWrapperClass = 'w-full max-w-md';
+  const fileInputClass = 'bg-[#0f0f14] border border-white/15 rounded-xl px-3 py-2.5 w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600/25 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-violet-100 hover:file:bg-violet-600/35';
+  const maxVideoPreviewSeconds = 6;
 
   // États locaux pour les previews (URLs temporaires)
   const [previews, setPreviews] = useState({
+    videoFile: null,
     coverImage: null,
     still1: null,
     still2: null,
@@ -204,6 +208,14 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     });
   };
 
+  const handleVideoPreviewTimeUpdate = (e) => {
+    const videoElement = e.currentTarget;
+    if (videoElement.currentTime >= maxVideoPreviewSeconds) {
+      videoElement.pause();
+      videoElement.currentTime = 0;
+    }
+  };
+
   /**
    * Gestion des fichiers non-images (video, subtitle)
    */
@@ -215,6 +227,10 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       setErrors(prev => ({ ...prev, [name]: null }));
       // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
+        if (previews.videoFile) {
+          URL.revokeObjectURL(previews.videoFile);
+        }
+        setPreviews(prev => ({ ...prev, videoFile: null }));
         setVideoDuration(null);
         setFormDataProp({ ...formData, [name]: null, duration: null });
       } else {
@@ -238,6 +254,10 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       e.target.value = '';
       // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
+        if (previews.videoFile) {
+          URL.revokeObjectURL(previews.videoFile);
+        }
+        setPreviews(prev => ({ ...prev, videoFile: null }));
         setVideoDuration(null);
         setFormDataProp({ ...formData, [name]: null, duration: null });
       } else {
@@ -248,18 +268,21 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
 
     // Fichier valide
     setErrors(prev => ({ ...prev, [name]: null }));
-    setFormDataProp({
-      ...formData,
-      [name]: file
-    });
 
     // Calculer la durée si c'est une vidéo
     if (name === 'videoFile') {
+      if (previews.videoFile) {
+        URL.revokeObjectURL(previews.videoFile);
+      }
+      const previewObjectUrl = URL.createObjectURL(file);
+      setPreviews(prev => ({ ...prev, videoFile: previewObjectUrl }));
+
       const video = document.createElement('video');
       video.preload = 'metadata';
+      const metadataObjectUrl = URL.createObjectURL(file);
       
       video.onloadedmetadata = function() {
-        window.URL.revokeObjectURL(video.src);
+        window.URL.revokeObjectURL(metadataObjectUrl);
         const duration = video.duration;
         const durationInSeconds = Math.floor(duration);
         
@@ -280,6 +303,10 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
         
         // Si la durée dépasse le maximum
         if (duration > maxDuration) {
+          if (previewObjectUrl) {
+            URL.revokeObjectURL(previewObjectUrl);
+          }
+          setPreviews(prev => ({ ...prev, videoFile: null }));
           setErrors(prev => ({ 
             ...prev, 
             videoFile: `Video too long (${formattedDuration}). Maximum duration: 2:30` 
@@ -296,12 +323,24 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       };
       
       video.onerror = function() {
-        window.URL.revokeObjectURL(video.src);
+        window.URL.revokeObjectURL(metadataObjectUrl);
+        if (previewObjectUrl) {
+          URL.revokeObjectURL(previewObjectUrl);
+        }
+        setPreviews(prev => ({ ...prev, videoFile: null }));
+        setErrors(prev => ({ ...prev, videoFile: 'Unable to read video file metadata' }));
+        setFormDataProp({ ...formData, videoFile: null, duration: null });
         setVideoDuration('Unable to read duration');
       };
       
-      video.src = URL.createObjectURL(file);
+      video.src = metadataObjectUrl;
+      return;
     }
+
+    setFormDataProp({
+      ...formData,
+      [name]: file
+    });
   };
 
   /**
@@ -369,13 +408,18 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       setSubmitError("Please accept the rights");
       return;
     }
+
+    if (typeof formData.duration === 'number' && formData.duration > 150) {
+      setSubmitError("Video too long. Maximum duration: 2:30");
+      return;
+    }
     
     // Démarrer la soumission
     setIsSubmitting(true);
     
     try {
-      console.log("[SUBMIT] Soumission du formulaire complet...");
-      console.log("[SUBMIT] Form data:", allFormData);
+      // console.log("[SUBMIT] Soumission du formulaire complet...");
+      // console.log("[SUBMIT] Form data:", allFormData);
       
       // Envoyer toutes les données au backend
       const result = await submitCompleteForm(allFormData, token);
@@ -389,7 +433,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
         }
       }
       
-      console.log("[SUBMIT] Soumission reussie!", result);
+      // console.log("[SUBMIT] Soumission reussie!", result);
       
       // Afficher le succès
       setSubmitSuccess(true);
@@ -398,9 +442,14 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       captchaRef.current?.reset();
       setRecaptchaToken(null);
       
-      // Rediriger après 2 secondes
+      // Rediriger après 2 secondes avec le nom/prenom
       setTimeout(() => {
-        navigate('/');
+        navigate('/ValidatedParticipation', {
+          state: {
+            firstName: allFormData?.step1?.firstName || '',
+            lastName: allFormData?.step1?.lastName || '',
+          },
+        });
       }, 2000);
       
     } catch (error) {
@@ -417,29 +466,30 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
   };
 
   return (
-    <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center">
-      <h2 className="p-2">Video Upload</h2>
+    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
+      <h2 className="text-2xl font-semibold tracking-tight">Video Upload</h2>
+      <p className="text-xs text-gray-400 mt-1">Step 3 - Finalize and submit</p>
       
-      <div className="text-center flex flex-raw space-between justify-center gap-2">
-        <div className="border rounded-full w-7 h-7">
+      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           1
         </div>
-        <div className="border rounded-full w-7 h-7">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           2
         </div>
-        <div className="border rounded-full w-7 h-7 bg-purple-500">
+        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
           3
         </div>
       </div>
 
       <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
+        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
 
           {/* Video Upload */}
-          <div className="w-60">
-            <label className="block text-sm mb-2">Upload Video (max 200MB, max duration 2m30) <span className="text-red-500">*</span></label>
+          <div className={fieldWrapperClass}>
+            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Upload Video (max 200MB, max duration 2m30) <span className="text-red-500">*</span></label>
             <input 
-              className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
+              className={fileInputClass}
               type="file"
               accept=".MOV,.MPEG4,.MP4,.WebM,.MKV"
               name="videoFile"
@@ -447,20 +497,36 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               onChange={handleFileChange}
             />
             {errors.videoFile ? (
-              <p className="text-red-500 text-xs mt-1">{errors.videoFile}</p>
+              <p className="text-rose-400 text-xs mt-1 text-left">{errors.videoFile}</p>
             ) : videoDuration ? (
-              <p className="text-green-400 text-xs mt-1">Duration: {videoDuration}</p>
+              <p className="text-emerald-400 text-xs mt-1 text-left">Duration: {videoDuration}</p>
             ) : formData.videoFile ? (
-              <p className="text-gray-400 text-xs mt-1">Calculating duration...</p>
+              <p className="text-gray-400 text-xs mt-1 text-left">Calculating duration...</p>
             ) : (
-              <p className="text-gray-400 text-xs mt-1">Duration will be displayed here</p>
+              <p className="text-gray-400 text-xs mt-1 text-left">Duration will be displayed here</p>
+            )}
+            {previews.videoFile && !errors.videoFile && (
+              <div className="mt-2 border border-white/15 rounded-xl bg-[#0f0f14] overflow-hidden">
+                <video
+                  src={previews.videoFile}
+                  controls
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-auto max-h-64 object-contain"
+                  onTimeUpdate={handleVideoPreviewTimeUpdate}
+                />
+                <p className="text-[10px] text-gray-400 px-2 py-1 text-left">
+                  Preview is limited to {maxVideoPreviewSeconds} seconds.
+                </p>
+              </div>
             )}
           </div>
 
           {/* Cover Image */}
-          <div className="w-60">
-            <label className="block text-sm mb-2">Cover Image (max 15MB) <span className="text-red-500">*</span></label>
-            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden">
+          <div className={fieldWrapperClass}>
+            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Cover Image (max 15MB) <span className="text-red-500">*</span></label>
+            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden">
               {loading.coverImage ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -482,7 +548,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               )}
             </div>
             <input 
-              className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
+              className={fileInputClass}
               type="file"
               accept="image/jpg, image/jpeg, image/png"
               name="coverImage"
@@ -493,9 +559,9 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           </div>
 
           {/* Still 1 */}
-          <div className="w-60">
-            <label className="block text-sm mb-2">Still 1 (optional, max 7MB)</label>
-            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden relative">
+          <div className={fieldWrapperClass}>
+            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Still 1 (optional, max 7MB)</label>
+            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden relative">
               {loading.still1 ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -516,7 +582,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                   <button
                     type="button"
                     onClick={() => handleRemoveImage('still1')}
-                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 rounded-full p-2 transition-colors"
+                    className="absolute top-2 right-2 bg-rose-500/80 hover:bg-rose-600 rounded-full p-2 transition-colors"
                     aria-label="Remove still 1"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -529,7 +595,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               )}
             </div>
             <input 
-              className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
+              className={fileInputClass}
               type="file"
               accept="image/jpeg, image/jpg, image/png"
               name="still1"
@@ -540,9 +606,9 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           </div>
           
           {/* Still 2 */}
-          <div className="w-60">
-            <label className="block text-sm mb-2">Still 2 (optional, max 7MB)</label>
-            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden relative">
+          <div className={fieldWrapperClass}>
+            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Still 2 (optional, max 7MB)</label>
+            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden relative">
               {loading.still2 ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -563,7 +629,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                   <button
                     type="button"
                     onClick={() => handleRemoveImage('still2')}
-                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 rounded-full p-2 transition-colors"
+                    className="absolute top-2 right-2 bg-rose-500/80 hover:bg-rose-600 rounded-full p-2 transition-colors"
                     aria-label="Remove still 2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -576,7 +642,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               )}
             </div>
             <input 
-              className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
+              className={fileInputClass}
               type="file"
               accept="image/jpeg, image/jpg, image/png"
               name="still2"
@@ -587,9 +653,9 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           </div>
           
           {/* Still 3 */}
-          <div className="w-60">
-            <label className="block text-sm mb-2">Still 3 (optional, max 7MB)</label>
-            <div className="border border-gray-500 rounded-xl h-48 mb-2 flex items-center justify-center bg-black/30 overflow-hidden relative">
+          <div className={fieldWrapperClass}>
+            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Still 3 (optional, max 7MB)</label>
+            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden relative">
               {loading.still3 ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -610,7 +676,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
                   <button
                     type="button"
                     onClick={() => handleRemoveImage('still3')}
-                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 rounded-full p-2 transition-colors"
+                    className="absolute top-2 right-2 bg-rose-500/80 hover:bg-rose-600 rounded-full p-2 transition-colors"
                     aria-label="Remove still 3"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -623,7 +689,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               )}
             </div>
             <input 
-              className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
+              className={fileInputClass}
               type="file"
               accept="image/jpeg, image/jpg, image/png"
               name="still3"
@@ -634,11 +700,11 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           </div>
 
           {/* Subtitle Upload */}
-          <div className="w-60">
-            <label className="block text-sm mb-2">If there is voice or txt needing translation :
+          <div className={fieldWrapperClass}>
+            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">If there is voice or txt needing translation :
               <br />Subtitle File (.srt, max 1MB)</label>
             <input 
-              className="bg-black/50 border rounded-xl p-2 w-60 text-sm"
+              className={fileInputClass}
               type="file"
               accept=".srt"
               name="subtitle"
@@ -646,12 +712,12 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               onChange={handleFileChange}
             />
             {errors.subtitle && (
-              <p className="text-red-500 text-xs mt-1">{errors.subtitle}</p>
+              <p className="text-rose-400 text-xs mt-1 text-left">{errors.subtitle}</p>
             )}
           </div>
 
           {/* Copyright Section */}
-          <div className="w-full max-w-2xl mt-4">
+          <div className="w-full max-w-2xl mt-3">
             <label className="flex items-center gap-2 mb-3 justify-center">
               <input 
                 type="checkbox"
@@ -663,7 +729,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               />
               <span className="text-sm">Rights accepted*</span>
             </label>
-            <div className="border border-red-500 rounded-xl p-4 text-sm text-gray-300 bg-black/20">
+            <div className="border border-rose-500/60 rounded-xl p-4 text-sm text-gray-300 bg-rose-500/10">
               <p>
                 *By submitting this video, you confirm that you hold all necessary rights to the content provided and authorize MarsAI to broadcast,
                 reproduce, and use this video, in whole or in part, in its communications media, without limitation in terms of duration or territory.
@@ -672,7 +738,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           </div>
 
           {/* Newsletter Subscription */}
-          <div className="w-full max-w-2xl mt-4">
+          <div className="w-full max-w-2xl mt-3">
             <label className="flex items-center gap-2 mb-2 justify-center cursor-pointer">
               <input 
                 type="checkbox"
@@ -701,7 +767,7 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               />
             </div>
             {errors.recaptcha && (
-              <p className="text-red-500 text-xs mt-1">{errors.recaptcha}</p>
+              <p className="text-rose-400 text-xs mt-1">{errors.recaptcha}</p>
             )}
           </div>
 
@@ -721,16 +787,16 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           )}
 
           {/* Buttons */}
-          <div className="flex gap-4 m-5 p-1 place-self-center">
+          <div className="flex gap-3 mt-4 p-1 place-self-center">
             <button
               type="button"
               onClick={() => setEtape(2)}
               disabled={isSubmitting}
               className={`border rounded-xl p-2 px-8 transition-colors ${
                 isSubmitting 
-                  ? 'bg-gray-600 cursor-not-allowed opacity-50' 
-                  : 'bg-gray-700 hover:bg-gray-600'
-              }`}>
+                  ? 'bg-white/10 cursor-not-allowed opacity-50 border-white/10' 
+                  : 'bg-white/5 hover:bg-white/10 border-white/15'
+              } text-sm font-medium`}>
               Back
             </button>
             <button
@@ -738,9 +804,9 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
               disabled={!recaptchaToken || isSubmitting}
               className={`border rounded-xl p-2 px-8 transition-colors ${
                 recaptchaToken && !isSubmitting
-                  ? 'bg-linear-to-r from-purple-700 to-pink-500 hover:from-purple-600 hover:to-pink-400' 
-                  : 'bg-gray-600 cursor-not-allowed opacity-50'
-              }`}>
+                  ? 'bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 border-white/10 shadow-[0_8px_24px_rgba(168,85,247,0.35)]' 
+                  : 'bg-white/10 cursor-not-allowed opacity-50 border-white/10'
+              } text-sm font-semibold`}>
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

@@ -19,6 +19,7 @@ const MIME_BY_EXTENSION = {
   '.srt': 'text/plain',
 };
 
+
 const normalizeFileForUpload = (file, fallbackMimeType = '') => {
   if (!file) return null;
 
@@ -65,6 +66,26 @@ const normalizeSocialNetworks = (socialNetworks = {}) => {
     .filter(Boolean);
 };
 
+const buildAddressFromParts = (addressParts = {}) => {
+  if (!addressParts || typeof addressParts !== 'object') {
+    return '';
+  }
+
+  const orderedParts = [
+    addressParts.street,
+    addressParts.street2,
+    addressParts.city,
+    addressParts.stateRegion,
+    addressParts.zipcode,
+    addressParts.country,
+  ];
+
+  return orderedParts
+    .map((part) => String(part || '').trim())
+    .filter(Boolean)
+    .join(', ');
+};
+
 /**
  * Créer une vidéo (métadonnées uniquement, sans fichiers)
  * @param {Object} videoData - Données de la vidéo
@@ -77,6 +98,7 @@ export const createVideo = async (videoData, recaptchaToken) => {
     const step1 = videoData.step1 || {};
     const step2 = videoData.step2 || {};
     const step3 = videoData.step3 || {};
+    const normalizedAddress = buildAddressFromParts(step1.addressParts) || step1.address || '';
 
     const formData = new FormData();
 
@@ -91,8 +113,9 @@ export const createVideo = async (videoData, recaptchaToken) => {
       country: step1.country || '',
       fixe_number: step1.phoneNumber || '',
       mobile_number: step1.mobileNumber || '',
-      address: step1.address || '',
+      address: normalizedAddress,
       acquisition_source: step1.acquisitionSource || '',
+      acquisition_source_other: step1.acquisitionSourceOther || '',
       title: step2.title || '',
       title_en: step2.titleEN || '',
       language: step2.language || '',
@@ -135,6 +158,10 @@ export const createVideo = async (videoData, recaptchaToken) => {
       formData.append('social_networks', JSON.stringify(socialNetworks));
     }
 
+    if (Array.isArray(step1.contributors) && step1.contributors.length > 0) {
+      formData.append('contributors', JSON.stringify(step1.contributors));
+    }
+
     // Fichiers (noms de champs attendus par multer backend)
     const normalizedVideo = normalizeFileForUpload(step3.videoFile, 'video/mp4');
     const normalizedCover = normalizeFileForUpload(step3.coverImage, 'image/jpeg');
@@ -157,7 +184,20 @@ export const createVideo = async (videoData, recaptchaToken) => {
     
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || errorData.message || 'Erreur lors de la création de la vidéo');
+      const durationError = Array.isArray(errorData?.errors)
+        ? errorData.errors.find((entry) => entry?.field === 'duration')?.message
+        : null;
+      const firstValidationError = Array.isArray(errorData?.errors) && errorData.errors.length > 0
+        ? errorData.errors[0]?.message
+        : null;
+
+      throw new Error(
+        durationError ||
+        firstValidationError ||
+        errorData.error ||
+        errorData.message ||
+        'Erreur lors de la création de la vidéo'
+      );
     }
     
     return await response.json();

@@ -1,11 +1,12 @@
 import { normalizeTags, upsertTags } from "../models/tag.model.js";
-import { addSocialMediaToVideo, addTagsToVideo } from "../models/video.model.js";
+import { addContributorsToVideo, addSocialMediaToVideo, addTagsToVideo } from "../models/video.model.js";
 import { createStills } from "../models/image.model.js";
 import { createVideo } from "../models/video.model.js";
 import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import { getVideoDuration } from "../utils/video.util.js";
 import pool from "../config/db.js";
 
+// liste des plateformes sociales autorisées
 const ALLOWED_SOCIAL_PLATFORMS = new Set([
   "facebook",
   "instagram",
@@ -16,6 +17,7 @@ const ALLOWED_SOCIAL_PLATFORMS = new Set([
   "website",
 ]);
 
+// fonction pour parser les réseaux sociaux
 const parseSocialNetworks = (rawSocialNetworks) => {
   if (!rawSocialNetworks) return [];
 
@@ -28,7 +30,7 @@ const parseSocialNetworks = (rawSocialNetworks) => {
       return [];
     }
   }
-
+// si parsedValue n'est pas un tableau, on retourne un tableau vide
   if (!Array.isArray(parsedValue)) return [];
 
   return parsedValue
@@ -37,6 +39,44 @@ const parseSocialNetworks = (rawSocialNetworks) => {
       url: String(entry?.url || "").trim(),
     }))
     .filter((entry) => entry.url && ALLOWED_SOCIAL_PLATFORMS.has(entry.platform));
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const parseContributors = (rawContributors) => {
+  if (!rawContributors) return [];
+
+  let parsedValue = rawContributors;
+
+  if (typeof parsedValue === "string") {
+    try {
+      parsedValue = JSON.parse(parsedValue);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  if (!Array.isArray(parsedValue)) return [];
+
+  const seenEmails = new Set();
+
+  // on map le tableau de contributors pour enlever les contributors qui n'ont pas de firstName, lastName, email, productionRole
+  return parsedValue
+    .map((entry) => {
+      const gender = String(entry?.gender || "").trim().toLowerCase() || null;
+      const firstName = String(entry?.firstName || "").trim();
+      const lastName = String(entry?.lastName || "").trim();
+      const email = String(entry?.email || "").trim().toLowerCase();
+      const productionRole = String(entry?.productionRole || "").trim();
+
+      if (!firstName || !lastName || !email || !productionRole) return null;
+      if (!EMAIL_PATTERN.test(email)) return null;
+      if (seenEmails.has(email)) return null;
+
+      seenEmails.add(email);
+      return { gender, firstName, lastName, email, productionRole };
+    })
+    .filter(Boolean);
 };
 
 export const uploadVideo = async (req, res) => {
@@ -57,6 +97,7 @@ export const uploadVideo = async (req, res) => {
     // normalisation des tags(trim, lowercase)
     const cleanTags = normalizeTags(tags);
     const socialNetworks = parseSocialNetworks(req.body.social_networks);
+    const contributors = parseContributors(req.body.contributors);
 
     // ionsersation des tags qui n'existent pas en bdd
     const newTags = await upsertTags(cleanTags, pool)
@@ -100,7 +141,8 @@ export const uploadVideo = async (req, res) => {
       video_file_name,
       srt_file_name,
       cover,
-      // champs texte déjà existants dans ton req.body
+    
+      // champs texte déjà existants dans le req.body
       title: req.body.title ?? null,
       title_en: req.body.title_en ?? null,
       synopsis: req.body.synopsis ?? null,
@@ -125,6 +167,8 @@ export const uploadVideo = async (req, res) => {
     
     // on recup l'id de la vidéo crée, on va la renvoyer dans la response
     const videoId = video.insertId;
+    let insertedContributors = [];
+    let contributorsWarning = null;
 
     // les stills sont un tableau avec les noms des fichiers stills et leur ordre
     const stills = [
@@ -147,7 +191,13 @@ export const uploadVideo = async (req, res) => {
 
     const insertedSocialNetworks = await addSocialMediaToVideo(videoId, socialNetworks);
 
-    // on renvoie un 201 avec, id de videon url youtube, les images, tags, ainsi que le contenu de la vidéo (titre etc)
+    try {
+      insertedContributors = await addContributorsToVideo(videoId, contributors);
+    } catch (contributorsError) {
+      contributorsWarning = "Contributors could not be saved";
+      console.warn("[contributors] non-blocking error:", contributorsError?.message || contributorsError);
+    }
+
     return res.status(201).json({
       success:true,
       message: "video uploaded successfully",
@@ -156,6 +206,8 @@ export const uploadVideo = async (req, res) => {
         youtube_url,
         stills,
         tags: newTags,
+        contributors: insertedContributors,
+        warnings: contributorsWarning ? [contributorsWarning] : [],
         social_networks: insertedSocialNetworks,
         srt_file_name,
         title: video.title ?? null,

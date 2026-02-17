@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import FormDirector from './pages/user/FormDirector';
+import ValidatedParticipation from './components/Form/ValidatedParticipation';
 import JuryDetails from './pages/user/JuryDetails';
 import AllJury from './pages/user/AllJury';
 import Player from './pages/playerVideo/player';
@@ -49,7 +50,7 @@ function AppContent() {
           <Route path="/videos" element={<Videos />} />
           <Route path="/videoDetails/:id" element={<VideoDetails />} />
           <Route path="/mentions" element={<CGU />} />
-
+          <Route path="/validatedparticipation" element={<ValidatedParticipation />} />
           {/* Admin */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />

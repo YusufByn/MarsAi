@@ -293,7 +293,7 @@ export const addTagsToVideo = async (videoId, tagIds) => {
   return rows;
 };
 
-
+// fonction pour ajouter les réseaux sociaux à la vidéo
 export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
   if (!Array.isArray(socialLinks) || socialLinks.length === 0) {
     return [];
@@ -325,7 +325,86 @@ export const addSocialMediaToVideo = async (videoId, socialLinks = []) => {
   return createdLinks;
 };
 
-// nouvelle fonction d'ajout de vidéo avec payload en parametre au lieu de passer 22323 params
+// fonction pour ajouter les contributeurs à la vidéo
+export const addContributorsToVideo = async (videoId, contributors = []) => {
+  if (!Array.isArray(contributors) || contributors.length === 0) {
+    return [];
+  }
+
+  // on map le tableau de contributors pour enlever les contributors qui n'ont pas de firstName, lastName, email, productionRole
+  const sanitizedContributors = contributors
+    .map((contributor) => {
+      const firstName = String(contributor?.firstName || "").trim();
+      const lastName = String(contributor?.lastName || "").trim();
+      const gender = String(contributor?.gender || "").trim().toLowerCase() || null;
+      const email = String(contributor?.email || "").trim().toLowerCase();
+      const productionRole = String(contributor?.productionRole || "").trim();
+
+      if (!firstName || !lastName || !email || !productionRole) return null;
+
+      return {
+        firstName,
+        lastName,
+        gender,
+        email,
+        productionRole
+      };
+    })
+    .filter(Boolean);
+
+  if (sanitizedContributors.length === 0) {
+    return [];
+  }
+
+  // on crée un map pour enlever les contributors qui ont le même email
+  const uniqueByEmail = new Map();
+  sanitizedContributors.forEach((contributor) => {
+    if (!uniqueByEmail.has(contributor.email)) {
+      uniqueByEmail.set(contributor.email, contributor);
+    }
+  });
+
+  const dedupedContributors = Array.from(uniqueByEmail.values());
+  const emails = dedupedContributors.map((contributor) => contributor.email);
+  const emailPlaceholders = emails.map(() => "?").join(",");
+
+  const [existingRows] = await pool.execute(
+    `SELECT email FROM contributor WHERE video_id = ? AND email IN (${emailPlaceholders})`,
+    [videoId, ...emails]
+  );
+
+  const existingEmails = new Set(
+    existingRows.map((row) => String(row.email || "").trim().toLowerCase())
+  );
+
+  const contributorsToInsert = dedupedContributors.filter(
+    (contributor) => !existingEmails.has(contributor.email)
+  );
+
+  if (contributorsToInsert.length === 0) {
+    return [];
+  }
+
+  // on crée un tableau de valeurs pour les contributeurs à insérer
+  const values = contributorsToInsert.flatMap((contributor) => [
+    videoId,
+    contributor.firstName,
+    contributor.lastName,
+    contributor.gender,
+    contributor.email,
+    contributor.productionRole
+  ]);
+  const rowPlaceholders = contributorsToInsert.map(() => "(?, ?, ?, ?, ?, ?)").join(",");
+
+  await pool.execute(
+    `INSERT INTO contributor (video_id, name, last_name, gender, email, production_role) VALUES ${rowPlaceholders}`,
+    values
+  );
+
+  return contributorsToInsert;
+};
+
+// nouvelle fonction d'ajout on test, imax
 export const createVideo = async (payload) => {
 
   // requete preparee

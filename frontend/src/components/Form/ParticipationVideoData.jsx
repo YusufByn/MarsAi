@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
 import { validateTitle, validateTitleEN, validateLanguage, validateSynopsis, validateSynopsisEN, validateTechResume, validateCreativeResume, validateClassification, validateTags } from '../../services/formService';
+import { normalizeText } from '../../../../shared/validators/video.rules.js';
 import TagInput from './TagInput';
 
 const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  
+  const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
+  const fieldWrapperClass = 'w-full max-w-md';
+  const normalizableFields = new Set([
+    'title',
+    'titleEN',
+    'language',
+    'synopsis',
+    'synopsisEN',
+    'techResume',
+    'creativeResume',
+  ]);
+
+  // Fonction pour générer les classes dynamiques (fond change si rempli)
+  const getFieldClass = (value, hasError, isTextarea = false) => {
+    const isFilled = value && String(value).trim() !== '';
+    // Changement de couleur de fond : #0f0f14 (vide) -> #1c1c24 (rempli)
+    const baseBg = isFilled ? 'bg-[#1c1c24]' : 'bg-[#0f0f14]';
+    const borderColor = hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
+    const minHeight = isTextarea ? 'min-h-28' : '';
+    
+    return `${baseBg} border rounded-xl px-3 py-2.5 w-full text-sm text-white transition-colors ${borderColor} ${minHeight}`;
+  };
 
   // Gestion des changements de champs
   const handleChange = (e) => {
@@ -18,6 +42,25 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
     // Validation en temps réel
     validateField(name, value);
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+
+    if (!normalizableFields.has(name)) {
+      return;
+    }
+
+    const normalizedValue = normalizeText(value);
+
+    if (normalizedValue !== value) {
+      setFormDataProp({
+        ...formData,
+        [name]: normalizedValue
+      });
+    }
+
+    validateField(name, normalizedValue);
   };
 
   // Gestion spécifique des tags
@@ -75,22 +118,37 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
   // Validation complète du formulaire
   const validateForm = () => {
+    const normalizedData = {
+      ...formData,
+      title: normalizeText(formData.title),
+      titleEN: normalizeText(formData.titleEN),
+      language: normalizeText(formData.language),
+      synopsis: normalizeText(formData.synopsis),
+      synopsisEN: normalizeText(formData.synopsisEN),
+      techResume: normalizeText(formData.techResume),
+      creativeResume: normalizeText(formData.creativeResume),
+      tags: Array.isArray(formData.tags) ? formData.tags.map((tag) => normalizeText(tag).toLowerCase()) : [],
+    };
+
     const newErrors = {
-      title: validateTitle(formData.title),
-      titleEN: validateTitleEN(formData.titleEN),
-      language: validateLanguage(formData.language),
-      synopsis: validateSynopsis(formData.synopsis),
-      synopsisEN: validateSynopsisEN(formData.synopsisEN),
-      techResume: validateTechResume(formData.techResume),
-      creativeResume: validateCreativeResume(formData.creativeResume),
-      classification: validateClassification(formData.classification),
-      tags: validateTags(formData.tags),
+      title: validateTitle(normalizedData.title),
+      titleEN: validateTitleEN(normalizedData.titleEN),
+      language: validateLanguage(normalizedData.language),
+      synopsis: validateSynopsis(normalizedData.synopsis),
+      synopsisEN: validateSynopsisEN(normalizedData.synopsisEN),
+      techResume: validateTechResume(normalizedData.techResume),
+      creativeResume: validateCreativeResume(normalizedData.creativeResume),
+      classification: validateClassification(normalizedData.classification),
+      tags: validateTags(normalizedData.tags),
     };
 
     setErrors(newErrors);
 
     // Retourne true si aucune erreur
-    return !Object.values(newErrors).some(error => error !== null);
+    return {
+      isValid: !Object.values(newErrors).some(error => error !== null),
+      normalizedData,
+    };
   };
 
   // Soumission du formulaire
@@ -99,7 +157,10 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
     setIsSubmitting(true);
     setSubmitError('');
 
-    if (validateForm()) {
+    const { isValid, normalizedData } = validateForm();
+
+    if (isValid) {
+      setFormDataProp(normalizedData);
       // Formulaire valide, passer à l'étape suivante
       setEtape(3);
     } else {
@@ -109,152 +170,162 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
   };
 
   return (
-    <div className="border border-white/10 bg-[#050505] rounded-xl p-2 text-center">
-      <h2 className="p-2">Video Data</h2>
+    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
+      <h2 className="text-2xl font-semibold tracking-tight">Video Data</h2>
+      <p className="text-xs text-gray-400 mt-1">Step 2 - Describe your project</p>
       
-      <div className="text-center flex flex-raw space-between justify-center gap-2">
-        <div className="border rounded-full w-7 h-7">
+      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           1
         </div>
-        <div className="border rounded-full w-7 h-7 bg-purple-500">
+        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
           2
         </div>
-        <div className="border rounded-full w-7 h-7">
+        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
           3
         </div>
       </div>
 
       <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center m-5 gap-5">
+        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
 
           {/* Title EN */}
-          <div className="w-60">
-            <label htmlFor="titleEN" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="titleEN" className={labelClass}>
               Title EN <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.titleEN ? 'border-red-500' : 'border-white/10'}`}
+              className={getFieldClass(formData.titleEN, errors.titleEN)}
               type="text"
               name="titleEN"
               id="titleEN"
               value={formData.titleEN}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Title EN"
             />
-            {errors.titleEN && <p className="text-red-500 text-sm mt-1">{errors.titleEN}</p>}
+            {errors.titleEN && <p className="text-rose-400 text-xs mt-1 text-left">{errors.titleEN}</p>}
           </div>
 
           {/* Title */}
-          <div className="w-60">
-            <label htmlFor="title" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="title" className={labelClass}>
               Title
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.title ? 'border-red-500' : 'border-white/10'}`}
+              className={getFieldClass(formData.title, errors.title)}
               type="text"
               name="title"
               id="title"
               value={formData.title}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Title"
             />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            {errors.title && <p className="text-rose-400 text-xs mt-1 text-left">{errors.title}</p>}
           </div>
 
           {/* Language */}
-          <div className="w-60">
-            <label htmlFor="language" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="language" className={labelClass}>
               Language <span className="text-red-500">*</span>
             </label>
             <input 
-              className={`bg-black/50 border rounded-xl p-2 w-60 ${errors.language ? 'border-red-500' : 'border-white/10'}`}
+              className={getFieldClass(formData.language, errors.language)}
               type="text"
               name="language"
               id="language"
               value={formData.language}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Language"
             />
-            {errors.language && <p className="text-red-500 text-sm mt-1">{errors.language}</p>}
+            {errors.language && <p className="text-rose-400 text-xs mt-1 text-left">{errors.language}</p>}
           </div>
 
           {/* Synopsis EN */}
-          <div className="w-60">
-            <label htmlFor="synopsisEN" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="synopsisEN" className={labelClass}>
               Synopsis EN <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsisEN ? 'border-red-500' : 'border-white/10'}`}
+              className={getFieldClass(formData.synopsisEN, errors.synopsisEN, true)}
               name="synopsisEN"
               id="synopsisEN"
               value={formData.synopsisEN}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Synopsis EN"
               rows="4"
             />
-            {errors.synopsisEN && <p className="text-red-500 text-sm mt-1">{errors.synopsisEN}</p>}
+            {errors.synopsisEN && <p className="text-rose-400 text-xs mt-1 text-left">{errors.synopsisEN}</p>}
           </div>
 
           {/* Synopsis */}
-          <div className="w-60">
-            <label htmlFor="synopsis" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="synopsis" className={labelClass}>
               Synopsis
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.synopsis ? 'border-red-500' : 'border-white/10'}`}
+              className={getFieldClass(formData.synopsis, errors.synopsis, true)}
               name="synopsis"
               id="synopsis"
               value={formData.synopsis}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Synopsis"
               rows="4"
             />
-            {errors.synopsis && <p className="text-red-500 text-sm mt-1">{errors.synopsis}</p>}
+            {errors.synopsis && <p className="text-rose-400 text-xs mt-1 text-left">{errors.synopsis}</p>}
           </div>
 
           {/* Tech Resume */}
-          <div className="w-60">
-            <label htmlFor="techResume" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="techResume" className={labelClass}>
               Technical Resume <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.techResume ? 'border-red-500' : 'border-white/10'}`}
+              className={getFieldClass(formData.techResume, errors.techResume, true)}
               name="techResume"
               id="techResume"
               value={formData.techResume}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Technical Resume"
               rows="4"
             />
-            {errors.techResume && <p className="text-red-500 text-sm mt-1">{errors.techResume}</p>}
+            {errors.techResume && <p className="text-rose-400 text-xs mt-1 text-left">{errors.techResume}</p>}
           </div>
 
           {/* Creative Resume */}
-          <div className="w-60">
-            <label htmlFor="creativeResume" className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="creativeResume" className={labelClass}>
               Creative Resume <span className="text-red-500">*</span>
             </label>
             <textarea 
-              className={`bg-black/50 border rounded-xl p-2 w-60 min-h-24 ${errors.creativeResume ? 'border-red-500' : 'border-white/10'}`}
+              className={getFieldClass(formData.creativeResume, errors.creativeResume, true)}
               name="creativeResume"
               id="creativeResume"
               value={formData.creativeResume}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="Creative Resume"
               rows="4"
             />
-            {errors.creativeResume && <p className="text-red-500 text-sm mt-1">{errors.creativeResume}</p>}
+            {errors.creativeResume && <p className="text-rose-400 text-xs mt-1 text-left">{errors.creativeResume}</p>}
           </div>
 
           {/* Classification */}
-          <div className="w-60">
-            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label className={labelClass}>
               Classification <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center justify-center gap-6 p-2">
+            <div className={`flex items-center justify-center gap-6 p-3 rounded-xl border transition-colors ${
+              formData.classification ? 'bg-[#1c1c24]' : 'bg-[#0f0f14]'
+            } ${errors.classification ? 'border-rose-500' : 'border-white/15'}`}>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
-                  className="w-4 h-4"
+                  className="w-4 h-4 accent-purple-500"
                   type="radio"
                   name="classification"
                   value="hybrid"
@@ -265,7 +336,7 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
-                  className="w-4 h-4"
+                  className="w-4 h-4 accent-purple-500"
                   type="radio"
                   name="classification"
                   value="ia"
@@ -275,12 +346,12 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
                 <span className="text-sm">Full AI</span>
               </label>
             </div>
-            {errors.classification && <p className="text-red-500 text-sm mt-1">{errors.classification}</p>}
+            {errors.classification && <p className="text-rose-400 text-xs mt-1 text-left">{errors.classification}</p>}
           </div>
 
           {/* Tags */}
-          <div className="w-60">
-            <label className="block text-left text-xs text-gray-400 mb-1 ml-1">
+          <div className={fieldWrapperClass}>
+            <label className={labelClass}>
               Tags
             </label>
             <TagInput
@@ -292,23 +363,23 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
 
           {/* Message d'erreur général */}
           {submitError && (
-            <div className="w-60 text-red-500 text-center">
+            <div className="w-full max-w-md text-rose-400 text-xs text-center">
               {submitError}
             </div>
           )}
 
           {/* Buttons */}
-          <div className="flex gap-4 m-5 p-1 place-self-centered">
+          <div className="flex gap-3 mt-4 p-1 place-self-center">
             <button 
               type="button"
               onClick={() => setEtape(1)}
-              className="bg-gray-700 hover:bg-gray-600 border rounded-xl p-2 px-8 transition-colors">
+              className="bg-white/5 hover:bg-white/10 border border-white/15 rounded-xl px-7 py-2.5 transition-colors text-sm font-medium">
               Back
             </button>
             <button 
               type="submit"
               disabled={isSubmitting}
-              className="bg-linear-to-r from-purple-500 to-pink-500 border rounded-xl p-2 px-8 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="bg-linear-to-r from-violet-600 to-fuchsia-600 border border-white/10 rounded-xl px-7 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-fuchsia-500 shadow-[0_8px_24px_rgba(168,85,247,0.35)] transition-all">
               {isSubmitting ? 'Loading...' : 'Next'}
             </button>
           </div>

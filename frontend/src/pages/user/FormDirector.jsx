@@ -19,7 +19,16 @@ const FormDirector = () => {
       phoneNumber: '',
       mobileNumber: '',
       address: '',
+      addressParts: {
+        street: '',
+        street2: '',
+        zipcode: '',
+        city: '',
+        stateRegion: '',
+        country: '',
+      },
       acquisitionSource: '',
+      acquisitionSourceOther: '',
       ageVerificator: false,
       contributors: [], // Ajout des contributeurs
     },

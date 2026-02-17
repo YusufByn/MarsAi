@@ -1,4 +1,30 @@
 import React, { useState } from 'react';
+import {
+  validateGender,
+  validateFirstName,
+  validateLastName,
+  validateEmail,
+} from '../../services/formService';
+
+const ROLE_PATTERN = /^[a-zA-Z0-9À-ÿ\s'(),.-]+$/;
+
+const validateProductionRole = (value) => {
+  const trimmedValue = String(value || '').trim();
+
+  if (!trimmedValue) return 'Role is required';
+  if (trimmedValue.length < 2) return 'Role must be at least 2 characters';
+  if (trimmedValue.length > 80) return 'Role is too long';
+  if (!ROLE_PATTERN.test(trimmedValue)) return 'Role contains invalid characters';
+  return null;
+};
+
+const normalizeContributorInput = (contributor = {}) => ({
+  gender: String(contributor.gender || '').trim(),
+  firstName: String(contributor.firstName || '').trim(),
+  lastName: String(contributor.lastName || '').trim(),
+  email: String(contributor.email || '').trim().toLowerCase(),
+  productionRole: String(contributor.productionRole || '').trim(),
+});
 
 const ParticipationContributorsData = ({ contributorsData, setContributorsData, onSave }) => {
   // contributorsData devrait être un tableau
@@ -15,36 +41,63 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentContributor({
-      ...currentContributor,
-      [name]: value
-    });
-    // Effacer l'erreur du champ modifié
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: null });
+  const validateContributorField = (fieldName, value) => {
+    switch (fieldName) {
+      case 'gender':
+        return validateGender(value);
+      case 'firstName':
+        return validateFirstName(value);
+      case 'lastName':
+        return validateLastName(value);
+      case 'email':
+        return validateEmail(value);
+      case 'productionRole':
+        return validateProductionRole(value);
+      default:
+        return null;
     }
   };
 
-  const validateContributor = () => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const nextContributor = {
+      ...currentContributor,
+      [name]: value
+    };
+    setCurrentContributor(nextContributor);
+
+    const normalizedValue = normalizeContributorInput(nextContributor)[name];
+    const fieldError = validateContributorField(name, normalizedValue);
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: fieldError,
+    }));
+  };
+
+  const validateContributor = (contributor) => {
     const newErrors = {};
-    
-    if (!currentContributor.gender) newErrors.gender = 'Gender is required';
-    if (!currentContributor.firstName?.trim()) newErrors.firstName = 'First name is required';
-    if (!currentContributor.lastName?.trim()) newErrors.lastName = 'Last name is required';
-    if (!currentContributor.email?.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentContributor.email)) {
-      newErrors.email = 'Invalid email';
-    }
-    if (!currentContributor.productionRole?.trim()) newErrors.productionRole = 'Role is required';
+
+    ['gender', 'firstName', 'lastName', 'email', 'productionRole'].forEach((fieldName) => {
+      const fieldError = validateContributorField(fieldName, contributor[fieldName]);
+      if (fieldError) {
+        newErrors[fieldName] = fieldError;
+      }
+    });
 
     return newErrors;
   };
 
   const addContributor = () => {
-    const newErrors = validateContributor();
+    const normalizedContributor = normalizeContributorInput(currentContributor);
+    const newErrors = validateContributor(normalizedContributor);
+    const contributorAlreadyExists = contributors.some(
+      (contributor) => String(contributor.email || '').trim().toLowerCase() === normalizedContributor.email
+    );
+
+    if (contributorAlreadyExists) {
+      newErrors.email = 'This email is already added';
+    }
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -53,7 +106,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
 
     // Ajouter le contributeur à la liste
     const updatedContributors = [...contributors, { 
-      ...currentContributor, 
+      ...normalizedContributor, 
       id: Date.now() // ID temporaire
     }];
     setContributorsData(updatedContributors);
@@ -108,14 +161,14 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
   };
 
   return (
-    <div className="text-center">
-      <div className="mb-4">
-        <h2 className="p-2 text-xl font-bold text-white">Contributors</h2>
-        <p className="text-gray-400 text-xs">Add all the contributors of the project</p>
+    <div className="text-center text-white">
+      <div className="mb-5">
+        <h2 className="text-xl font-semibold tracking-tight">Contributors</h2>
+        <p className="text-gray-400 text-xs mt-1">Add all the contributors of the project</p>
       </div>
 
       {globalError && (
-        <div className="mb-3 p-2 bg-red-500/20 border border-red-500 rounded-xl text-red-500 text-xs w-60 mx-auto">
+        <div className="mb-3 p-2 bg-rose-500/15 border border-rose-500/60 rounded-xl text-rose-300 text-xs w-full max-w-md mx-auto">
           {globalError}
         </div>
       )}
@@ -131,13 +184,13 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               {contributors.map((contributor) => (
                 <div 
                   key={contributor.id} 
-                  className="w-full max-w-xs bg-linear-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-3 relative hover:border-purple-500/50 transition-all text-left"
+                  className="w-full max-w-md bg-linear-to-br from-violet-950/30 to-fuchsia-950/30 border border-violet-400/25 rounded-xl p-3 relative hover:border-violet-400/45 transition-all text-left"
                 >
                   {/* Bouton supprimer */}
                   <button
                     type="button"
                     onClick={() => removeContributor(contributor.id)}
-                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-500/20 hover:bg-red-500/40 rounded-lg transition-colors text-red-400 hover:text-red-300"
+                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-rose-500/20 hover:bg-rose-500/40 rounded-lg transition-colors text-rose-300 hover:text-rose-200"
                     title="Remove"
                   >
                     ✕
@@ -172,8 +225,11 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
           <div className="flex justify-center my-2">
             <button
               type="button"
-              onClick={() => setShowForm(true)}
-              className="w-60 bg-purple-600/20 hover:bg-purple-600/30 border-2 border-dashed border-purple-500/50 hover:border-purple-500 rounded-xl p-3 text-purple-300 hover:text-purple-200 transition-all flex items-center justify-center gap-2 font-medium text-sm"
+              onClick={() => {
+                setGlobalError('');
+                setShowForm(true);
+              }}
+            className="w-full max-w-md bg-violet-600/15 hover:bg-violet-600/25 border-2 border-dashed border-violet-400/40 hover:border-violet-400/70 rounded-xl p-3 text-violet-200 hover:text-violet-100 transition-all flex items-center justify-center gap-2 font-medium text-sm"
             >
               <span className="text-xl">+</span>
               Add
@@ -187,7 +243,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
             <h3 className="text-md font-semibold text-white">New contributor</h3>
             
               {/* Gender */}
-              <div className="w-60 text-left">
+              <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
                   Gender <span className="text-red-500">*</span>
                 </label>
@@ -195,93 +251,93 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   name="gender"
                   value={currentContributor.gender}
                   onChange={handleChange}
-                  className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.gender ? 'border-red-500' : 'border-white/10'}`}
+                  className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.gender ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                 >
                   <option value="">Select gender</option>
                   <option value="women">Woman</option>
                   <option value="man">Man</option>
                   <option value="other">Other</option>
                 </select>
-                {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
+                {errors.gender && <p className="text-rose-400 text-xs mt-1">{errors.gender}</p>}
               </div>
 
               {/* First Name */}
-              <div className="w-60 text-left">
+              <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input 
-                  className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.firstName ? 'border-red-500' : 'border-white/10'}`}
+                  className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.firstName ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                   type="text"
                   name="firstName"
                   value={currentContributor.firstName}
                   onChange={handleChange}
                   placeholder="First Name"
                 />
-                {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
+                {errors.firstName && <p className="text-rose-400 text-xs mt-1">{errors.firstName}</p>}
               </div>
 
               {/* Last Name */}
-              <div className="w-60 text-left">
+              <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input 
-                  className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.lastName ? 'border-red-500' : 'border-white/10'}`}
+                  className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.lastName ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                   type="text"
                   name="lastName"
                   value={currentContributor.lastName}
                   onChange={handleChange}
                   placeholder="Last Name"
                 />
-                {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
+                {errors.lastName && <p className="text-rose-400 text-xs mt-1">{errors.lastName}</p>}
               </div>
 
               {/* Email */}
-              <div className="w-60 text-left">
+              <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input 
-                  className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.email ? 'border-red-500' : 'border-white/10'}`}
+                  className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.email ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                   type="email"
                   name="email"
                   value={currentContributor.email}
                   onChange={handleChange}
                   placeholder="email@example.com"
                 />
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                {errors.email && <p className="text-rose-400 text-xs mt-1">{errors.email}</p>}
               </div>
 
               {/* Production Role */}
-              <div className="w-60 text-left">
+              <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
                   Role <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`bg-black/50 border rounded-xl p-2 w-60 text-white text-sm ${errors.productionRole ? 'border-red-500' : 'border-white/10'}`}
+                  className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.productionRole ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                   type="text"
                   name="productionRole"
                   value={currentContributor.productionRole}
                   onChange={handleChange}
                   placeholder="Role (e.g. Director)"
                 />
-                {errors.productionRole && <p className="text-red-500 text-xs mt-1">{errors.productionRole}</p>}
+                {errors.productionRole && <p className="text-rose-400 text-xs mt-1">{errors.productionRole}</p>}
               </div>
 
               {/* Boutons Actions Formulaire */}
-              <div className="flex gap-2 mt-1 w-60">
+              <div className="flex gap-2 mt-1 w-full max-w-md">
                 <button
                   type="button"
                   onClick={cancelAdd}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white border border-gray-600 rounded-xl p-1.5 text-sm transition-colors"
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-xl py-2 text-sm transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={addContributor}
-                  className="flex-1 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 rounded-xl p-1.5 text-sm transition-all font-medium"
+                  className="flex-1 bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white border border-white/10 rounded-xl py-2 text-sm transition-all font-medium"
                 >
                   Add
                 </button>
@@ -294,7 +350,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
           <button
             type="button"
             onClick={handleSave}
-            className="bg-linear-to-r from-purple-500 to-pink-500 text-white border rounded-xl p-2 px-6 hover:from-purple-600 hover:to-pink-400 transition-all font-semibold text-sm"
+            className="bg-linear-to-r from-violet-600 to-fuchsia-600 text-white border border-white/10 rounded-xl px-6 py-2.5 hover:from-violet-500 hover:to-fuchsia-500 transition-all font-semibold text-sm shadow-[0_8px_24px_rgba(168,85,247,0.35)]"
           >
             Save and continue
           </button>
