@@ -437,9 +437,14 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       captchaRef.current?.reset();
       setRecaptchaToken(null);
       
-      // Rediriger après 2 secondes
+      // Rediriger après 2 secondes avec le nom/prenom
       setTimeout(() => {
-        navigate('/');
+        navigate('/ValidatedParticipation', {
+          state: {
+            firstName: allFormData?.step1?.firstName || '',
+            lastName: allFormData?.step1?.lastName || '',
+          },
+        });
       }, 2000);
       
     } catch (error) {
