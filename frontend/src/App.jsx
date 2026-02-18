@@ -27,6 +27,7 @@ import AdminEvents from './pages/admin/admin.events';
 import AdminConfig from './pages/admin/admin.config';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import AdminUsers from './pages/admin/admin.users';
+import AdminSponsors from './pages/admin/admin.sponsors';
 
 function AppContent() {
   const location = useLocation();
@@ -62,6 +63,7 @@ function AppContent() {
             <Route path="config" element={<AdminConfig />} />
             <Route path="newsletter" element={<NewsletterAdmin />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="sponsors" element={<AdminSponsors />} />
           </Route>
         </Routes>
       </main>

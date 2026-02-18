@@ -13,6 +13,7 @@ import testRoutes from './test.routes.js';
 import countdownRoutes from './cms/countdown.routes.js';
 import adminRoutes from "./admin.routes.js";
 import tagRoutes from './tag.routes.js';
+import sponsorsRoutes from './sponsors.routes.js';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use('/player', playerRoutes);
 router.use('/cms', countdownRoutes);
 router.use('/admin', adminRoutes);
 router.use('/tags', tagRoutes);
+router.use('/sponsors', sponsorsRoutes);
 
 // testRoutes garde /test en interne - doit être en dernier pour ne pas intercepter les autres routes
 router.use('/', testRoutes);

@@ -48,9 +48,11 @@ const HomePage = () => {
           </svg>
         </div>
 
+        {/* Sponsors Section */}
         <div className="h-full mt-25">
           <Sponsors />
         </div>
+        
       </header>
 
     </div>

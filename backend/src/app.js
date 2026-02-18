@@ -33,7 +33,15 @@ app.use(compression());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '../uploads'), {
+    setHeaders: (res) => {
+      // Autorise l'affichage des images uploadées depuis un autre origin (ex: frontend Vite).
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  })
+);
 
 // toutes les routes
 app.use('/api', routes);
