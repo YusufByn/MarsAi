@@ -1,10 +1,8 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import { LayoutDashboard, Film, Users, Calendar, Settings, Mail, UserCog, LogOut, Home } from 'lucide-react';
-=======
+
 import { LayoutDashboard, Film, Users, Calendar, Settings, Mail, UserCog, Home, LogOut } from 'lucide-react';
->>>>>>> origin/WILLIAM_FIX_UX_PLAYER
+
 
 export default function AdminSidebar({ user }) {
   const location = useLocation();

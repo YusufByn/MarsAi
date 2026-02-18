@@ -1,43 +1,14 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import LanguageToggle from '../LanguageToggle';
-<<<<<<< HEAD
-import { isTokenExpired, clearAuth } from '../../services/authService';
-
-function readAuthFromStorage() {
-  const token = localStorage.getItem('auth_token');
-  const storedUser = localStorage.getItem('auth_user');
-
-  if (!token || isTokenExpired(token)) {
-    clearAuth();
-    return { user: null, isJury: false };
-  }
-
-  if (storedUser) {
-    const authUser = JSON.parse(storedUser);
-    const role = authUser.role;
-    const isAdmin = role === 'admin' || role === 'superadmin';
-    return { user: authUser, isJury: role === 'jury' || isAdmin, isAdmin };
-  }
-  return { user: null, isJury: false, isAdmin: false };
-}
-=======
 import { useAuth } from '../../hooks/useAuth';
->>>>>>> origin/WILLIAM_FIX_UX_PLAYER
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isSelector, isAdmin, logout } = useAuth();
 
-<<<<<<< HEAD
-  // Re-read auth from localStorage on every render (triggered by location or logoutFlag change)
-  const { user, isJury, isAdmin } = logoutFlag ? { user: null, isJury: false, isAdmin: false } : readAuthFromStorage();
-
-  // Ensure logoutFlag is consumed (location is used to trigger re-renders on route change)
-=======
   // location is used to trigger re-renders on route change
->>>>>>> origin/WILLIAM_FIX_UX_PLAYER
   void location;
 
   const handleLogout = () => {
@@ -70,23 +41,8 @@ const Navbar = () => {
             </svg>
           </Link>
 
-<<<<<<< HEAD
-          {/* Lien admin dashboard */}
-          {isAdmin && (
-            <Link to="/admin/dashboard" className="text-gray-400 hover:text-white transition-colors" title="Administration">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </Link>
-          )}
-
-          {/* Liens spécifiques aux jurys (sélecteurs) */}
-          {isJury && (
-=======
           {/* Liens selector (jury, admin, superadmin) */}
           {isSelector && (
->>>>>>> origin/WILLIAM_FIX_UX_PLAYER
             <>
               {/* Liste des vidéos */}
               <Link to="/videos" className="text-gray-400 hover:text-white transition-colors" title="Liste des vidéos" aria-label="Liste des videos">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { API_URL } from '../config';
+import { API_URL } from '../../../config';
 
 const Countdown = () => {
   const { t } = useTranslation();
@@ -8,13 +8,16 @@ const Countdown = () => {
   const [loading, setLoading] = useState(true);
   const [phaseDate, setPhaseDate] = useState(null);
   const hasFetched = useRef(false);
+  
+  // Debug : vérifier les re-renders 
+  // console.log('[Countdown] render'); 
 
   // Fetch unique au chargement : récupère la date de phase une seule fois
   useEffect(() => {
     // Protection contre les appels multiples
     if (hasFetched.current) return;
     hasFetched.current = true;
-
+    
     const fetchHomepage = async () => {
       try {
         const response = await fetch(`${API_URL}/api/cms/homepage`);
@@ -22,8 +25,11 @@ const Countdown = () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         const data = await response.json();
+
+        console.log('[COUNTDOWN] homepage data:', data); // Debug : vérifier la structure de la réponse
+        
 
         if (data.success && data.countdown?.phaseDate) {
           setPhaseDate(new Date(data.countdown.phaseDate));

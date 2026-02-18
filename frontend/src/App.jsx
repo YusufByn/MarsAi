@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/home/HomePage';
 import FormDirector from './pages/user/FormDirector';
 import JuryDetails from './pages/user/JuryDetails';
 import AllJury from './pages/user/AllJury';
