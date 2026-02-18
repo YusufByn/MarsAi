@@ -65,7 +65,7 @@ const AllJury = () => {
           </div>
 
           <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-4 italic uppercase leading-[0.8]">
-            THE <span className="mars-text-gradient">JURY</span>
+            THE <span className="mars-gradient-text">JURY</span>
           </h1>
           <p className="text-xl text-white/40 font-light max-w-2xl leading-relaxed">
             {t('jury.description')}

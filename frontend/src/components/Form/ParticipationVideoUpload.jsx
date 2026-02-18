@@ -4,14 +4,15 @@ import ReCAPTCHA from "react-google-recaptcha";
 import validateRecaptcha from '../../../../shared/validators/recaptcha.validator.js';
 import { submitCompleteForm } from '../../services/api.service.js';
 import { newsletterService } from '../../services/newsletterService.js';
+import {
+  SectionHeading, labelClass, errorClass,
+  primaryButtonClass, primaryButtonStyle, secondaryButtonClass, secondaryButtonStyle,
+} from './formStyles';
 
 const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataProp, allFormData}) => {
   const navigate = useNavigate();
-  const fieldWrapperClass = 'w-full max-w-md';
-  const fileInputClass = 'bg-[#0f0f14] border border-white/15 rounded-xl px-3 py-2.5 w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-violet-600/25 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-violet-100 hover:file:bg-violet-600/35';
   const maxVideoPreviewSeconds = 6;
 
-  // États locaux pour les previews (URLs temporaires)
   const [previews, setPreviews] = useState({
     videoFile: null,
     coverImage: null,
@@ -20,7 +21,6 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     still3: null,
   });
 
-  // États locaux pour les loaders
   const [loading, setLoading] = useState({
     coverImage: false,
     still1: false,
@@ -28,7 +28,6 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     still3: false,
   });
 
-  // États locaux pour les erreurs
   const [errors, setErrors] = useState({
     coverImage: null,
     still1: null,
@@ -39,173 +38,98 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     recaptcha: null,
   });
 
-  // État pour la durée de la vidéo
   const [videoDuration, setVideoDuration] = useState(null);
-
-  // État pour le token reCAPTCHA
   const [recaptchaToken, setRecaptchaToken] = useState(null);
-
-  // Références pour le composant reCAPTCHA et les inputs file
   const captchaRef = useRef(null);
   const fileInputRefs = useRef({});
-
-  // État pour la soumission du formulaire
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  /**
-   * Validation d'un fichier image
-   */
   const validateImage = (file, fieldName) => {
-    // Vérifier le type - accepter uniquement JPG/JPEG/PNG
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type.toLowerCase())) {
       return 'Please select a JPG or PNG image only';
     }
-
-    // Vérifier la taille
-    const maxSize = fieldName === 'coverImage' ? 15 * 1024 * 1024 : 7 * 1024 * 1024; // 15MB pour cover, 7MB pour stills
+    const maxSize = fieldName === 'coverImage' ? 15 * 1024 * 1024 : 7 * 1024 * 1024;
     if (file.size > maxSize) {
       const maxSizeMB = fieldName === 'coverImage' ? 15 : 7;
       return `File too large. Max: ${maxSizeMB}MB`;
     }
-
-    return null; // Valide
+    return null;
   };
 
-  /**
-   * Validation d'un fichier vidéo
-   */
   const validateVideo = (file) => {
-    // Vérifier l'extension
     const allowedExtensions = ['.mov', '.mpeg4', '.mp4', '.webm', '.mkv'];
     const fileName = file.name.toLowerCase();
     const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
-    
     if (!hasValidExtension) {
       return 'Please select a valid video file (MOV, MPEG4, MP4, WebM, MKV)';
     }
-
-    // Vérifier le type MIME
     const allowedMimeTypes = [
-      'video/quicktime',      // .mov
-      'video/mp4',            // .mp4
-      'video/x-matroska',     // .mkv
-      'video/webm',           // .webm
-      'video/mov',            // tolérance backend
-      'application/octet-stream' // certains navigateurs
+      'video/quicktime', 'video/mp4', 'video/x-matroska',
+      'video/webm', 'video/mov', 'application/octet-stream'
     ];
-    
     if (file.type && !allowedMimeTypes.includes(file.type)) {
       return 'Video file type not allowed';
     }
-
-    // Vérifier la taille (max 200MB pour une vidéo)
-    const maxSize = 200 * 1024 * 1024; // 200MB
+    const maxSize = 200 * 1024 * 1024;
     if (file.size > maxSize) {
       return 'Video file too large. Maximum: 200MB';
     }
-
-    return null; // Valide
+    return null;
   };
 
-  /**
-   * Validation d'un fichier sous-titre
-   */
   const validateSubtitle = (file) => {
-    // Vérifier l'extension
     const fileName = file.name.toLowerCase();
     if (!fileName.endsWith('.srt')) {
       return 'Please select a .srt file only';
     }
-
-    // Vérifier le type MIME (peut être text/plain ou application/x-subrip)
     const allowedMimeTypes = ['text/plain', 'application/srt', 'application/x-subrip', 'application/octet-stream'];
     if (file.type && !allowedMimeTypes.includes(file.type)) {
       return 'Subtitle file type not allowed';
     }
-
-    // Vérifier la taille (max 1MB pour un fichier de sous-titres)
-    const maxSize = 1 * 1024 * 1024; // 1MB
+    const maxSize = 1 * 1024 * 1024;
     if (file.size > maxSize) {
       return 'Subtitle file too large. Maximum: 1MB';
     }
-
-    return null; // Valide
+    return null;
   };
 
-  /**
-   * Gestion de la sélection de fichier image
-   */
   const handleImageChange = (e, fieldName) => {
     const file = e.target.files[0];
-    
     if (!file) return;
-
-    // Révoquer l'ancienne URL si elle existe
-    if (previews[fieldName]) {
-      URL.revokeObjectURL(previews[fieldName]);
-    }
-
-    // Valider le fichier
+    if (previews[fieldName]) URL.revokeObjectURL(previews[fieldName]);
     const error = validateImage(file, fieldName);
-    
     if (error) {
-      // Afficher l'erreur
       setErrors(prev => ({ ...prev, [fieldName]: error }));
       setPreviews(prev => ({ ...prev, [fieldName]: null }));
       setFormDataProp({ ...formData, [fieldName]: null });
       return;
     }
-
-    // Fichier valide
     setErrors(prev => ({ ...prev, [fieldName]: null }));
     setLoading(prev => ({ ...prev, [fieldName]: true }));
-
-    // Créer URL de preview
     const objectUrl = URL.createObjectURL(file);
-    
-    // Simuler un léger délai pour montrer le loader (optionnel)
     setTimeout(() => {
       setPreviews(prev => ({ ...prev, [fieldName]: objectUrl }));
       setLoading(prev => ({ ...prev, [fieldName]: false }));
     }, 200);
-
-    // Stocker le fichier dans formData
     setFormDataProp({ ...formData, [fieldName]: file });
   };
 
-  /**
-   * Suppression d'une image
-   */
   const handleRemoveImage = (fieldName) => {
-    // Révoquer l'URL de preview
-    if (previews[fieldName]) {
-      URL.revokeObjectURL(previews[fieldName]);
-    }
-    
-    // Réinitialiser les états
+    if (previews[fieldName]) URL.revokeObjectURL(previews[fieldName]);
     setPreviews(prev => ({ ...prev, [fieldName]: null }));
     setFormDataProp({ ...formData, [fieldName]: null });
     setErrors(prev => ({ ...prev, [fieldName]: null }));
-    
-    // Réinitialiser l'input file
     const input = fileInputRefs.current[fieldName];
     if (input) input.value = '';
   };
 
-  /**
-   * Gestion des autres champs (non-images)
-   */
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const fieldValue = type === 'checkbox' ? checked : value;
-    
-    setFormDataProp({
-      ...formData,
-      [name]: fieldValue
-    });
+    setFormDataProp({ ...formData, [name]: fieldValue });
   };
 
   const handleVideoPreviewTimeUpdate = (e) => {
@@ -216,20 +140,13 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
     }
   };
 
-  /**
-   * Gestion des fichiers non-images (video, subtitle)
-   */
   const handleFileChange = (e) => {
     const { name } = e.target;
     const file = e.target.files[0];
-    
     if (!file) {
       setErrors(prev => ({ ...prev, [name]: null }));
-      // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
-        if (previews.videoFile) {
-          URL.revokeObjectURL(previews.videoFile);
-        }
+        if (previews.videoFile) URL.revokeObjectURL(previews.videoFile);
         setPreviews(prev => ({ ...prev, videoFile: null }));
         setVideoDuration(null);
         setFormDataProp({ ...formData, [name]: null, duration: null });
@@ -238,25 +155,17 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       }
       return;
     }
-
-    // Valider selon le type de fichier
     let error = null;
     if (name === 'videoFile') {
       error = validateVideo(file);
     } else if (name === 'subtitle') {
       error = validateSubtitle(file);
     }
-
     if (error) {
-      // Afficher l'erreur et ne pas sauvegarder le fichier
       setErrors(prev => ({ ...prev, [name]: error }));
-      // Réinitialiser l'input
       e.target.value = '';
-      // Réinitialiser la durée si c'est une vidéo
       if (name === 'videoFile') {
-        if (previews.videoFile) {
-          URL.revokeObjectURL(previews.videoFile);
-        }
+        if (previews.videoFile) URL.revokeObjectURL(previews.videoFile);
         setPreviews(prev => ({ ...prev, videoFile: null }));
         setVideoDuration(null);
         setFormDataProp({ ...formData, [name]: null, duration: null });
@@ -265,90 +174,53 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
       }
       return;
     }
-
-    // Fichier valide
     setErrors(prev => ({ ...prev, [name]: null }));
-
-    // Calculer la durée si c'est une vidéo
     if (name === 'videoFile') {
-      if (previews.videoFile) {
-        URL.revokeObjectURL(previews.videoFile);
-      }
+      if (previews.videoFile) URL.revokeObjectURL(previews.videoFile);
       const previewObjectUrl = URL.createObjectURL(file);
       setPreviews(prev => ({ ...prev, videoFile: previewObjectUrl }));
-
       const video = document.createElement('video');
       video.preload = 'metadata';
       const metadataObjectUrl = URL.createObjectURL(file);
-      
       video.onloadedmetadata = function() {
         window.URL.revokeObjectURL(metadataObjectUrl);
         const duration = video.duration;
         const durationInSeconds = Math.floor(duration);
-        
-        // Vérifier la durée maximale (2m30 = 150 secondes)
-        const maxDuration = 150; // 2 minutes 30 secondes
-        
-        // Convertir la durée en format lisible
+        const maxDuration = 150;
         const hours = Math.floor(duration / 3600);
         const minutes = Math.floor((duration % 3600) / 60);
         const seconds = Math.floor(duration % 60);
-        
-        let formattedDuration = '';
-        if (hours > 0) {
-          formattedDuration = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        } else {
-          formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }
-        
-        // Si la durée dépasse le maximum
+        let formattedDuration = hours > 0
+          ? `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+          : `${minutes}:${seconds.toString().padStart(2, '0')}`;
         if (duration > maxDuration) {
-          if (previewObjectUrl) {
-            URL.revokeObjectURL(previewObjectUrl);
-          }
+          if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
           setPreviews(prev => ({ ...prev, videoFile: null }));
-          setErrors(prev => ({ 
-            ...prev, 
-            videoFile: `Video too long (${formattedDuration}). Maximum duration: 2:30` 
-          }));
+          setErrors(prev => ({ ...prev, videoFile: `Video too long (${formattedDuration}). Maximum duration: 2:30` }));
           setFormDataProp({ ...formData, videoFile: null, duration: null });
           setVideoDuration(null);
-          e.target.value = ''; // Réinitialiser l'input
+          e.target.value = '';
           return;
         }
-        
-        // Durée valide - stocker en secondes pour la DB et en format lisible pour l'affichage
         setVideoDuration(formattedDuration);
         setFormDataProp({ ...formData, videoFile: file, duration: durationInSeconds });
       };
-      
       video.onerror = function() {
         window.URL.revokeObjectURL(metadataObjectUrl);
-        if (previewObjectUrl) {
-          URL.revokeObjectURL(previewObjectUrl);
-        }
+        if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
         setPreviews(prev => ({ ...prev, videoFile: null }));
         setErrors(prev => ({ ...prev, videoFile: 'Unable to read video file metadata' }));
         setFormDataProp({ ...formData, videoFile: null, duration: null });
         setVideoDuration('Unable to read duration');
       };
-      
       video.src = metadataObjectUrl;
       return;
     }
-
-    setFormDataProp({
-      ...formData,
-      [name]: file
-    });
+    setFormDataProp({ ...formData, [name]: file });
   };
 
-  /**
-   * Cleanup des URLs au démontage du composant
-   */
   useEffect(() => {
     return () => {
-      // Révoquer toutes les URLs créées
       Object.values(previews).forEach(url => {
         if (url) URL.revokeObjectURL(url);
       });
@@ -356,75 +228,36 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Cleanup d'une URL spécifique quand elle change
-   */
   useEffect(() => {
     const currentPreviews = previews;
     return () => {
       Object.entries(currentPreviews).forEach(([key, url]) => {
-        if (url && url !== previews[key]) {
-          URL.revokeObjectURL(url);
-        }
+        if (url && url !== previews[key]) URL.revokeObjectURL(url);
       });
     };
   }, [previews]);
 
-  /**
-   * Gestion de la soumission du formulaire
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Réinitialiser les états
     setSubmitError(null);
     setSubmitSuccess(false);
-    
-    // Récupérer le token reCAPTCHA
     const token = captchaRef.current?.getValue();
-    
-    // Valider le reCAPTCHA
     const recaptchaError = validateRecaptcha(token);
     if (recaptchaError) {
       setErrors(prev => ({ ...prev, recaptcha: recaptchaError }));
       return;
     }
-    
-    // Réinitialiser l'erreur reCAPTCHA si tout est OK
     setErrors(prev => ({ ...prev, recaptcha: null }));
-    
-    // Vérifier les champs obligatoires
-    if (!formData.videoFile) {
-      setSubmitError("Please upload a video");
-      return;
-    }
-    
-    if (!formData.coverImage) {
-      setSubmitError("Please upload a cover image");
-      return;
-    }
-    
-    if (!formData.rightsAccepted) {
-      setSubmitError("Please accept the rights");
-      return;
-    }
-
+    if (!formData.videoFile) { setSubmitError("Please upload a video"); return; }
+    if (!formData.coverImage) { setSubmitError("Please upload a cover image"); return; }
+    if (!formData.rightsAccepted) { setSubmitError("Please accept the rights"); return; }
     if (typeof formData.duration === 'number' && formData.duration > 150) {
       setSubmitError("Video too long. Maximum duration: 2:30");
       return;
     }
-    
-    // Démarrer la soumission
     setIsSubmitting(true);
-    
     try {
-      // console.log("[SUBMIT] Soumission du formulaire complet...");
-      // console.log("[SUBMIT] Form data:", allFormData);
-      
-      // Envoyer toutes les données au backend
-      const result = await submitCompleteForm(allFormData, token);
-
-      // Inscription newsletter optionnelle (non bloquante pour la soumission vidéo)
+      await submitCompleteForm(allFormData, token);
       if (formData.newsletterSubscription && allFormData?.step1?.email) {
         try {
           await newsletterService.subscribe(allFormData.step1.email);
@@ -432,17 +265,9 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           console.warn("Newsletter subscription warning:", newsletterError?.message || newsletterError);
         }
       }
-      
-      // console.log("[SUBMIT] Soumission reussie!", result);
-      
-      // Afficher le succès
       setSubmitSuccess(true);
-      
-      // Réinitialiser le reCAPTCHA
       captchaRef.current?.reset();
       setRecaptchaToken(null);
-      
-      // Rediriger après 2 secondes avec le nom/prenom
       setTimeout(() => {
         navigate('/ValidatedParticipation', {
           state: {
@@ -451,380 +276,339 @@ const ParticipationVideoUpload = ({setEtape, formData, setFormData: setFormDataP
           },
         });
       }, 2000);
-      
     } catch (error) {
       console.error("[SUBMIT ERROR] Erreur lors de la soumission:", error);
       setSubmitError(error.message || "An error occurred while submitting the form. Please try again.");
-      
-      // Réinitialiser le reCAPTCHA en cas d'erreur
       captchaRef.current?.reset();
       setRecaptchaToken(null);
-      
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Styles réutilisables pour les zones d'upload
+  const uploadZoneBase = 'flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/[0.03] border border-dashed';
+  const uploadZoneIdle = 'border-white/10 hover:border-white/25';
+  const uploadZoneError = 'border-rose-500';
+
   return (
-    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
-      <h2 className="text-2xl font-semibold tracking-tight">Video Upload</h2>
-      <p className="text-xs text-gray-400 mt-1">Step 3 - Finalize and submit</p>
-      
-      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          1
+    <form onSubmit={handleSubmit} method="post" className="space-y-16">
+
+      {/* ── Section 1 : Médias ── */}
+      <div className="space-y-8">
+        <SectionHeading>Médias</SectionHeading>
+
+        {/* Vidéo */}
+        <div>
+          <label className={labelClass}>
+            Fichier Vidéo{' '}
+            <span className="text-[10px] text-white/20 normal-case tracking-normal font-normal">
+              (max 200MB · max 2m30)
+            </span>
+            {' '}<span className="text-rose-500">*</span>
+          </label>
+
+          {previews.videoFile && !errors.videoFile ? (
+            <div className="w-full overflow-hidden bg-white/[0.03] border border-white/10" style={{ borderRadius: '24px' }}>
+              <video
+                src={previews.videoFile}
+                controls
+                muted
+                playsInline
+                preload="metadata"
+                className="w-full h-auto max-h-72 object-contain"
+                onTimeUpdate={handleVideoPreviewTimeUpdate}
+              />
+              <p className="text-[10px] text-white/20 px-6 py-3 tracking-widest uppercase">
+                Aperçu limité à {maxVideoPreviewSeconds} secondes
+              </p>
+            </div>
+          ) : (
+            <label
+              htmlFor="videoFile"
+              className={`${uploadZoneBase} gap-3 w-full h-40 ${errors.videoFile ? uploadZoneError : uploadZoneIdle}`}
+              style={{ borderRadius: '24px' }}
+            >
+              <svg className="w-6 h-6 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+              </svg>
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/20">
+                {formData.videoFile ? 'Vidéo sélectionnée' : 'Choisir un fichier'}
+              </span>
+              <span className="text-[10px] text-white/15">MOV · MP4 · WebM · MKV</span>
+            </label>
+          )}
+
+          {previews.videoFile && !errors.videoFile && (
+            <label
+              htmlFor="videoFile"
+              className="mt-3 inline-flex items-center gap-2 px-4 h-9 cursor-pointer text-[10px] font-bold tracking-[0.2em] uppercase text-white/30 hover:text-white/60 transition-colors bg-white/[0.03] border border-white/10 hover:border-white/25"
+              style={{ borderRadius: '12px' }}
+            >
+              Changer de fichier
+            </label>
+          )}
+
+          <input
+            type="file"
+            accept=".MOV,.MPEG4,.MP4,.WebM,.MKV"
+            name="videoFile"
+            id="videoFile"
+            className="sr-only"
+            onChange={handleFileChange}
+          />
+
+          <div className="mt-2 px-1">
+            {errors.videoFile ? (
+              <p className={errorClass}>{errors.videoFile}</p>
+            ) : videoDuration ? (
+              <p className="text-emerald-400 text-xs">Durée : {videoDuration}</p>
+            ) : formData.videoFile ? (
+              <p className="text-white/30 text-xs">Calcul de la durée...</p>
+            ) : null}
+          </div>
         </div>
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          2
+
+        {/* Image de couverture */}
+        <div>
+          <label className={labelClass}>
+            Image de couverture{' '}
+            <span className="text-[10px] text-white/20 normal-case tracking-normal font-normal">(max 15MB)</span>
+            {' '}<span className="text-rose-500">*</span>
+          </label>
+          <label
+            htmlFor="coverImage"
+            className={`relative ${uploadZoneBase} gap-3 w-full h-56 overflow-hidden ${errors.coverImage ? uploadZoneError : uploadZoneIdle}`}
+            style={{ borderRadius: '24px' }}
+          >
+            {loading.coverImage ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                <span className="text-[10px] text-white/30 tracking-widest uppercase">Chargement...</span>
+              </div>
+            ) : previews.coverImage ? (
+              <img src={previews.coverImage} alt="Cover" className="w-full h-full object-contain" />
+            ) : errors.coverImage ? (
+              <span className="text-rose-400 text-[10px] tracking-widest uppercase text-center px-4">{errors.coverImage}</span>
+            ) : (
+              <>
+                <svg className="w-6 h-6 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/20">Image de couverture</span>
+                <span className="text-[10px] text-white/15">JPG · PNG</span>
+              </>
+            )}
+          </label>
+          <input
+            type="file"
+            accept="image/jpg, image/jpeg, image/png"
+            name="coverImage"
+            id="coverImage"
+            className="sr-only"
+            ref={(el) => { fileInputRefs.current.coverImage = el; }}
+            onChange={(e) => handleImageChange(e, 'coverImage')}
+          />
         </div>
-        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
-          3
+
+        {/* Stills */}
+        <div>
+          <label className={`${labelClass} mb-4 block`}>
+            Photogrammes{' '}
+            <span className="text-[10px] text-white/20 normal-case tracking-normal font-normal">(optionnel · max 7MB)</span>
+          </label>
+          <div className="grid grid-cols-3 gap-4">
+            {(['still1', 'still2', 'still3']).map((field, i) => (
+              <div key={field}>
+                <label
+                  htmlFor={field}
+                  className={`relative ${uploadZoneBase} gap-2 w-full aspect-video overflow-hidden ${errors[field] ? uploadZoneError : uploadZoneIdle}`}
+                  style={{ borderRadius: '16px' }}
+                >
+                  {loading[field] ? (
+                    <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                  ) : previews[field] ? (
+                    <>
+                      <img src={previews[field]} alt={`Still ${i + 1}`} className="w-full h-full object-contain" />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveImage(field); }}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 hover:bg-rose-500/80 rounded-full flex items-center justify-center transition-colors"
+                        aria-label={`Supprimer le still ${i + 1}`}
+                      >
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </>
+                  ) : errors[field] ? (
+                    <span className="text-rose-400 text-[9px] tracking-widest uppercase text-center px-2">{errors[field]}</span>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-[9px] font-bold tracking-widest uppercase text-white/20">Still {i + 1}</span>
+                    </>
+                  )}
+                </label>
+                <input
+                  type="file"
+                  accept="image/jpeg, image/jpg, image/png"
+                  name={field}
+                  id={field}
+                  className="sr-only"
+                  ref={(el) => { fileInputRefs.current[field] = el; }}
+                  onChange={(e) => handleImageChange(e, field)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sous-titres */}
+        <div>
+          <label className={labelClass}>
+            Sous-titres{' '}
+            <span className="text-[10px] text-white/20 normal-case tracking-normal font-normal">
+              (si voix ou texte à traduire · .srt · max 1MB)
+            </span>
+          </label>
+          <label
+            htmlFor="subtitle"
+            className={`${uploadZoneBase} flex-row gap-4 w-full h-[66px] px-8 ${errors.subtitle ? uploadZoneError : uploadZoneIdle}`}
+            style={{ borderRadius: '24px' }}
+          >
+            <svg className="w-4 h-4 text-white/20 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h6m-6 4h10M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/20">
+              {formData.subtitle ? formData.subtitle.name : 'Fichier .srt'}
+            </span>
+          </label>
+          <input type="file" accept=".srt" name="subtitle" id="subtitle" className="sr-only" onChange={handleFileChange} />
+          {errors.subtitle && <p className={errorClass}>{errors.subtitle}</p>}
         </div>
       </div>
 
-      <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
+      {/* ── Section 2 : Droits & Options ── */}
+      <div className="space-y-8">
+        <SectionHeading>Droits & Options</SectionHeading>
 
-          {/* Video Upload */}
-          <div className={fieldWrapperClass}>
-            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Upload Video (max 200MB, max duration 2m30) <span className="text-red-500">*</span></label>
-            <input 
-              className={fileInputClass}
-              type="file"
-              accept=".MOV,.MPEG4,.MP4,.WebM,.MKV"
-              name="videoFile"
-              id="videoFile"
-              onChange={handleFileChange}
-            />
-            {errors.videoFile ? (
-              <p className="text-rose-400 text-xs mt-1 text-left">{errors.videoFile}</p>
-            ) : videoDuration ? (
-              <p className="text-emerald-400 text-xs mt-1 text-left">Duration: {videoDuration}</p>
-            ) : formData.videoFile ? (
-              <p className="text-gray-400 text-xs mt-1 text-left">Calculating duration...</p>
-            ) : (
-              <p className="text-gray-400 text-xs mt-1 text-left">Duration will be displayed here</p>
-            )}
-            {previews.videoFile && !errors.videoFile && (
-              <div className="mt-2 border border-white/15 rounded-xl bg-[#0f0f14] overflow-hidden">
-                <video
-                  src={previews.videoFile}
-                  controls
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-auto max-h-64 object-contain"
-                  onTimeUpdate={handleVideoPreviewTimeUpdate}
-                />
-                <p className="text-[10px] text-gray-400 px-2 py-1 text-left">
-                  Preview is limited to {maxVideoPreviewSeconds} seconds.
-                </p>
-              </div>
+        {/* Texte des droits */}
+        <div className="px-8 py-6 bg-white/[0.03] border border-white/10" style={{ borderRadius: '24px' }}>
+          <p className="text-sm text-white/40 leading-relaxed">
+            En soumettant cette vidéo, vous confirmez détenir tous les droits nécessaires sur le contenu
+            fourni et autorisez MarsAI à diffuser, reproduire et utiliser cette vidéo, en tout ou en partie,
+            dans ses médias de communication, sans limitation de durée ni de territoire.
+          </p>
+        </div>
+
+        {/* Droits acceptés */}
+        <label className="flex items-start gap-4 cursor-pointer group">
+          <input
+            type="checkbox"
+            name="rightsAccepted"
+            id="rightsAccepted"
+            checked={formData.rightsAccepted}
+            onChange={handleChange}
+            className="sr-only"
+          />
+          <div className={`shrink-0 mt-0.5 w-5 h-5 rounded border transition-colors flex items-center justify-center ${
+            formData.rightsAccepted ? 'bg-white border-white' : 'border-white/20 bg-white/[0.03] group-hover:border-white/40'
+          }`}>
+            {formData.rightsAccepted && (
+              <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             )}
           </div>
+          <span className="text-sm text-white/60 group-hover:text-white/80 transition-colors">
+            J'accepte les droits de diffusion <span className="text-rose-500">*</span>
+          </span>
+        </label>
 
-          {/* Cover Image */}
-          <div className={fieldWrapperClass}>
-            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Cover Image (max 15MB) <span className="text-red-500">*</span></label>
-            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden">
-              {loading.coverImage ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                  <span className="text-gray-500 text-xs">Loading...</span>
-                </div>
-              ) : errors.coverImage ? (
-                <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">X</span>
-                  <span className="text-red-500 text-xs">{errors.coverImage}</span>
-                </div>
-              ) : previews.coverImage ? (
-                <img 
-                  src={previews.coverImage} 
-                  alt="Cover preview" 
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <span className="text-gray-500 text-xs">Preview</span>
-              )}
-            </div>
-            <input 
-              className={fileInputClass}
-              type="file"
-              accept="image/jpg, image/jpeg, image/png"
-              name="coverImage"
-              id="coverImage"
-              ref={(el) => { fileInputRefs.current.coverImage = el; }}
-              onChange={(e) => handleImageChange(e, 'coverImage')}
-            />
-          </div>
-
-          {/* Still 1 */}
-          <div className={fieldWrapperClass}>
-            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Still 1 (optional, max 7MB)</label>
-            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden relative">
-              {loading.still1 ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                  <span className="text-gray-500 text-xs">Loading...</span>
-                </div>
-              ) : errors.still1 ? (
-                <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">X</span>
-                  <span className="text-red-500 text-xs">{errors.still1}</span>
-                </div>
-              ) : previews.still1 ? (
-                <>
-                  <img 
-                    src={previews.still1} 
-                    alt="Still 1 preview" 
-                    className="w-full h-full object-contain"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage('still1')}
-                    className="absolute top-2 right-2 bg-rose-500/80 hover:bg-rose-600 rounded-full p-2 transition-colors"
-                    aria-label="Remove still 1"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <span className="text-gray-500 text-xs">Preview</span>
-              )}
-            </div>
-            <input 
-              className={fileInputClass}
-              type="file"
-              accept="image/jpeg, image/jpg, image/png"
-              name="still1"
-              id="still1"
-              ref={(el) => { fileInputRefs.current.still1 = el; }}
-              onChange={(e) => handleImageChange(e, 'still1')}
-            />
-          </div>
-          
-          {/* Still 2 */}
-          <div className={fieldWrapperClass}>
-            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Still 2 (optional, max 7MB)</label>
-            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden relative">
-              {loading.still2 ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                  <span className="text-gray-500 text-xs">Loading...</span>
-                </div>
-              ) : errors.still2 ? (
-                <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">X</span>
-                  <span className="text-red-500 text-xs">{errors.still2}</span>
-                </div>
-              ) : previews.still2 ? (
-                <>
-                  <img 
-                    src={previews.still2} 
-                    alt="Still 2 preview" 
-                    className="w-full h-full object-contain"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage('still2')}
-                    className="absolute top-2 right-2 bg-rose-500/80 hover:bg-rose-600 rounded-full p-2 transition-colors"
-                    aria-label="Remove still 2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <span className="text-gray-500 text-xs">Preview</span>
-              )}
-            </div>
-            <input 
-              className={fileInputClass}
-              type="file"
-              accept="image/jpeg, image/jpg, image/png"
-              name="still2"
-              id="still2"
-              ref={(el) => { fileInputRefs.current.still2 = el; }}
-              onChange={(e) => handleImageChange(e, 'still2')}
-            />
-          </div>
-          
-          {/* Still 3 */}
-          <div className={fieldWrapperClass}>
-            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">Still 3 (optional, max 7MB)</label>
-            <div className="border border-white/15 rounded-xl h-48 mb-2 flex items-center justify-center bg-[#0f0f14] overflow-hidden relative">
-              {loading.still3 ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                  <span className="text-gray-500 text-xs">Loading...</span>
-                </div>
-              ) : errors.still3 ? (
-                <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <span className="text-red-500 text-xl">X</span>
-                  <span className="text-red-500 text-xs">{errors.still3}</span>
-                </div>
-              ) : previews.still3 ? (
-                <>
-                  <img 
-                    src={previews.still3} 
-                    alt="Still 3 preview" 
-                    className="w-full h-full object-contain"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage('still3')}
-                    className="absolute top-2 right-2 bg-rose-500/80 hover:bg-rose-600 rounded-full p-2 transition-colors"
-                    aria-label="Remove still 3"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <span className="text-gray-500 text-xs">Preview</span>
-              )}
-            </div>
-            <input 
-              className={fileInputClass}
-              type="file"
-              accept="image/jpeg, image/jpg, image/png"
-              name="still3"
-              id="still3"
-              ref={(el) => { fileInputRefs.current.still3 = el; }}
-              onChange={(e) => handleImageChange(e, 'still3')}
-            />
-          </div>
-
-          {/* Subtitle Upload */}
-          <div className={fieldWrapperClass}>
-            <label className="block text-left text-xs text-gray-300 mb-1 ml-1">If there is voice or txt needing translation :
-              <br />Subtitle File (.srt, max 1MB)</label>
-            <input 
-              className={fileInputClass}
-              type="file"
-              accept=".srt"
-              name="subtitle"
-              id="subtitle"
-              onChange={handleFileChange}
-            />
-            {errors.subtitle && (
-              <p className="text-rose-400 text-xs mt-1 text-left">{errors.subtitle}</p>
+        {/* Newsletter */}
+        <label className="flex items-start gap-4 cursor-pointer group">
+          <input
+            type="checkbox"
+            name="newsletterSubscription"
+            id="newsletterSubscription"
+            checked={formData.newsletterSubscription || false}
+            onChange={handleChange}
+            className="sr-only"
+          />
+          <div className={`shrink-0 mt-0.5 w-5 h-5 rounded border transition-colors flex items-center justify-center ${
+            formData.newsletterSubscription ? 'bg-white border-white' : 'border-white/20 bg-white/[0.03] group-hover:border-white/40'
+          }`}>
+            {formData.newsletterSubscription && (
+              <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             )}
           </div>
-
-          {/* Copyright Section */}
-          <div className="w-full max-w-2xl mt-3">
-            <label className="flex items-center gap-2 mb-3 justify-center">
-              <input 
-                type="checkbox"
-                name="rightsAccepted"
-                id="rightsAccepted"
-                checked={formData.rightsAccepted}
-                onChange={handleChange}
-                className="w-4 h-4"
-              />
-              <span className="text-sm">Rights accepted*</span>
-            </label>
-            <div className="border border-rose-500/60 rounded-xl p-4 text-sm text-gray-300 bg-rose-500/10">
-              <p>
-                *By submitting this video, you confirm that you hold all necessary rights to the content provided and authorize MarsAI to broadcast,
-                reproduce, and use this video, in whole or in part, in its communications media, without limitation in terms of duration or territory.
-              </p>
-            </div>
+          <div>
+            <span className="text-sm text-white/60 group-hover:text-white/80 transition-colors">
+              S'inscrire à la newsletter Mars AI
+            </span>
+            <p className="text-[10px] text-white/25 mt-0.5">Vous pouvez vous désinscrire à tout moment</p>
           </div>
+        </label>
 
-          {/* Newsletter Subscription */}
-          <div className="w-full max-w-2xl mt-3">
-            <label className="flex items-center gap-2 mb-2 justify-center cursor-pointer">
-              <input 
-                type="checkbox"
-                name="newsletterSubscription"
-                id="newsletterSubscription"
-                checked={formData.newsletterSubscription || false}
-                onChange={handleChange}
-                className="w-4 h-4 cursor-pointer"
-              />
-              <span className="text-sm">Subscribe to our newsletter to stay updated on Mars AI news</span>
-            </label>
-            <p className="text-xs text-gray-400 text-center">
-              You can unsubscribe at any time
-            </p>
+        {/* reCAPTCHA */}
+        <div className="flex flex-col items-start gap-2">
+          <div className="rounded-2xl overflow-hidden">
+            <ReCAPTCHA
+              sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
+              ref={captchaRef}
+              onChange={(token) => setRecaptchaToken(token)}
+              onExpired={() => setRecaptchaToken(null)}
+              theme="dark"
+            />
           </div>
+          {errors.recaptcha && <p className={errorClass}>{errors.recaptcha}</p>}
+        </div>
+      </div>
 
-          {/* reCaptcha */}
-          <div className="w-auto flex flex-col items-center">
-            <div className="w-[301px] h-[75.5px] overflow-hidden rounded shadow-md">
-              <ReCAPTCHA 
-                sitekey={import.meta.env.VITE_GOOGLE_RECAPTCHA_SITE_KEY}
-                ref={captchaRef}
-                onChange={(token) => setRecaptchaToken(token)}
-                onExpired={() => setRecaptchaToken(null)}
-                theme="dark"
-              />
-            </div>
-            {errors.recaptcha && (
-              <p className="text-rose-400 text-xs mt-1">{errors.recaptcha}</p>
-            )}
-          </div>
+      {/* Messages de statut */}
+      {submitSuccess && (
+        <div className="px-6 py-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm text-center" style={{ borderRadius: '16px' }}>
+          Votre vidéo a été soumise avec succès !
+          <br />
+          <span className="text-xs text-emerald-400/60">Redirection en cours...</span>
+        </div>
+      )}
+      {submitError && (
+        <p className="text-rose-400 text-sm text-center">{submitError}</p>
+      )}
 
-          {/* Messages de succès et d'erreur */}
-          {submitSuccess && (
-            <div className="w-60 mx-auto mb-3 p-3 bg-green-500/20 border border-green-500 rounded-xl text-green-400 text-sm text-center">
-              Your video has been successfully submitted!
-              <br />
-              <span className="text-xs">Redirecting...</span>
-            </div>
-          )}
-          
-          {submitError && (
-            <div className="w-60 mx-auto mb-3 p-3 bg-red-500/20 border border-red-500 rounded-xl text-red-400 text-sm text-center">
-              {submitError}
-            </div>
-          )}
+      {/* Boutons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button
+          type="button"
+          onClick={() => setEtape(2)}
+          disabled={isSubmitting}
+          className={secondaryButtonClass}
+          style={secondaryButtonStyle}
+        >
+          Retour
+        </button>
+        <button
+          type="submit"
+          disabled={!recaptchaToken || isSubmitting}
+          className={`flex-1 ${primaryButtonClass(!recaptchaToken || isSubmitting)}`}
+          style={primaryButtonStyle}
+        >
+          {isSubmitting ? (
+            <span className="flex items-center justify-center gap-3">
+              <span className="w-4 h-4 border-2 border-black/20 border-t-black/60 rounded-full animate-spin" />
+              Envoi en cours...
+            </span>
+          ) : 'Soumettre'}
+        </button>
+      </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 mt-4 p-1 place-self-center">
-            <button
-              type="button"
-              onClick={() => setEtape(2)}
-              disabled={isSubmitting}
-              className={`border rounded-xl p-2 px-8 transition-colors ${
-                isSubmitting 
-                  ? 'bg-white/10 cursor-not-allowed opacity-50 border-white/10' 
-                  : 'bg-white/5 hover:bg-white/10 border-white/15'
-              } text-sm font-medium`}>
-              Back
-            </button>
-            <button
-              type="submit"
-              disabled={!recaptchaToken || isSubmitting}
-              className={`border rounded-xl p-2 px-8 transition-colors ${
-                recaptchaToken && !isSubmitting
-                  ? 'bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 border-white/10 shadow-[0_8px_24px_rgba(168,85,247,0.35)]' 
-                  : 'bg-white/10 cursor-not-allowed opacity-50 border-white/10'
-              } text-sm font-semibold`}>
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Submitting...
-                </span>
-              ) : (
-                'Submit'
-              )}
-            </button>
-          </div>
-
-        </form>
-      </section>
-
-    </div>
+    </form>
   );
 };
 

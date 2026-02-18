@@ -1,19 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  
-  --color-mars-dark: #000000;
+  --font-sans: "Arimo", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-mars-dark: #050505;
   --color-mars-gray: #0A0A0A;
   --color-mars-light: #111111;
   --color-mars-primary: #8B5CF6;
   --color-mars-secondary: #EC4899;
   --color-mars-accent: #F59E0B;
+  --color-mars-blue: #2B7FFF;
+  --color-mars-blue-light: #51A2FF;
+  --color-mars-purple: #AD46FF;
+  --color-mars-pink: #FF2B7F;
+  --color-mars-gold: #FDC700;
 
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-  
-  --background-image-mars-gradient: linear-gradient(to right, #8B5CF6, #EC4899);
+  --shadow-glass: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+  /* CTA buttons: blue → purple */
+  --background-image-mars-gradient: linear-gradient(135deg, #2B7FFF 0%, #AD46FF 100%);
+  /* AI logo text: blue-light → purple → pink (vertical) */
+  --background-image-mars-gradient-v: linear-gradient(180deg, #51A2FF 0%, #AD46FF 50%, #FF2B7F 100%);
+  --background-image-mars-gradient-legacy: linear-gradient(to right, #8B5CF6, #EC4899);
 }
 
 :root {
@@ -34,7 +43,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--color-mars-dark);
+  background-color: #050505;
   overflow-x: hidden;
 }
 
@@ -61,31 +70,62 @@ body {
 
   .mars-button-primary {
     background-image: var(--background-image-mars-gradient);
-    padding: 0.625rem 1.5rem;
+    padding: 0.875rem 2rem;
     border-radius: 9999px;
     font-size: 0.875rem;
     font-weight: 700;
     letter-spacing: 0.1em;
+    text-transform: uppercase;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 30px rgba(81, 162, 255, 0.25);
+    color: #fff;
   }
 
   .mars-button-primary:hover {
     opacity: 0.9;
+    box-shadow: 0 0 40px rgba(81, 162, 255, 0.4);
   }
 
   .mars-button-outline {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.625rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.875rem 2rem;
     border-radius: 9999px;
     font-size: 0.875rem;
     font-weight: 500;
     letter-spacing: 0.1em;
+    text-transform: uppercase;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: rgba(255,255,255,0.8);
   }
 
   .mars-button-outline:hover {
     background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+  }
+
+  /* Used for "AI" in logo — vertical blue→purple→pink */
+  .mars-gradient-text {
+    background-image: var(--background-image-mars-gradient-v);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Used for stats, amounts — same horizontal CTA gradient */
+  .mars-gradient-text-h {
+    background-image: var(--background-image-mars-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .mars-section-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
   }
 }
 

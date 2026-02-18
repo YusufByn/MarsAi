@@ -51,8 +51,8 @@ const Footer = () => {
 
           {/* Brand Column */}
           <div className="flex flex-col gap-6 lg:col-span-2">
-            <Link to="/" className="text-2xl font-black tracking-tighter text-white">
-              mars<span className="mars-text-gradient">AI</span>
+            <Link to="/" className="text-2xl font-black tracking-tighter italic text-white">
+              mars<span className="mars-gradient-text" style={{ display: 'inline-block', paddingRight: '3px' }}>AI</span>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
               {t('footer.description')}
@@ -75,7 +75,8 @@ const Footer = () => {
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="bg-gradient-to-r from-mars-primary to-mars-secondary px-5 py-2.5 rounded-lg text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg, #51A2FF, #AD46FF, #FF2B7F)' }}
                 >
                   {status === 'loading' ? t('footer.sending') : t('footer.subscribe')}
                 </button>

@@ -8,6 +8,11 @@ import { validateGender, validateFirstName, validateLastName, validateEmail, val
 import ParticipationContributorsData from './ParticipationContributorsData';
 import ParticipationSocialNetworks from './ParticipationSocialNetworks';
 import { createPortal } from 'react-dom';
+import {
+  SectionHeading, labelClass, inputClass, inputBg, inputStyle,
+  errorClass, selectStyles, primaryButtonClass, primaryButtonStyle,
+  secondaryButtonClass, secondaryButtonStyle,
+} from './formStyles';
 
 // Modal des contributeurs (en dehors du composant pour éviter les re-créations)
 const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsData, onSave }) => {
@@ -165,10 +170,7 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     other: '',
   });
   const [isSocialNetworksModalOpen, setIsSocialNetworksModalOpen] = useState(false);
-  const inputBaseClass = 'bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-sm text-white transition-colors';
-  const inputBorderClass = (hasError) => hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
-  const fieldWrapperClass = 'w-full max-w-md';
-  const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
+  const fieldWrapperClass = 'w-full space-y-0';
   const emptyAddressParts = {
     street: '',
     street2: '',
@@ -635,434 +637,335 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
   const addressParts = getAddressParts();
 
+  // Shared select style for native <select>
+  const nativeSelectClass = (hasError) =>
+    `w-full h-[66px] px-8 text-base text-white bg-white/[0.03] border focus:outline-none transition-colors appearance-none cursor-pointer ${
+      hasError ? 'border-rose-500' : 'border-white/10 focus:border-white/25'
+    }`;
+
   return (
-    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
-      <h2 className="text-2xl font-semibold tracking-tight">Personnal Data</h2>
-      <p className="text-xs text-gray-400 mt-1">Step 1 - Tell us about yourself</p>
-      
-      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
-        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
-          1
+    <form onSubmit={handleSubmit} method="post" className="space-y-16">
+
+      {/* ── Section 1: Identité du réalisateur ── */}
+      <div className="space-y-8">
+        <SectionHeading>Identité du réalisateur</SectionHeading>
+
+        {/* Gender */}
+        <div className={fieldWrapperClass}>
+          <label htmlFor="gender" className={labelClass}>
+            Genre <span className="text-rose-500">*</span>
+          </label>
+          <select
+            name="gender" id="gender"
+            value={formData.gender} onChange={handleChange}
+            className={nativeSelectClass(errors.gender)}
+            style={inputStyle}
+          >
+            <option value="">Sélectionner</option>
+            <option value="women">Femme</option>
+            <option value="man">Homme</option>
+            <option value="other">Autre</option>
+          </select>
+          {errors.gender && <p className={errorClass}>{errors.gender}</p>}
         </div>
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          2
+
+        {/* First + Last name */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className={fieldWrapperClass}>
+            <label htmlFor="firstName" className={labelClass}>Prénom <span className="text-rose-500">*</span></label>
+            <input
+              className={`${inputBg} ${inputClass(errors.firstName)}`}
+              style={inputStyle}
+              type="text" name="firstName" id="firstName"
+              value={formData.firstName} onChange={handleChange}
+              placeholder="Prénom"
+            />
+            {errors.firstName && <p className={errorClass}>{errors.firstName}</p>}
+          </div>
+          <div className={fieldWrapperClass}>
+            <label htmlFor="lastName" className={labelClass}>Nom <span className="text-rose-500">*</span></label>
+            <input
+              className={`${inputBg} ${inputClass(errors.lastName)}`}
+              style={inputStyle}
+              type="text" name="lastName" id="lastName"
+              value={formData.lastName} onChange={handleChange}
+              placeholder="Nom de famille"
+            />
+            {errors.lastName && <p className={errorClass}>{errors.lastName}</p>}
+          </div>
         </div>
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          3
+
+        {/* Email */}
+        <div className={fieldWrapperClass}>
+          <label htmlFor="email" className={labelClass}>Email <span className="text-rose-500">*</span></label>
+          <input
+            className={`${inputBg} ${inputClass(errors.email)}`}
+            style={inputStyle}
+            type="email" name="email" id="email"
+            value={formData.email} onChange={handleChange}
+            placeholder="nom@exemple.com"
+          />
+          {errors.email && <p className={errorClass}>{errors.email}</p>}
+        </div>
+
+        {/* Country */}
+        <div className={fieldWrapperClass}>
+          <label htmlFor="country" className={labelClass}>Pays <span className="text-rose-500">*</span></label>
+          <Select
+            inputId="country" name="country"
+            options={countryOptions}
+            value={countryOptions.find((option) => option.label === formData.country) || null}
+            onChange={handleCountrySelect}
+            isSearchable filterOption={customCountryFilter}
+            formatOptionLabel={formatCountryOption}
+            placeholder="Sélectionner un pays"
+            styles={selectStyles(errors.country)}
+          />
+          {errors.country && <p className={errorClass}>{errors.country}</p>}
         </div>
       </div>
 
-      <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
+      {/* ── Section 2: Coordonnées ── */}
+      <div className="space-y-8">
+        <SectionHeading>Coordonnées</SectionHeading>
 
-          {/* Civility */}
+        {/* Phones */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className={fieldWrapperClass}>
-            <label htmlFor="gender" className={labelClass}>
-              Gender <span className="text-red-500">*</span>
-            </label>
-            <select 
-              name="gender"
-              id="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className={`${inputBaseClass} ${inputBorderClass(errors.gender)}`}
-            >
-              <option value="">Select your gender</option>
-              <option value="women">Women</option>
-              <option value="man">Man</option>
-              <option value="other">Other</option>
-            </select>
-            {errors.gender && <p className="text-rose-400 text-xs mt-1 text-left">{errors.gender}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="firstName" className={labelClass}>
-              First Name <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.firstName)}`}
-              type="text"
-              name="firstName"
-              id="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="First Name"
-            />
-            {errors.firstName && <p className="text-rose-400 text-xs mt-1 text-left">{errors.firstName}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="lastName" className={labelClass}>
-              Last Name <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.lastName)}`}
-              type="text"
-              name="lastName"
-              id="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Last Name"
-            />
-            {errors.lastName && <p className="text-rose-400 text-xs mt-1 text-left">{errors.lastName}</p>}
-          </div>
-
-          {/* Email */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="email" className={labelClass}>
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.email)}`}
-              type="email"
-              name="email"
-              id="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="email"
-            />
-            {errors.email && <p className="text-rose-400 text-xs mt-1 text-left">{errors.email}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="country" className={labelClass}>
-              Country <span className="text-red-500">*</span>
-            </label>
-            <Select
-              inputId="country"
-              name="country"
-              options={countryOptions}
-              value={countryOptions.find((option) => option.label === formData.country) || null}
-              onChange={handleCountrySelect}
-              isSearchable
-              filterOption={customCountryFilter}
-              formatOptionLabel={formatCountryOption}
-              placeholder="Country"
-              className="text-sm"
-              styles={{
-                control: (base, state) => ({
-                  ...base,
-                  minHeight: '42px',
-                  borderRadius: '0.75rem',
-                  backgroundColor: '#0f0f14',
-                  borderColor: errors.country
-                    ? '#f43f5e'
-                    : state.isFocused
-                      ? 'rgba(217, 70, 239, 0.7)'
-                      : 'rgba(255, 255, 255, 0.15)',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    borderColor: errors.country ? '#f43f5e' : 'rgba(217, 70, 239, 0.7)',
-                  },
-                }),
-                menu: (base) => ({
-                  ...base,
-                  backgroundColor: '#0f0f14',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isFocused ? 'rgba(168, 85, 247, 0.22)' : '#0f0f14',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                }),
-                singleValue: (base) => ({
-                  ...base,
-                  color: '#ffffff',
-                }),
-                input: (base) => ({
-                  ...base,
-                  color: '#ffffff',
-                }),
-                placeholder: (base) => ({
-                  ...base,
-                  color: '#9ca3af',
-                }),
-              }}
-            />
-            {errors.country && <p className="text-rose-400 text-xs mt-1 text-left">{errors.country}</p>}
-          </div>
-
-          {/* Phones */}
-          <div className={fieldWrapperClass}>
-            <label className={labelClass}>
-              Phone Number
-            </label>
+            <label className={labelClass}>Téléphone</label>
             <PhoneInput
-              international
-              defaultCountry={selectedPhoneCountry}
+              international defaultCountry={selectedPhoneCountry}
               value={formData.phoneNumber}
               onChange={(value) => handlePhoneChange('phoneNumber', value)}
-              className={`${inputBaseClass} ${inputBorderClass(errors.phoneNumber)}`}
-              placeholder="Phone Number"
+              className={`${inputBg} ${inputClass(errors.phoneNumber)}`}
+              style={inputStyle}
+              placeholder="Téléphone"
             />
-            {errors.phoneNumber && <p className="text-rose-400 text-xs mt-1 text-left">{errors.phoneNumber}</p>}
+            {errors.phoneNumber && <p className={errorClass}>{errors.phoneNumber}</p>}
           </div>
-          
           <div className={fieldWrapperClass}>
-            <label className={labelClass}>
-              Mobile Number <span className="text-red-500">*</span>
-            </label>
+            <label className={labelClass}>Mobile <span className="text-rose-500">*</span></label>
             <PhoneInput
-              international
-              defaultCountry={selectedPhoneCountry}
+              international defaultCountry={selectedPhoneCountry}
               value={formData.mobileNumber}
               onChange={(value) => handlePhoneChange('mobileNumber', value)}
-              className={`${inputBaseClass} ${inputBorderClass(errors.mobileNumber)}`}
-              placeholder="Mobile Number"
+              className={`${inputBg} ${inputClass(errors.mobileNumber)}`}
+              style={inputStyle}
+              placeholder="Mobile"
             />
-            {errors.mobileNumber && <p className="text-rose-400 text-xs mt-1 text-left">{errors.mobileNumber}</p>}
+            {errors.mobileNumber && <p className={errorClass}>{errors.mobileNumber}</p>}
           </div>
+        </div>
 
-          {/* Address */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="street" className={labelClass}>
-              Street
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.street'])}`}
-              type="text"
-              name="street"
-              id="street"
-              value={addressParts.street}
-              onChange={(e) => handleAddressPartChange('street', e.target.value)}
-              placeholder="Street"
-            />
-            {errors['addressParts.street'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.street']}</p>}
-          </div>
+        {/* Address */}
+        <div className={fieldWrapperClass}>
+          <label htmlFor="street" className={labelClass}>Rue</label>
+          <input
+            className={`${inputBg} ${inputClass(errors['addressParts.street'])}`}
+            style={inputStyle}
+            type="text" name="street" id="street"
+            value={addressParts.street}
+            onChange={(e) => handleAddressPartChange('street', e.target.value)}
+            placeholder="Numéro et nom de rue"
+          />
+          {errors['addressParts.street'] && <p className={errorClass}>{errors['addressParts.street']}</p>}
+        </div>
 
-          <div className={fieldWrapperClass}>
-            <label htmlFor="street2" className={labelClass}>
-              Street 2
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.street2'])}`}
-              type="text"
-              name="street2"
-              id="street2"
-              value={addressParts.street2}
-              onChange={(e) => handleAddressPartChange('street2', e.target.value)}
-              placeholder="Street 2"
-            />
-            {errors['addressParts.street2'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.street2']}</p>}
-          </div>
+        <div className={fieldWrapperClass}>
+          <label htmlFor="street2" className={labelClass}>Complément d'adresse</label>
+          <input
+            className={`${inputBg} ${inputClass(errors['addressParts.street2'])}`}
+            style={inputStyle}
+            type="text" name="street2" id="street2"
+            value={addressParts.street2}
+            onChange={(e) => handleAddressPartChange('street2', e.target.value)}
+            placeholder="Appartement, bâtiment..."
+          />
+          {errors['addressParts.street2'] && <p className={errorClass}>{errors['addressParts.street2']}</p>}
+        </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className={fieldWrapperClass}>
-            <label htmlFor="zipcode" className={labelClass}>
-              Zip Code <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.zipcode'])}`}
-              type="text"
-              name="zipcode"
-              id="zipcode"
+            <label htmlFor="zipcode" className={labelClass}>Code postal <span className="text-rose-500">*</span></label>
+            <input
+              className={`${inputBg} ${inputClass(errors['addressParts.zipcode'])}`}
+              style={inputStyle}
+              type="text" name="zipcode" id="zipcode"
               value={addressParts.zipcode}
               onChange={(e) => handleAddressPartChange('zipcode', e.target.value)}
-              placeholder="Zip Code"
+              placeholder="Code postal"
             />
-            {errors['addressParts.zipcode'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.zipcode']}</p>}
+            {errors['addressParts.zipcode'] && <p className={errorClass}>{errors['addressParts.zipcode']}</p>}
           </div>
-
           <div className={fieldWrapperClass}>
-            <label htmlFor="city" className={labelClass}>
-              City
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.city'])}`}
-              type="text"
-              name="city"
-              id="city"
+            <label htmlFor="city" className={labelClass}>Ville</label>
+            <input
+              className={`${inputBg} ${inputClass(errors['addressParts.city'])}`}
+              style={inputStyle}
+              type="text" name="city" id="city"
               value={addressParts.city}
               onChange={(e) => handleAddressPartChange('city', e.target.value)}
-              placeholder="City"
+              placeholder="Ville"
             />
-            {errors['addressParts.city'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.city']}</p>}
+            {errors['addressParts.city'] && <p className={errorClass}>{errors['addressParts.city']}</p>}
           </div>
-
           <div className={fieldWrapperClass}>
-            <label htmlFor="stateRegion" className={labelClass}>
-              State / Region
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.stateRegion'])}`}
-              type="text"
-              name="stateRegion"
-              id="stateRegion"
+            <label htmlFor="stateRegion" className={labelClass}>Région</label>
+            <input
+              className={`${inputBg} ${inputClass(errors['addressParts.stateRegion'])}`}
+              style={inputStyle}
+              type="text" name="stateRegion" id="stateRegion"
               value={addressParts.stateRegion}
               onChange={(e) => handleAddressPartChange('stateRegion', e.target.value)}
-              placeholder="State / Region"
+              placeholder="Région / État"
             />
-            {errors['addressParts.stateRegion'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.stateRegion']}</p>}
+            {errors['addressParts.stateRegion'] && <p className={errorClass}>{errors['addressParts.stateRegion']}</p>}
           </div>
+        </div>
 
-          <div className={fieldWrapperClass}>
-            <label htmlFor="countryAddress" className={labelClass}>
-              Country
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.country'])}`}
-              type="text"
-              name="countryAddress"
-              id="countryAddress"
-              value={addressParts.country}
-              onChange={(e) => handleAddressPartChange('country', e.target.value)}
-              placeholder={isAddressCountryAutoFilled ? 'Auto-filled from country field' : 'Country'}
-            />
-            {errors['addressParts.country'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.country']}</p>}
-          </div>
+        <div className={fieldWrapperClass}>
+          <label htmlFor="countryAddress" className={labelClass}>Pays (adresse)</label>
+          <input
+            className={`${inputBg} ${inputClass(errors['addressParts.country'])}`}
+            style={inputStyle}
+            type="text" name="countryAddress" id="countryAddress"
+            value={addressParts.country}
+            onChange={(e) => handleAddressPartChange('country', e.target.value)}
+            placeholder={isAddressCountryAutoFilled ? 'Rempli automatiquement' : 'Pays'}
+          />
+          {errors['addressParts.country'] && <p className={errorClass}>{errors['addressParts.country']}</p>}
+        </div>
+      </div>
 
-          {/* Acquisition source */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="acquisitionSource" className={labelClass}>
-              How did you hear about us? <span className="text-red-500">*</span>
-            </label>
-            <select
-              className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSource)}`}
-              name="acquisitionSource"
-              id="acquisitionSource"
-              value={acquisitionMainValue}
-              onChange={handleAcquisitionMainChange}
-            >
-              <option value="">Select an option</option>
-              <option value="social_networks">Social networks</option>
-              <option value="word_of_mouth">Word of mouth</option>
-              <option value="mobile_film_festival">Mobile Film Festival</option>
-              <option value="search_engine">Search engine</option>
-              <option value="other">Other</option>
-            </select>
-            {errors.acquisitionSource && <p className="text-rose-400 text-xs mt-1 text-left">{errors.acquisitionSource}</p>}
+      {/* ── Section 3: Options ── */}
+      <div className="space-y-8">
+        <SectionHeading>Options</SectionHeading>
 
-            {acquisitionMainValue === 'social_networks' && (
-              <div className="mt-2">
-                <select
-                  className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSource)}`}
-                  name="acquisitionSourceSocial"
-                  id="acquisitionSourceSocial"
-                  value={acquisitionSocialValue}
-                  onChange={handleAcquisitionSocialChange}
-                >
-                  <option value="">Select a social network</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="youtube">YouTube</option>
-                  <option value="facebook">Facebook</option>
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="x">X</option>
-                </select>
-              </div>
-            )}
-
-            {acquisitionMainValue === 'other' && (
-              <div className="mt-2">
-                <input
-                  className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSourceOther)}`}
-                  type="text"
-                  name="acquisitionSourceOther"
-                  id="acquisitionSourceOther"
-                  value={acquisitionOtherValue}
-                  onChange={handleAcquisitionOtherChange}
-                  placeholder="Please specify"
-                />
-                {errors.acquisitionSourceOther && (
-                  <p className="text-rose-400 text-xs mt-1 text-left">{errors.acquisitionSourceOther}</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label className="flex items-center gap-2">
-              <input 
-                className={`bg-[#0f0f14] border rounded p-2 ${errors.ageVerificator ? 'border-rose-500' : 'border-white/10'}`}
-                type="checkbox"
-                name="ageVerificator"
-                id="ageVerificator"
-                checked={formData.ageVerificator}
-                onChange={handleChange}
-              />
-              <span className="text-sm">Are you 18 years old or older? <span className="text-red-500">*</span></span>
-            </label>
-            {errors.ageVerificator && <p className="text-rose-400 text-xs mt-1 text-left">{errors.ageVerificator}</p>}
-          </div>
-          
-          <span className="text-sm text-gray-300">Do you have contributors ?</span>
-          <div className={fieldWrapperClass}>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="withContributors"
-                id="withContributors"
-                checked={formData.withContributors || false}
-                onChange={(e) => {
-                  handleChange(e);
-                  if (e.target.checked) {
-                    setIsModalOpen(true);
-                  }
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fuchsia-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-violet-600 peer-checked:to-fuchsia-600"></div>
-            </label>
-          </div>
-          <span className="text-sm text-gray-300">Do you have social networks ?</span>
-          <div className={fieldWrapperClass}>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="withSocialNetworks"
-                id="withSocialNetworks"
-                checked={formData.withSocialNetworks || false}
-                onChange={(e) => {
-                  handleChange(e);
-                  if (e.target.checked) {
-                    setIsSocialNetworksModalOpen(true);
-                  }
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fuchsia-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-violet-600 peer-checked:to-fuchsia-600"></div>
-            </label>
-          </div>
-
-          {/* Message d'erreur général */}
-          {submitError && (
-            <div className="w-full max-w-md text-rose-400 text-xs text-center">
-              {submitError}
+        {/* Acquisition source */}
+        <div className={fieldWrapperClass}>
+          <label htmlFor="acquisitionSource" className={labelClass}>
+            Comment avez-vous entendu parler de nous ? <span className="text-rose-500">*</span>
+          </label>
+          <select
+            className={nativeSelectClass(errors.acquisitionSource)}
+            style={inputStyle}
+            name="acquisitionSource" id="acquisitionSource"
+            value={acquisitionMainValue} onChange={handleAcquisitionMainChange}
+          >
+            <option value="">Sélectionner</option>
+            <option value="social_networks">Réseaux sociaux</option>
+            <option value="word_of_mouth">Bouche à oreille</option>
+            <option value="mobile_film_festival">Mobile Film Festival</option>
+            <option value="search_engine">Moteur de recherche</option>
+            <option value="other">Autre</option>
+          </select>
+          {errors.acquisitionSource && <p className={errorClass}>{errors.acquisitionSource}</p>}
+          {acquisitionMainValue === 'social_networks' && (
+            <div className="mt-4">
+              <select
+                className={nativeSelectClass(errors.acquisitionSource)}
+                style={inputStyle}
+                name="acquisitionSourceSocial" id="acquisitionSourceSocial"
+                value={acquisitionSocialValue} onChange={handleAcquisitionSocialChange}
+              >
+                <option value="">Choisir un réseau</option>
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="youtube">YouTube</option>
+                <option value="facebook">Facebook</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="x">X</option>
+              </select>
             </div>
           )}
+          {acquisitionMainValue === 'other' && (
+            <div className="mt-4">
+              <input
+                className={`${inputBg} ${inputClass(errors.acquisitionSourceOther)}`}
+                style={inputStyle}
+                type="text" name="acquisitionSourceOther" id="acquisitionSourceOther"
+                value={acquisitionOtherValue} onChange={handleAcquisitionOtherChange}
+                placeholder="Préciser..."
+              />
+              {errors.acquisitionSourceOther && <p className={errorClass}>{errors.acquisitionSourceOther}</p>}
+            </div>
+          )}
+        </div>
 
-          {/* Button */}
-          <div className="mt-4 p-1 place-self-centered">
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-linear-to-r from-violet-600 to-fuchsia-600 border border-white/10 rounded-xl px-7 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-fuchsia-500 shadow-[0_8px_24px_rgba(168,85,247,0.35)] transition-all">
-              {isSubmitting ? 'Loading...' : 'Next'}
-            </button>
-          </div>
+        {/* Age + Contributors + Social toggles */}
+        <div className="space-y-5">
+          {/* Age */}
+          <label className="flex items-center gap-4 cursor-pointer group">
+            <input
+              type="checkbox" name="ageVerificator" id="ageVerificator"
+              checked={formData.ageVerificator} onChange={handleChange}
+              className="sr-only peer"
+            />
+            <div className="w-10 h-6 rounded-full border border-white/10 bg-white/5 relative transition-colors peer-checked:bg-[#51A2FF]/20 peer-checked:border-[#51A2FF]/40 shrink-0">
+              <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white/30 transition-transform peer-checked:translate-x-4 group-has-[:checked]:translate-x-4" />
+            </div>
+            <span className="text-sm text-white/60 group-hover:text-white transition-colors">
+              J'ai 18 ans ou plus <span className="text-rose-500">*</span>
+            </span>
+          </label>
+          {errors.ageVerificator && <p className={errorClass}>{errors.ageVerificator}</p>}
 
-        </form>
-      </section>
+          {/* Contributors */}
+          <label className="flex items-center gap-4 cursor-pointer group">
+            <input
+              type="checkbox" name="withContributors" id="withContributors"
+              checked={formData.withContributors || false}
+              onChange={(e) => { handleChange(e); if (e.target.checked) setIsModalOpen(true); }}
+              className="sr-only peer"
+            />
+            <div className="w-10 h-6 rounded-full border border-white/10 bg-white/5 relative transition-colors peer-checked:bg-[#51A2FF]/20 peer-checked:border-[#51A2FF]/40 shrink-0">
+              <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white/30 transition-transform group-has-[:checked]:translate-x-4" />
+            </div>
+            <span className="text-sm text-white/60 group-hover:text-white transition-colors">J'ai des contributeurs</span>
+          </label>
 
-      {/* Modal des contributeurs */}
-      <ContributorsModal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseContributorsModal}
-        contributorsData={contributorsData}
-        setContributorsData={setContributorsData}
+          {/* Social networks */}
+          <label className="flex items-center gap-4 cursor-pointer group">
+            <input
+              type="checkbox" name="withSocialNetworks" id="withSocialNetworks"
+              checked={formData.withSocialNetworks || false}
+              onChange={(e) => { handleChange(e); if (e.target.checked) setIsSocialNetworksModalOpen(true); }}
+              className="sr-only peer"
+            />
+            <div className="w-10 h-6 rounded-full border border-white/10 bg-white/5 relative transition-colors peer-checked:bg-[#51A2FF]/20 peer-checked:border-[#51A2FF]/40 shrink-0">
+              <div className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white/30 transition-transform group-has-[:checked]:translate-x-4" />
+            </div>
+            <span className="text-sm text-white/60 group-hover:text-white transition-colors">J'ai des réseaux sociaux</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Error + Submit */}
+      {submitError && (
+        <p className="text-rose-400 text-sm text-center">{submitError}</p>
+      )}
+
+      <button
+        type="submit" disabled={isSubmitting}
+        className={primaryButtonClass(isSubmitting)}
+        style={primaryButtonStyle}
+      >
+        {isSubmitting ? 'Chargement...' : 'Étape suivante'}
+      </button>
+
+      {/* Modals */}
+      <ContributorsModal
+        isOpen={isModalOpen} onClose={handleCloseContributorsModal}
+        contributorsData={contributorsData} setContributorsData={setContributorsData}
         onSave={handleSaveContributor}
       />
-      {/* Modal des réseaux sociaux */}
-      <SocialNetworksModal 
-        isOpen={isSocialNetworksModalOpen}
-        onClose={handleCloseSocialNetworksModal}
+      <SocialNetworksModal
+        isOpen={isSocialNetworksModalOpen} onClose={handleCloseSocialNetworksModal}
         realisatorSocialNetworks={realisatorSocialNetworks}
         setRealisatorSocialNetworks={setRealisatorSocialNetworks}
         onSave={handleSaveSocialNetworks}
       />
-
-    </div>
+    </form>
   );
 };
 

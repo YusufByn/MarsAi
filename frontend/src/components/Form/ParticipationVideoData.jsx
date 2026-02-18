@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { validateTitle, validateTitleEN, validateLanguage, validateSynopsis, validateSynopsisEN, validateTechResume, validateCreativeResume, validateClassification, validateTags } from '../../services/formService';
 import { normalizeText } from '../../../../shared/validators/video.rules.js';
 import TagInput from './TagInput';
+import {
+  SectionHeading, labelClass, inputClass, inputBg, inputStyle,
+  textareaClass, textareaStyle, errorClass,
+  primaryButtonClass, primaryButtonStyle, secondaryButtonClass, secondaryButtonStyle,
+} from './formStyles';
 
 const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataProp}) => {
   const [errors, setErrors] = useState({});
@@ -170,224 +175,140 @@ const ParticipationVideoData = ({setEtape, formData, setFormData: setFormDataPro
   };
 
   return (
-    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
-      <h2 className="text-2xl font-semibold tracking-tight">Video Data</h2>
-      <p className="text-xs text-gray-400 mt-1">Step 2 - Describe your project</p>
-      
-      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          1
+    <form onSubmit={handleSubmit} method="post" className="space-y-16">
+
+      {/* ── Section 1: Identité de l'œuvre ── */}
+      <div className="space-y-8">
+        <SectionHeading>Identité de l'œuvre</SectionHeading>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="titleEN" className={labelClass}>Titre EN <span className="text-rose-500">*</span></label>
+            <input
+              className={`${inputBg} ${inputClass(errors.titleEN)}`} style={inputStyle}
+              type="text" name="titleEN" id="titleEN"
+              value={formData.titleEN} onChange={handleChange} onBlur={handleBlur}
+              placeholder="TITLE IN ENGLISH..."
+            />
+            {errors.titleEN && <p className={errorClass}>{errors.titleEN}</p>}
+          </div>
+          <div>
+            <label htmlFor="title" className={labelClass}>Titre original</label>
+            <input
+              className={`${inputBg} ${inputClass(errors.title)}`} style={inputStyle}
+              type="text" name="title" id="title"
+              value={formData.title} onChange={handleChange} onBlur={handleBlur}
+              placeholder="NOM DE VOTRE ŒUVRE..."
+            />
+            {errors.title && <p className={errorClass}>{errors.title}</p>}
+          </div>
         </div>
-        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
-          2
+
+        <div>
+          <label htmlFor="language" className={labelClass}>Langue <span className="text-rose-500">*</span></label>
+          <input
+            className={`${inputBg} ${inputClass(errors.language)}`} style={inputStyle}
+            type="text" name="language" id="language"
+            value={formData.language} onChange={handleChange} onBlur={handleBlur}
+            placeholder="EX : FRANÇAIS, ANGLAIS..."
+          />
+          {errors.language && <p className={errorClass}>{errors.language}</p>}
         </div>
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          3
+
+        {/* Classification */}
+        <div>
+          <label className={labelClass}>Classification <span className="text-rose-500">*</span></label>
+          <div
+            className={`flex items-center gap-8 h-[66px] px-8 bg-white/[0.03] border transition-colors ${errors.classification ? 'border-rose-500' : 'border-white/10'}`}
+            style={inputStyle}
+          >
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="classification" value="hybrid"
+                checked={formData.classification === 'hybrid'} onChange={handleChange}
+                className="w-4 h-4 accent-[#51A2FF]" />
+              <span className="text-sm font-medium text-white/70">Hybride</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="classification" value="ia"
+                checked={formData.classification === 'ia'} onChange={handleChange}
+                className="w-4 h-4 accent-[#51A2FF]" />
+              <span className="text-sm font-medium text-white/70">Full IA</span>
+            </label>
+          </div>
+          {errors.classification && <p className={errorClass}>{errors.classification}</p>}
+        </div>
+
+        {/* Tags */}
+        <div>
+          <label className={labelClass}>Tags</label>
+          <TagInput value={formData.tags} onChange={handleTagsChange} error={errors.tags} />
         </div>
       </div>
 
-      <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
+      {/* ── Section 2: Vision Artistique ── */}
+      <div className="space-y-8">
+        <SectionHeading>Vision Artistique</SectionHeading>
 
-          {/* Title EN */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="titleEN" className={labelClass}>
-              Title EN <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={getFieldClass(formData.titleEN, errors.titleEN)}
-              type="text"
-              name="titleEN"
-              id="titleEN"
-              value={formData.titleEN}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Title EN"
-            />
-            {errors.titleEN && <p className="text-rose-400 text-xs mt-1 text-left">{errors.titleEN}</p>}
-          </div>
+        <div>
+          <label htmlFor="synopsisEN" className={labelClass}>Synopsis EN <span className="text-rose-500">*</span></label>
+          <textarea
+            className={`${inputBg} ${textareaClass(errors.synopsisEN)}`} style={textareaStyle}
+            name="synopsisEN" id="synopsisEN"
+            value={formData.synopsisEN} onChange={handleChange} onBlur={handleBlur}
+            placeholder="SYNOPSIS IN ENGLISH..."
+          />
+          {errors.synopsisEN && <p className={errorClass}>{errors.synopsisEN}</p>}
+        </div>
 
-          {/* Title */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="title" className={labelClass}>
-              Title
-            </label>
-            <input 
-              className={getFieldClass(formData.title, errors.title)}
-              type="text"
-              name="title"
-              id="title"
-              value={formData.title}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Title"
-            />
-            {errors.title && <p className="text-rose-400 text-xs mt-1 text-left">{errors.title}</p>}
-          </div>
+        <div>
+          <label htmlFor="synopsis" className={labelClass}>Synopsis original</label>
+          <textarea
+            className={`${inputBg} ${textareaClass(errors.synopsis)}`} style={textareaStyle}
+            name="synopsis" id="synopsis"
+            value={formData.synopsis} onChange={handleChange} onBlur={handleBlur}
+            placeholder="DÉCRIVEZ VOTRE HISTOIRE..."
+          />
+          {errors.synopsis && <p className={errorClass}>{errors.synopsis}</p>}
+        </div>
 
-          {/* Language */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="language" className={labelClass}>
-              Language <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={getFieldClass(formData.language, errors.language)}
-              type="text"
-              name="language"
-              id="language"
-              value={formData.language}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Language"
-            />
-            {errors.language && <p className="text-rose-400 text-xs mt-1 text-left">{errors.language}</p>}
-          </div>
+        <div>
+          <label htmlFor="techResume" className={labelClass}>Résumé technique <span className="text-rose-500">*</span></label>
+          <textarea
+            className={`${inputBg} ${textareaClass(errors.techResume)}`} style={textareaStyle}
+            name="techResume" id="techResume"
+            value={formData.techResume} onChange={handleChange} onBlur={handleBlur}
+            placeholder="OUTILS, MODÈLES ET PIPELINE TECHNIQUE UTILISÉS..."
+          />
+          {errors.techResume && <p className={errorClass}>{errors.techResume}</p>}
+        </div>
 
-          {/* Synopsis EN */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="synopsisEN" className={labelClass}>
-              Synopsis EN <span className="text-red-500">*</span>
-            </label>
-            <textarea 
-              className={getFieldClass(formData.synopsisEN, errors.synopsisEN, true)}
-              name="synopsisEN"
-              id="synopsisEN"
-              value={formData.synopsisEN}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Synopsis EN"
-              rows="4"
-            />
-            {errors.synopsisEN && <p className="text-rose-400 text-xs mt-1 text-left">{errors.synopsisEN}</p>}
-          </div>
+        <div>
+          <label htmlFor="creativeResume" className={labelClass}>Manifeste créatif <span className="text-rose-500">*</span></label>
+          <textarea
+            className={`${inputBg} ${textareaClass(errors.creativeResume)}`} style={textareaStyle}
+            name="creativeResume" id="creativeResume"
+            value={formData.creativeResume} onChange={handleChange} onBlur={handleBlur}
+            placeholder="DÉCRIVEZ VOTRE VISION ET LE MESSAGE DE L'ŒUVRE..."
+          />
+          {errors.creativeResume && <p className={errorClass}>{errors.creativeResume}</p>}
+        </div>
+      </div>
 
-          {/* Synopsis */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="synopsis" className={labelClass}>
-              Synopsis
-            </label>
-            <textarea 
-              className={getFieldClass(formData.synopsis, errors.synopsis, true)}
-              name="synopsis"
-              id="synopsis"
-              value={formData.synopsis}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Synopsis"
-              rows="4"
-            />
-            {errors.synopsis && <p className="text-rose-400 text-xs mt-1 text-left">{errors.synopsis}</p>}
-          </div>
+      {submitError && <p className="text-rose-400 text-sm text-center">{submitError}</p>}
 
-          {/* Tech Resume */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="techResume" className={labelClass}>
-              Technical Resume <span className="text-red-500">*</span>
-            </label>
-            <textarea 
-              className={getFieldClass(formData.techResume, errors.techResume, true)}
-              name="techResume"
-              id="techResume"
-              value={formData.techResume}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Technical Resume"
-              rows="4"
-            />
-            {errors.techResume && <p className="text-rose-400 text-xs mt-1 text-left">{errors.techResume}</p>}
-          </div>
+      {/* Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button type="button" onClick={() => setEtape(1)}
+          className={secondaryButtonClass} style={secondaryButtonStyle}>
+          Retour
+        </button>
+        <button type="submit" disabled={isSubmitting}
+          className={`flex-1 ${primaryButtonClass(isSubmitting)}`} style={primaryButtonStyle}>
+          {isSubmitting ? 'Chargement...' : 'Étape suivante'}
+        </button>
+      </div>
 
-          {/* Creative Resume */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="creativeResume" className={labelClass}>
-              Creative Resume <span className="text-red-500">*</span>
-            </label>
-            <textarea 
-              className={getFieldClass(formData.creativeResume, errors.creativeResume, true)}
-              name="creativeResume"
-              id="creativeResume"
-              value={formData.creativeResume}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Creative Resume"
-              rows="4"
-            />
-            {errors.creativeResume && <p className="text-rose-400 text-xs mt-1 text-left">{errors.creativeResume}</p>}
-          </div>
-
-          {/* Classification */}
-          <div className={fieldWrapperClass}>
-            <label className={labelClass}>
-              Classification <span className="text-red-500">*</span>
-            </label>
-            <div className={`flex items-center justify-center gap-6 p-3 rounded-xl border transition-colors ${
-              formData.classification ? 'bg-[#1c1c24]' : 'bg-[#0f0f14]'
-            } ${errors.classification ? 'border-rose-500' : 'border-white/15'}`}>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  className="w-4 h-4 accent-purple-500"
-                  type="radio"
-                  name="classification"
-                  value="hybrid"
-                  checked={formData.classification === 'hybrid'}
-                  onChange={handleChange}
-                />
-                <span className="text-sm">Hybrid</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  className="w-4 h-4 accent-purple-500"
-                  type="radio"
-                  name="classification"
-                  value="ia"
-                  checked={formData.classification === 'ia'}
-                  onChange={handleChange}
-                />
-                <span className="text-sm">Full AI</span>
-              </label>
-            </div>
-            {errors.classification && <p className="text-rose-400 text-xs mt-1 text-left">{errors.classification}</p>}
-          </div>
-
-          {/* Tags */}
-          <div className={fieldWrapperClass}>
-            <label className={labelClass}>
-              Tags
-            </label>
-            <TagInput
-              value={formData.tags}
-              onChange={handleTagsChange}
-              error={errors.tags}
-            />
-          </div>
-
-          {/* Message d'erreur général */}
-          {submitError && (
-            <div className="w-full max-w-md text-rose-400 text-xs text-center">
-              {submitError}
-            </div>
-          )}
-
-          {/* Buttons */}
-          <div className="flex gap-3 mt-4 p-1 place-self-center">
-            <button 
-              type="button"
-              onClick={() => setEtape(1)}
-              className="bg-white/5 hover:bg-white/10 border border-white/15 rounded-xl px-7 py-2.5 transition-colors text-sm font-medium">
-              Back
-            </button>
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-linear-to-r from-violet-600 to-fuchsia-600 border border-white/10 rounded-xl px-7 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-fuchsia-500 shadow-[0_8px_24px_rgba(168,85,247,0.35)] transition-all">
-              {isSubmitting ? 'Loading...' : 'Next'}
-            </button>
-          </div>
-
-        </form>
-      </section>
-
-    </div>
+    </form>
   );
 };
 
