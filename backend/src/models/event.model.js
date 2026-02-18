@@ -31,9 +31,29 @@ export const EventModel = {
         `;
         
         const [result] = await pool.execute(query, [
-            title, description, date, duration, stock, illustration, location, created_by
+            title, 
+            description, 
+            date, 
+            duration, 
+            stock, 
+            illustration, 
+            location, 
+            created_by // Assure-toi que c'est un ID utilisateur valide
         ]);
         return result.insertId;
+    },
+
+    async update(id, data) {
+        const { title, description, date, duration, stock, illustration, location } = data;
+        const query = `
+            UPDATE event 
+            SET title=?, description=?, date=?, duration=?, stock=?, illustration=?, location=?
+            WHERE id=?
+        `;
+        const [result] = await pool.execute(query, [
+            title, description, date, duration, stock, illustration, location, id
+        ]);
+        return result.affectedRows > 0;
     },
 
     async delete(id) {
