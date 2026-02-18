@@ -14,8 +14,13 @@ router.use(checkAuth);
 router.use(restrictTo('superadmin'));
 
 router.post('/admin/all', sponsorsController.getAllAdmin);
+router.post('/admin/sections', sponsorsController.getSections);
+router.post('/admin/sections/order', sponsorsController.moveSection);
+router.post('/admin/sections/rename', sponsorsController.renameSection);
+router.post('/admin/sections/delete', sponsorsController.deleteSection);
 router.post('/', uploadSponsorCover, sponsorsController.create);
 router.put('/:id', uploadSponsorCover, sponsorsController.update);
+router.post('/:id/order', sponsorsController.moveOrder);
 router.post('/:id/visibility', sponsorsController.setVisibility);
 router.delete('/:id', sponsorsController.delete);
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import SponsorsTemplate from './sponsorsOption/SponsorsTemplate';
 import { API_URL } from '../../config';
 
@@ -26,6 +26,18 @@ function Sponsors() {
         fetchSponsors();
     }, []);
 
+    const groupedSponsors = useMemo(() => {
+        const groups = {};
+        sponsors.forEach((sponsor) => {
+            const section = sponsor.section?.trim() || 'general';
+            if (!groups[section]) {
+                groups[section] = [];
+            }
+            groups[section].push(sponsor);
+        });
+        return Object.entries(groups);
+    }, [sponsors]);
+
     if (loading) {
         return <section className="py-6 text-center text-white/60">Chargement des sponsors...</section>;
     }
@@ -35,14 +47,21 @@ function Sponsors() {
     }
 
     return (
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {sponsors.map((sponsor) => (
-                <SponsorsTemplate
-                    key={sponsor.id}
-                    {...sponsor}
-                />
+        <div className="space-y-10">
+            {groupedSponsors.map(([section, sectionSponsors]) => (
+                <section key={section} className="space-y-4">
+                    <h1 className="text-2xl font-bold text-white capitalize">{section}</h1>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {sectionSponsors.map((sponsor) => (
+                            <SponsorsTemplate
+                                key={sponsor.id}
+                                {...sponsor}
+                            />
+                        ))}
+                    </div>
+                </section>
             ))}
-        </section>
+        </div>
     );
 }
 
