@@ -34,7 +34,9 @@ function Sponsors() {
             if (!groups[key]) {
                 groups[key] = { typeCode: key, typeName: '', sponsors: [] };
             }
-            const labelCandidate = typeof sponsor.name === 'string' ? sponsor.name.trim() : '';
+            const labelCandidate = typeof sponsor.type_name === 'string' && sponsor.type_name.trim()
+                ? sponsor.type_name.trim()
+                : (typeof sponsor.name === 'string' ? sponsor.name.trim() : '');
             if (!groups[key].typeName && labelCandidate) {
                 groups[key].typeName = labelCandidate;
             }

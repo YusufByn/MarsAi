@@ -160,7 +160,9 @@ export default function AdminSponsors() {
             if (!groups[typeCode]) {
                 groups[typeCode] = { typeCode, typeName: '', sponsors: [] };
             }
-            const labelCandidate = typeof sponsor.name === 'string' ? sponsor.name.trim() : '';
+            const labelCandidate = typeof sponsor.type_name === 'string' && sponsor.type_name.trim()
+                ? sponsor.type_name.trim()
+                : (typeof sponsor.name === 'string' ? sponsor.name.trim() : '');
             if (!groups[typeCode].typeName && labelCandidate) {
                 groups[typeCode].typeName = labelCandidate;
             }
@@ -243,7 +245,7 @@ export default function AdminSponsors() {
 
     const openEdit = (sponsor) => {
         setFormData({
-            name: sponsor.name || '',
+            name: sponsor.type_name || sponsor.name || '',
             img: sponsor.img || '',
             cover: null,
             url: sponsor.url || '',
@@ -364,6 +366,16 @@ export default function AdminSponsors() {
             setError(null);
         } catch (moveError) {
             console.error('[ADMIN SPONSORS] Erreur ordre:', moveError);
+            const moveMessage = String(moveError?.message || '').toLowerCase();
+            const isBoundaryMoveError =
+                moveError?.status === 400 &&
+                (moveMessage.includes('deja en premiere position') ||
+                    moveMessage.includes('deja en derniere position'));
+
+            if (isBoundaryMoveError) {
+                setError(null);
+                return;
+            }
             setError(getActionErrorMessage(moveError, "Erreur lors du deplacement de l'ordre"));
         }
     };
@@ -616,8 +628,10 @@ export default function AdminSponsors() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {typeSponsors.map((sponsor) => {
+                                {typeSponsors.map((sponsor, sponsorIndex) => {
                                     const sponsorType = toTypeCode(sponsor.is_active, 0);
+                                    const isFirstSponsor = sponsorIndex === 0;
+                                    const isLastSponsor = sponsorIndex === typeSponsors.length - 1;
                                     return (
                                         <div key={sponsor.id} className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
                                             <div className="space-y-2">
@@ -629,7 +643,7 @@ export default function AdminSponsors() {
                                                                 : 'bg-yellow-500/20 text-yellow-300'
                                                         }`}
                                                     >
-                                                        {getTypeLabel(sponsorType, sponsor.name)}
+                                                        {getTypeLabel(sponsorType, sponsor.type_name || sponsor.name)}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-gray-400">
@@ -657,14 +671,16 @@ export default function AdminSponsors() {
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <button
                                                     onClick={() => handleMoveOrder(sponsor.id, 'up')}
-                                                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 transition-colors"
+                                                    disabled={isFirstSponsor}
+                                                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                                     title="Monter"
                                                 >
                                                     <ArrowUp size={12} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleMoveOrder(sponsor.id, 'down')}
-                                                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 transition-colors"
+                                                    disabled={isLastSponsor}
+                                                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                                     title="Descendre"
                                                 >
                                                     <ArrowDown size={12} />

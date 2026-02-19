@@ -37,15 +37,50 @@ const parseSortOrder = (value, fallback = 0) => {
   return normalized;
 };
 
+const resolveTypeName = async (typeCode, options = {}) => {
+  const { excludeId = null } = options;
+  if (!Number.isFinite(Number(typeCode)) || Number(typeCode) <= 0) return '';
+
+  const params = [Number(typeCode)];
+  let sql = `
+    SELECT name
+    FROM ${TABLE}
+    WHERE is_active = ?
+      AND name IS NOT NULL
+      AND TRIM(name) <> ''
+  `;
+
+  if (excludeId !== null && excludeId !== undefined) {
+    sql += ' AND id <> ?';
+    params.push(Number(excludeId));
+  }
+
+  sql += ' ORDER BY sort_order ASC, id ASC LIMIT 1';
+  const [rows] = await pool.execute(sql, params);
+  return rows[0]?.name ? String(rows[0].name).trim() : '';
+};
+
+const sponsorSelectWithTypeName = `
+  SELECT s.id, s.name, s.img, s.url, s.sort_order, s.is_active,
+    (
+      SELECT s2.name
+      FROM ${TABLE} s2
+      WHERE s2.is_active = s.is_active
+        AND s2.name IS NOT NULL
+        AND TRIM(s2.name) <> ''
+      ORDER BY s2.sort_order ASC, s2.id ASC
+      LIMIT 1
+    ) AS type_name
+  FROM ${TABLE} s
+`;
+
 export const sponsorsController = {
   async getAll(req, res) {
     try {
       const [rows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active
-         FROM ${TABLE}
-         WHERE is_active > 0
-         ORDER BY is_active ASC, sort_order ASC,
-           id DESC`
+        `${sponsorSelectWithTypeName}
+         WHERE s.is_active > 0
+         ORDER BY s.is_active ASC, s.sort_order ASC, s.id DESC`
       );
       return res.json({ success: true, data: rows });
     } catch (error) {
@@ -60,10 +95,8 @@ export const sponsorsController = {
   async getAllAdmin(req, res) {
     try {
       const [rows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active
-         FROM ${TABLE}
-         ORDER BY is_active ASC, sort_order ASC,
-           id DESC`
+        `${sponsorSelectWithTypeName}
+         ORDER BY s.is_active ASC, s.sort_order ASC, s.id DESC`
       );
       return res.json({ success: true, data: rows });
     } catch (error) {
@@ -79,9 +112,8 @@ export const sponsorsController = {
     try {
       const { id } = req.params;
       const [rows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active
-         FROM ${TABLE}
-         WHERE id = ? AND is_active > 0
+        `${sponsorSelectWithTypeName}
+         WHERE s.id = ? AND s.is_active > 0
          LIMIT 1`,
         [id]
       );
@@ -111,7 +143,11 @@ export const sponsorsController = {
       const nextUrl = normalizeSponsorUrl(url);
       const nextSortOrder = parseSortOrder(sort_order, 0);
       const nextIsActive = parseIsActive(is_active, 1);
-      const nextName = typeof name === 'string' ? name.trim() : '';
+      const inputName = typeof name === 'string' ? name.trim() : '';
+      const inheritedTypeName = !inputName && nextIsActive > 0
+        ? await resolveTypeName(nextIsActive)
+        : '';
+      const nextName = inputName || inheritedTypeName;
 
       const [result] = await pool.execute(
         `INSERT INTO ${TABLE} (name, img, url, sort_order, is_active) VALUES (?, ?, ?, ?, ?)`,
@@ -119,7 +155,9 @@ export const sponsorsController = {
       );
 
       const [createdRows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active FROM ${TABLE} WHERE id = ? LIMIT 1`,
+        `${sponsorSelectWithTypeName}
+         WHERE s.id = ?
+         LIMIT 1`,
         [result.insertId]
       );
 
@@ -163,15 +201,26 @@ export const sponsorsController = {
       }
 
       const current = currentRows[0];
-      const nextName = name !== undefined
+      const inputName = name !== undefined
         ? (typeof name === 'string' ? name.trim() : '')
-        : (current.name ?? '');
+        : undefined;
       const nextImg = uploadedImg || (img !== undefined ? img : current.img);
       const nextUrl = url !== undefined ? normalizeSponsorUrl(url) : current.url;
       const nextSortOrder = sort_order !== undefined
         ? parseSortOrder(sort_order, current.sort_order ?? 0)
         : parseSortOrder(current.sort_order ?? 0, 0);
       const nextIsActive = parseIsActive(is_active, current.is_active ?? 1);
+      const typeChanged = Number(nextIsActive) !== Number(parseIsActive(current.is_active, 1));
+      let nextName = inputName;
+
+      if (nextName === undefined) {
+        nextName = typeChanged ? '' : (typeof current.name === 'string' ? current.name.trim() : '');
+      }
+
+      if (!nextName && nextIsActive > 0) {
+        const inheritedTypeName = await resolveTypeName(nextIsActive, { excludeId: id });
+        nextName = inheritedTypeName || (typeof current.name === 'string' ? current.name.trim() : '');
+      }
 
       const [result] = await pool.execute(
         `UPDATE ${TABLE} SET name = ?, img = ?, url = ?, sort_order = ?, is_active = ? WHERE id = ?`,
@@ -186,7 +235,9 @@ export const sponsorsController = {
       }
 
       const [updatedRows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active FROM ${TABLE} WHERE id = ? LIMIT 1`,
+        `${sponsorSelectWithTypeName}
+         WHERE s.id = ?
+         LIMIT 1`,
         [id]
       );
 
@@ -224,9 +275,30 @@ export const sponsorsController = {
         });
       }
 
+      const [currentRows] = await pool.execute(
+        `SELECT id, name FROM ${TABLE} WHERE id = ? LIMIT 1`,
+        [id]
+      );
+
+      if (!currentRows.length) {
+        return res.status(404).json({
+          success: false,
+          message: 'Sponsor introuvable',
+        });
+      }
+
+      const current = currentRows[0];
+      let nextName = typeof current.name === 'string' ? current.name.trim() : '';
+      if (nextIsActive > 0) {
+        const inheritedTypeName = await resolveTypeName(nextIsActive, { excludeId: id });
+        if (inheritedTypeName) {
+          nextName = inheritedTypeName;
+        }
+      }
+
       const [result] = await pool.execute(
-        `UPDATE ${TABLE} SET is_active = ? WHERE id = ?`,
-        [nextIsActive, id]
+        `UPDATE ${TABLE} SET is_active = ?, name = ? WHERE id = ?`,
+        [nextIsActive, nextName, id]
       );
 
       if (!result.affectedRows) {
@@ -237,7 +309,9 @@ export const sponsorsController = {
       }
 
       const [updatedRows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active FROM ${TABLE} WHERE id = ? LIMIT 1`,
+        `${sponsorSelectWithTypeName}
+         WHERE s.id = ?
+         LIMIT 1`,
         [id]
       );
 
@@ -329,7 +403,9 @@ export const sponsorsController = {
       await connection.commit();
 
       const [updatedRows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active FROM ${TABLE} WHERE id = ? LIMIT 1`,
+        `${sponsorSelectWithTypeName}
+         WHERE s.id = ?
+         LIMIT 1`,
         [id]
       );
 
