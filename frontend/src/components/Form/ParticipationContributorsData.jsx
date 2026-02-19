@@ -98,19 +98,19 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
     if (contributorAlreadyExists) {
       newErrors.email = 'This email is already added';
     }
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      return;
+      return null;
     }
 
     // Ajouter le contributeur à la liste
-    const updatedContributors = [...contributors, { 
-      ...normalizedContributor, 
+    const updatedContributors = [...contributors, {
+      ...normalizedContributor,
       id: Date.now() // ID temporaire
     }];
     setContributorsData(updatedContributors);
-    
+
     // Réinitialiser le formulaire
     setCurrentContributor({
       gender: '',
@@ -122,6 +122,8 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
     setErrors({});
     setShowForm(false);
     setGlobalError('');
+
+    return updatedContributors;
   };
 
   const removeContributor = (id) => {
@@ -142,7 +144,23 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
   };
 
   const handleSave = () => {
-    if (contributors.length === 0) {
+    let currentList = contributors;
+
+    if (showForm) {
+      // Si le form est ouvert avec des données, tenter d'ajouter le contributeur d'abord
+      const hasData = Object.values(currentContributor).some(v => String(v || '').trim() !== '');
+
+      if (hasData) {
+        const result = addContributor();
+        if (result === null) return; // validation échouée, erreurs affichées
+        currentList = result;
+      } else {
+        // Form ouvert mais vide → le fermer et vérifier la liste existante
+        setShowForm(false);
+      }
+    }
+
+    if (currentList.length === 0) {
       setGlobalError('You must add at least one contributor');
       return;
     }
