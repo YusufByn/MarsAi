@@ -4,6 +4,11 @@ import { sponsorsService } from '../../services/sponsorsService';
 import { API_URL } from '../../config';
 
 const MAX_TYPE_CODE = 255;
+const MAX_NAME_LENGTH = 120;
+const MAX_URL_LENGTH = 500;
+const MAX_SORT_ORDER = 32767;
+const MAX_COVER_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_COVER_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const toTypeCode = (value, fallback = 0) => {
     const raw = Number(value);
@@ -18,6 +23,94 @@ const getTypeLabel = (typeCode, typeName = '') => {
     const normalizedName = typeof typeName === 'string' ? typeName.trim() : '';
     if (normalizedName) return normalizedName;
     return typeCode === 0 ? 'Masqué (0)' : `Type ${typeCode}`;
+};
+
+const buildFieldErrorsMap = (errors = []) =>
+    errors.reduce((acc, err) => {
+        const field = typeof err?.field === 'string' ? err.field : '';
+        const message = typeof err?.message === 'string' ? err.message : 'Valeur invalide';
+        if (!field) return acc;
+        if (!acc[field]) acc[field] = [];
+        acc[field].push(message);
+        return acc;
+    }, {});
+
+const getActionErrorMessage = (error, fallbackMessage) => {
+    if (error?.status === 401) {
+        return 'Session invalide ou expirée. Reconnectez-vous.';
+    }
+    if (error?.status === 403) {
+        return "Accès refusé. Seul un superadmin peut gérer les sponsors.";
+    }
+    return error?.message || fallbackMessage;
+};
+
+const validateSponsorForm = ({ formData, createNewType, editingId }) => {
+    const errors = [];
+    const trimmedName = String(formData.name || '').trim();
+    const trimmedUrl = String(formData.url || '').trim();
+
+    if (createNewType && !trimmedName) {
+        errors.push({ field: 'name', message: 'Le nom du type est obligatoire' });
+    }
+    if (trimmedName.length > MAX_NAME_LENGTH) {
+        errors.push({
+            field: 'name',
+            message: `Le nom ne doit pas dépasser ${MAX_NAME_LENGTH} caractères`,
+        });
+    }
+
+    if (trimmedUrl.length > MAX_URL_LENGTH) {
+        errors.push({
+            field: 'url',
+            message: `L'URL ne doit pas dépasser ${MAX_URL_LENGTH} caractères`,
+        });
+    }
+    if (/\s/.test(trimmedUrl)) {
+        errors.push({
+            field: 'url',
+            message: "L'URL ne doit pas contenir d'espaces",
+        });
+    }
+
+    if (editingId) {
+        const sortOrder = Number(formData.sort_order);
+        if (!Number.isFinite(sortOrder) || !Number.isInteger(sortOrder)) {
+            errors.push({ field: 'sort_order', message: "L'ordre doit être un entier" });
+        } else if (sortOrder < 1 || sortOrder > MAX_SORT_ORDER) {
+            errors.push({
+                field: 'sort_order',
+                message: `L'ordre doit être compris entre 1 et ${MAX_SORT_ORDER}`,
+            });
+        }
+    }
+
+    if (!createNewType) {
+        const typeCode = Number(formData.is_active);
+        if (!Number.isFinite(typeCode) || !Number.isInteger(typeCode) || typeCode < 1 || typeCode > MAX_TYPE_CODE) {
+            errors.push({
+                field: 'is_active',
+                message: `Le type doit être un entier entre 1 et ${MAX_TYPE_CODE}`,
+            });
+        }
+    }
+
+    if (formData.cover instanceof File) {
+        if (!ALLOWED_COVER_MIME_TYPES.includes(formData.cover.type)) {
+            errors.push({
+                field: 'cover',
+                message: 'Image invalide. Formats autorisés: JPEG, PNG, WEBP',
+            });
+        }
+        if (formData.cover.size > MAX_COVER_SIZE_BYTES) {
+            errors.push({
+                field: 'cover',
+                message: 'Image trop lourde. Taille maximale: 5MB',
+            });
+        }
+    }
+
+    return errors;
 };
 
 export default function AdminSponsors() {
@@ -37,7 +130,18 @@ export default function AdminSponsors() {
         is_active: 1,
     });
     const [saving, setSaving] = useState(false);
+    const [validationErrors, setValidationErrors] = useState([]);
     const sponsorFormRef = useRef(null);
+    const fieldErrorsMap = useMemo(() => buildFieldErrorsMap(validationErrors), [validationErrors]);
+
+    const getFieldError = (fieldName) => fieldErrorsMap[fieldName]?.[0] || null;
+
+    const clearFieldErrors = (...fieldNames) => {
+        if (!fieldNames.length) return;
+        setValidationErrors((prev) =>
+            prev.filter((item) => !fieldNames.includes(item?.field))
+        );
+    };
 
     useEffect(() => {
         loadSponsors();
@@ -100,7 +204,7 @@ export default function AdminSponsors() {
             setError(null);
         } catch (loadError) {
             console.error('[ADMIN SPONSORS] Erreur chargement:', loadError);
-            setError(loadError.message || 'Erreur lors du chargement des sponsors');
+            setError(getActionErrorMessage(loadError, 'Erreur lors du chargement des sponsors'));
         } finally {
             setLoading(false);
         }
@@ -118,6 +222,7 @@ export default function AdminSponsors() {
         setCreateNewType(false);
         setEditingId(null);
         setShowForm(false);
+        setValidationErrors([]);
     };
 
     const openCreate = () => {
@@ -132,6 +237,8 @@ export default function AdminSponsors() {
         setCreateNewType(false);
         setEditingId(null);
         setShowForm(true);
+        setValidationErrors([]);
+        setError(null);
     };
 
     const openEdit = (sponsor) => {
@@ -146,6 +253,8 @@ export default function AdminSponsors() {
         setCreateNewType(false);
         setEditingId(sponsor.id);
         setShowForm(true);
+        setValidationErrors([]);
+        setError(null);
     };
 
     const resolveImgUrl = (imgPath) => {
@@ -164,6 +273,14 @@ export default function AdminSponsors() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setValidationErrors([]);
+        setError(null);
+        const localErrors = validateSponsorForm({ formData, createNewType, editingId });
+        if (localErrors.length > 0) {
+            setValidationErrors(localErrors);
+            return;
+        }
+
         setSaving(true);
         try {
             const selectedType = createNewType
@@ -194,10 +311,6 @@ export default function AdminSponsors() {
                 url: normalizeSponsorUrl(formData.url),
             };
 
-            if (createNewType && !String(formData.name || '').trim()) {
-                throw new Error('Le nom du type est obligatoire pour créer un nouveau type');
-            }
-
             if (editingId) {
                 const response = await sponsorsService.update(editingId, payload);
                 const updatedSponsor = response?.data || { ...payload, id: editingId };
@@ -212,7 +325,10 @@ export default function AdminSponsors() {
             setError(null);
         } catch (saveError) {
             console.error('[ADMIN SPONSORS] Erreur sauvegarde:', saveError);
-            setError(saveError.message || 'Erreur lors de la sauvegarde');
+            if (Array.isArray(saveError?.errors) && saveError.errors.length > 0) {
+                setValidationErrors(saveError.errors);
+            }
+            setError(getActionErrorMessage(saveError, 'Erreur lors de la sauvegarde'));
         } finally {
             setSaving(false);
         }
@@ -225,7 +341,7 @@ export default function AdminSponsors() {
             setError(null);
         } catch (moveTypeError) {
             console.error('[ADMIN SPONSORS] Erreur ordre type:', moveTypeError);
-            setError(moveTypeError.message || 'Erreur lors du deplacement du type');
+            setError(getActionErrorMessage(moveTypeError, 'Erreur lors du deplacement du type'));
         }
     };
 
@@ -237,7 +353,7 @@ export default function AdminSponsors() {
             setError(null);
         } catch (updateError) {
             console.error('[ADMIN SPONSORS] Erreur type:', updateError);
-            setError(updateError.message || 'Erreur lors de la mise à jour du type');
+            setError(getActionErrorMessage(updateError, 'Erreur lors de la mise à jour du type'));
         }
     };
 
@@ -248,7 +364,7 @@ export default function AdminSponsors() {
             setError(null);
         } catch (moveError) {
             console.error('[ADMIN SPONSORS] Erreur ordre:', moveError);
-            setError(moveError.message || "Erreur lors du deplacement de l'ordre");
+            setError(getActionErrorMessage(moveError, "Erreur lors du deplacement de l'ordre"));
         }
     };
 
@@ -259,7 +375,7 @@ export default function AdminSponsors() {
             setDeleteConfirm(null);
         } catch (deleteError) {
             console.error('[ADMIN SPONSORS] Erreur suppression:', deleteError);
-            setError(deleteError.message || 'Erreur lors de la suppression');
+            setError(getActionErrorMessage(deleteError, 'Erreur lors de la suppression'));
         }
     };
 
@@ -300,6 +416,17 @@ export default function AdminSponsors() {
                             {error}
                         </div>
                     )}
+                    {validationErrors.length > 0 && (
+                        <div className="p-3 rounded-lg bg-red-900/20 border border-red-500/20 text-sm text-red-300">
+                            <ul className="space-y-1">
+                                {validationErrors.map((item, index) => (
+                                    <li key={`${item.field || 'unknown'}-${index}`}>
+                                        {(item.field || 'unknown')}: {item.message || 'Valeur invalide'}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -310,10 +437,16 @@ export default function AdminSponsors() {
                                     id="name"
                                     name="name"
                                     value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    onChange={(e) => {
+                                        clearFieldErrors('name');
+                                        setFormData({ ...formData, name: e.target.value });
+                                    }}
                                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
                                     placeholder="Ex: Partenaires Gold"
                                 />
+                                {getFieldError('name') && (
+                                    <p className="mt-1 text-xs text-red-400">{getFieldError('name')}</p>
+                                )}
                             </div>
                             {!editingId && (
                                 <div className="flex items-end">
@@ -321,7 +454,10 @@ export default function AdminSponsors() {
                                         <input
                                             type="checkbox"
                                             checked={createNewType}
-                                            onChange={(e) => setCreateNewType(e.target.checked)}
+                                            onChange={(e) => {
+                                                clearFieldErrors('name', 'is_active');
+                                                setCreateNewType(e.target.checked);
+                                            }}
                                             className="rounded border-gray-600 bg-gray-800"
                                         />
                                         Créer un nouveau type
@@ -334,10 +470,16 @@ export default function AdminSponsors() {
                                     type="file"
                                     id="cover"
                                     name="cover"
-                                    accept="image/*"
-                                    onChange={(e) => setFormData({ ...formData, cover: e.target.files?.[0] || null })}
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={(e) => {
+                                        clearFieldErrors('cover');
+                                        setFormData({ ...formData, cover: e.target.files?.[0] || null });
+                                    }}
                                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
                                 />
+                                {getFieldError('cover') && (
+                                    <p className="mt-1 text-xs text-red-400">{getFieldError('cover')}</p>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="url" className="block text-sm font-medium text-gray-400">URL</label>
@@ -346,9 +488,15 @@ export default function AdminSponsors() {
                                     id="url"
                                     name="url"
                                     value={formData.url}
-                                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                                    onChange={(e) => {
+                                        clearFieldErrors('url');
+                                        setFormData({ ...formData, url: e.target.value });
+                                    }}
                                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
                                 />
+                                {getFieldError('url') && (
+                                    <p className="mt-1 text-xs text-red-400">{getFieldError('url')}</p>
+                                )}
                             </div>
                             {editingId && (
                                 <div>
@@ -360,9 +508,15 @@ export default function AdminSponsors() {
                                         min="1"
                                         max="65535"
                                         value={formData.sort_order}
-                                        onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
+                                        onChange={(e) => {
+                                            clearFieldErrors('sort_order');
+                                            setFormData({ ...formData, sort_order: e.target.value });
+                                        }}
                                         className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
                                     />
+                                    {getFieldError('sort_order') && (
+                                        <p className="mt-1 text-xs text-red-400">{getFieldError('sort_order')}</p>
+                                    )}
                                 </div>
                             )}
                             <div>
@@ -376,7 +530,10 @@ export default function AdminSponsors() {
                                         id="is_active"
                                         name="is_active"
                                         value={formData.is_active}
-                                        onChange={(e) => setFormData({ ...formData, is_active: e.target.value })}
+                                        onChange={(e) => {
+                                            clearFieldErrors('is_active');
+                                            setFormData({ ...formData, is_active: e.target.value });
+                                        }}
                                         className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
                                     >
                                         {activeTypeOptions.length === 0 ? (
@@ -389,6 +546,9 @@ export default function AdminSponsors() {
                                             ))
                                         )}
                                     </select>
+                                )}
+                                {getFieldError('is_active') && (
+                                    <p className="mt-1 text-xs text-red-400">{getFieldError('is_active')}</p>
                                 )}
                             </div>
                         </div>

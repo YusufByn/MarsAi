@@ -1,4 +1,4 @@
-import { API_URL, authHeaders } from '../config';
+import { API_URL } from '../config';
 
 const authTokenHeaders = () => {
     const token = localStorage.getItem('auth_token');
@@ -8,11 +8,16 @@ const authTokenHeaders = () => {
 const parseApiError = async (response, fallbackMessage) => {
     try {
         const data = await response.json();
-        if (data?.message) return data.message;
+        const error = new Error(data?.message || fallbackMessage);
+        error.status = response.status;
+        error.errors = Array.isArray(data?.errors) ? data.errors : [];
+        return error;
     } catch (_) {
-        // no-op: fallback below
+        const error = new Error(fallbackMessage);
+        error.status = response.status;
+        error.errors = [];
+        return error;
     }
-    return fallbackMessage;
 };
 
 const toSponsorFormData = (sponsorData = {}) => {
@@ -40,7 +45,7 @@ export const sponsorsService = {
     async getAll() {
         const response = await fetch(`${API_URL}/api/sponsors`);
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des sponsors');
+            throw await parseApiError(response, 'Erreur lors de la récupération des sponsors');
         }
         return response.json();
     },
@@ -48,7 +53,7 @@ export const sponsorsService = {
     async getById(id) {
         const response = await fetch(`${API_URL}/api/sponsors/${id}`);
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération du sponsor');
+            throw await parseApiError(response, 'Erreur lors de la récupération du sponsor');
         }
         return response.json();
     },
@@ -59,7 +64,7 @@ export const sponsorsService = {
             headers: authTokenHeaders(),
         });
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des sponsors (admin)');
+            throw await parseApiError(response, 'Erreur lors de la récupération des sponsors (admin)');
         }
         return response.json();
     },
@@ -71,7 +76,7 @@ export const sponsorsService = {
             body: toSponsorFormData(sponsorData),
         });
         if (!response.ok) {
-            throw new Error('Erreur lors de la création du sponsor');
+            throw await parseApiError(response, 'Erreur lors de la création du sponsor');
         }
         return response.json();
     },
@@ -83,7 +88,7 @@ export const sponsorsService = {
             body: toSponsorFormData(sponsorData),
         });
         if (!response.ok) {
-            throw new Error('Erreur lors de la mise à jour du sponsor');
+            throw await parseApiError(response, 'Erreur lors de la mise à jour du sponsor');
         }
         return response.json();
     },
@@ -91,10 +96,10 @@ export const sponsorsService = {
     async delete(id) {
         const response = await fetch(`${API_URL}/api/sponsors/${id}`, {
             method: 'DELETE',
-            headers: authHeaders(),
+            headers: authTokenHeaders(),
         });
         if (!response.ok) {
-            throw new Error('Erreur lors de la suppression du sponsor');
+            throw await parseApiError(response, 'Erreur lors de la suppression du sponsor');
         }
         return response.json();
     },
@@ -109,7 +114,7 @@ export const sponsorsService = {
             body: JSON.stringify({ is_active: isActive }),
         });
         if (!response.ok) {
-            throw new Error('Erreur lors de la mise à jour de la visibilité');
+            throw await parseApiError(response, 'Erreur lors de la mise à jour de la visibilité');
         }
         return response.json();
     },
@@ -124,7 +129,7 @@ export const sponsorsService = {
             body: JSON.stringify({ direction }),
         });
         if (!response.ok) {
-            throw new Error("Erreur lors du deplacement de l'ordre");
+            throw await parseApiError(response, "Erreur lors du deplacement de l'ordre");
         }
         return response.json();
     },
@@ -139,7 +144,7 @@ export const sponsorsService = {
             body: JSON.stringify({ type, direction }),
         });
         if (!response.ok) {
-            throw new Error(await parseApiError(response, 'Erreur lors du deplacement du type'));
+            throw await parseApiError(response, 'Erreur lors du deplacement du type');
         }
         return response.json();
     },
