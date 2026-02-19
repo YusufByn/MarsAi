@@ -629,6 +629,59 @@ export const sendVideoSubmissionConfirmationEmail = async (videoData) => {
 };
 
 /**
+ * Template email d'invitation jury
+ * @param {string} email
+ * @param {string} inviteLink
+ */
+const generateInvitationEmailContent = (email, inviteLink) => {
+  const content = `
+    <div class="subheading">Invitation</div>
+    <div class="heading">Vous avez été invité à rejoindre MarsAI Festival.</div>
+    <div class="message">
+        Bonjour,<br><br>
+        L'équipe MarsAI vous invite à créer votre compte jury. Ce lien est valable
+        <strong style="color: #ffffff;">24 heures</strong> et ne peut être utilisé qu'une seule fois.
+    </div>
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="info-card-label">Email</span>
+            <span class="info-card-value">${email}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Validité</span>
+            <span class="info-card-value">24 heures</span>
+        </div>
+    </div>
+    <div class="cta-wrapper">
+        <a href="${inviteLink}" class="cta-button">Créer mon compte</a>
+    </div>
+    <p class="cta-fallback">
+        Si le bouton ne fonctionne pas :<br>
+        <a href="${inviteLink}">${inviteLink}</a>
+    </p>
+  `;
+  return generateBaseTemplate('Votre invitation MarsAI', content, email);
+};
+
+/**
+ * Envoie un email d'invitation à un futur membre jury
+ * @param {string} email
+ * @param {string} token
+ */
+export const sendInvitationEmail = async (email, token) => {
+  const link = `${env.websiteUrl}/register?token=${token}`;
+  const html = generateInvitationEmailContent(email, link);
+  const text = `Invitation MarsAI Festival\n\nVous avez été invité à créer votre compte jury.\nLien (valide 24h) : ${link}\n\n© 2026 MarsAI Protocol`;
+
+  return sendEmail({
+    to: email,
+    subject: 'Votre invitation MarsAI Festival',
+    html,
+    text
+  });
+};
+
+/**
  * Envoie un email d'un sélectionneur au réalisateur (depuis le player)
  * @param {Object} videoData - { title, email }
  * @param {string} message - Message du sélectionneur
@@ -660,5 +713,6 @@ export default {
   sendBulkEmail,
   sendVideoEditRequestEmail,
   sendVideoSubmissionConfirmationEmail,
-  sendSelectorEmailToCreator
+  sendSelectorEmailToCreator,
+  sendInvitationEmail
 };

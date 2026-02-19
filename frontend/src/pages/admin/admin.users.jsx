@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, X, Save } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Mail } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 
 function getCurrentUserRole() {
@@ -42,6 +42,10 @@ export default function AdminUsers() {
     role: 'jury',
   });
   const [saving, setSaving] = useState(false);
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteStatus, setInviteStatus] = useState('idle'); // 'idle' | 'sending' | 'sent' | 'error'
+  const [inviteMessage, setInviteMessage] = useState('');
 
   const currentRole = getCurrentUserRole();
   const roleOptions = getRoleOptions(currentRole);
@@ -113,6 +117,22 @@ export default function AdminUsers() {
     }
   };
 
+  const handleSendInvite = async (e) => {
+    e.preventDefault();
+    setInviteStatus('sending');
+    setInviteMessage('');
+    try {
+      await adminService.sendInvite(inviteEmail);
+      setInviteStatus('sent');
+      setInviteMessage('Invitation envoyée avec succès.');
+      setInviteEmail('');
+    } catch (err) {
+      console.error('[ADMIN USERS] Erreur envoi invitation:', err);
+      setInviteStatus('error');
+      setInviteMessage(err.message || "Erreur lors de l'envoi de l'invitation");
+    }
+  };
+
   const handleDelete = async (id) => {
     try {
       await adminService.deleteUser(id);
@@ -135,14 +155,57 @@ export default function AdminUsers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Gestion des Utilisateurs</h1>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={16} />
-          Ajouter un utilisateur
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setShowInviteForm((v) => !v); setInviteStatus('idle'); setInviteMessage(''); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 text-white text-sm font-bold hover:bg-purple-700 transition-colors"
+          >
+            <Mail size={16} />
+            Envoyer une invitation
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={16} />
+            Ajouter un utilisateur
+          </button>
+        </div>
       </div>
+
+      {showInviteForm && (
+        <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold">Inviter un jury par email</h2>
+            <button onClick={() => setShowInviteForm(false)} className="text-gray-400 hover:text-white">
+              <X size={20} />
+            </button>
+          </div>
+          <form onSubmit={handleSendInvite} className="flex gap-3">
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="email@exemple.com"
+              required
+              className="flex-1 rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            />
+            <button
+              type="submit"
+              disabled={inviteStatus === 'sending'}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 text-white text-sm font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors"
+            >
+              <Mail size={16} />
+              {inviteStatus === 'sending' ? 'Envoi...' : 'Envoyer'}
+            </button>
+          </form>
+          {inviteMessage && (
+            <p className={`text-sm ${inviteStatus === 'error' ? 'text-red-400' : 'text-green-400'}`}>
+              {inviteMessage}
+            </p>
+          )}
+        </div>
+      )}
 
       <p className="text-sm text-gray-400">{users.length} utilisateur{users.length > 1 ? 's' : ''}</p>
 

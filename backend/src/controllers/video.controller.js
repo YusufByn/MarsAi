@@ -6,6 +6,7 @@ import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import { getVideoDuration } from "../utils/video.util.js";
 import pool from "../config/db.js";
 import { sendVideoSubmissionConfirmationEmail } from "../services/email.service.js";
+import { logActivity } from "../utils/activity.util.js";
 
 // liste des plateformes sociales autorisées
 const ALLOWED_SOCIAL_PLATFORMS = new Set([
@@ -198,6 +199,8 @@ export const uploadVideo = async (req, res) => {
       contributorsWarning = "Contributors could not be saved";
       console.warn("[contributors] non-blocking error:", contributorsError?.message || contributorsError);
     }
+
+    logActivity({ action: 'video_submit', entity: 'video', entityId: videoId, details: req.body.title ?? null, ip: req.ip });
 
     // Envoi email de confirmation au réalisateur (non-bloquant)
     sendVideoSubmissionConfirmationEmail({

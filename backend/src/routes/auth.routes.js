@@ -10,6 +10,7 @@ const router = express.Router();
 
 router.use(authLimiter);
 
+router.get('/invite/validate', authController.validateInviteToken);
 router.post('/register', validate(juryRegisterSchema), authController.register);
 router.post('/login', validate(juryLoginSchema), authController.login);
 

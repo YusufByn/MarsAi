@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Film, Users, Calendar, Settings, Mail, UserCog, Home, LogOut } from 'lucide-react';
+import { LayoutDashboard, Film, Users, Calendar, Settings, Mail, UserCog, Home, LogOut, ShieldAlert } from 'lucide-react';
 
 export default function AdminSidebar({ user }) {
   const location = useLocation();
@@ -14,6 +14,7 @@ export default function AdminSidebar({ user }) {
     { label: 'CONFIGURATION', path: '/admin/config', icon: <Settings size={20} /> },
     { label: 'NEWSLETTER', path: '/admin/newsletter', icon: <Mail size={20} /> },
     { label: 'UTILISATEURS', path: '/admin/users', icon: <UserCog size={20} /> },
+    { label: 'MONITORING', path: '/admin/monitoring', icon: <ShieldAlert size={20} /> },
   ];
 
   const handleLogout = () => {
