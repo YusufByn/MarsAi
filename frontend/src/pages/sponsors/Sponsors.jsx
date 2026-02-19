@@ -29,13 +29,18 @@ function Sponsors() {
     const groupedSponsors = useMemo(() => {
         const groups = {};
         sponsors.forEach((sponsor) => {
-            const section = sponsor.section?.trim() || 'general';
-            if (!groups[section]) {
-                groups[section] = [];
+            const typeCode = Number(sponsor.is_active ?? 0);
+            const key = Number.isFinite(typeCode) ? typeCode : 0;
+            if (!groups[key]) {
+                groups[key] = { typeCode: key, typeName: '', sponsors: [] };
             }
-            groups[section].push(sponsor);
+            const labelCandidate = typeof sponsor.name === 'string' ? sponsor.name.trim() : '';
+            if (!groups[key].typeName && labelCandidate) {
+                groups[key].typeName = labelCandidate;
+            }
+            groups[key].sponsors.push(sponsor);
         });
-        return Object.entries(groups);
+        return Object.values(groups).sort((a, b) => a.typeCode - b.typeCode);
     }, [sponsors]);
 
     if (loading) {
@@ -48,11 +53,13 @@ function Sponsors() {
 
     return (
         <div className="space-y-10">
-            {groupedSponsors.map(([section, sectionSponsors]) => (
-                <section key={section} className="space-y-4">
-                    <h1 className="text-2xl font-bold text-white capitalize">{section}</h1>
+            {groupedSponsors.map(({ typeCode, typeName, sponsors: typeSponsors }) => (
+                <section key={typeCode} className="space-y-4">
+                    <h1 className="text-2xl font-bold text-white">
+                        {typeName || `Type ${typeCode}`}
+                    </h1>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {sectionSponsors.map((sponsor) => (
+                        {typeSponsors.map((sponsor) => (
                             <SponsorsTemplate
                                 key={sponsor.id}
                                 {...sponsor}

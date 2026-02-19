@@ -5,12 +5,23 @@ const authTokenHeaders = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const parseApiError = async (response, fallbackMessage) => {
+    try {
+        const data = await response.json();
+        if (data?.message) return data.message;
+    } catch (_) {
+        // no-op: fallback below
+    }
+    return fallbackMessage;
+};
+
 const toSponsorFormData = (sponsorData = {}) => {
     const formData = new FormData();
 
-    formData.append('name', sponsorData.name ?? '');
+    if (Object.prototype.hasOwnProperty.call(sponsorData, 'name')) {
+        formData.append('name', sponsorData.name ?? '');
+    }
     formData.append('url', sponsorData.url ?? '');
-    formData.append('section', sponsorData.section ?? 'general');
     formData.append('sort_order', sponsorData.sort_order ?? 0);
     formData.append('is_active', sponsorData.is_active ?? 1);
 
@@ -118,59 +129,19 @@ export const sponsorsService = {
         return response.json();
     },
 
-    async getSections() {
-        const response = await fetch(`${API_URL}/api/sponsors/admin/sections`, {
-            method: 'POST',
-            headers: authTokenHeaders(),
-        });
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des sections');
-        }
-        return response.json();
-    },
-
-    async moveSection(section, direction) {
-        const response = await fetch(`${API_URL}/api/sponsors/admin/sections/order`, {
+    async moveTypeOrder(type, direction) {
+        const response = await fetch(`${API_URL}/api/sponsors/admin/types/order`, {
             method: 'POST',
             headers: {
                 ...authTokenHeaders(),
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ section, direction }),
+            body: JSON.stringify({ type, direction }),
         });
         if (!response.ok) {
-            throw new Error('Erreur lors du deplacement de la section');
+            throw new Error(await parseApiError(response, 'Erreur lors du deplacement du type'));
         }
         return response.json();
     },
 
-    async renameSection(oldSection, newSection) {
-        const response = await fetch(`${API_URL}/api/sponsors/admin/sections/rename`, {
-            method: 'POST',
-            headers: {
-                ...authTokenHeaders(),
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ old_section: oldSection, new_section: newSection }),
-        });
-        if (!response.ok) {
-            throw new Error('Erreur lors du renommage de la section');
-        }
-        return response.json();
-    },
-
-    async deleteSection(section, targetSection = 'general') {
-        const response = await fetch(`${API_URL}/api/sponsors/admin/sections/delete`, {
-            method: 'POST',
-            headers: {
-                ...authTokenHeaders(),
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ section, target_section: targetSection }),
-        });
-        if (!response.ok) {
-            throw new Error('Erreur lors de la suppression de la section');
-        }
-        return response.json();
-    },
 };

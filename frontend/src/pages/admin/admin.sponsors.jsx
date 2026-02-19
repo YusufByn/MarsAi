@@ -1,9 +1,24 @@
-import React from 'react';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, X, Save, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react';
 import { sponsorsService } from '../../services/sponsorsService';
 import { API_URL } from '../../config';
 
+const MAX_TYPE_CODE = 255;
+
+const toTypeCode = (value, fallback = 0) => {
+    const raw = Number(value);
+    if (!Number.isFinite(raw)) return fallback;
+    const normalized = Math.trunc(raw);
+    if (normalized < 0) return 0;
+    if (normalized > MAX_TYPE_CODE) return MAX_TYPE_CODE;
+    return normalized;
+};
+
+const getTypeLabel = (typeCode, typeName = '') => {
+    const normalizedName = typeof typeName === 'string' ? typeName.trim() : '';
+    if (normalizedName) return normalizedName;
+    return typeCode === 0 ? 'Masqué (0)' : `Type ${typeCode}`;
+};
 
 export default function AdminSponsors() {
     const [sponsors, setSponsors] = useState([]);
@@ -12,25 +27,20 @@ export default function AdminSponsors() {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
-    const [sections, setSections] = useState([]);
-    const [newSectionDraft, setNewSectionDraft] = useState('');
-    const [sectionCreationInfo, setSectionCreationInfo] = useState('');
-    const [renameSectionForm, setRenameSectionForm] = useState({ old_section: '', new_section: '' });
-    const [deleteSectionForm, setDeleteSectionForm] = useState({ section: '', target_section: 'general' });
+    const [createNewType, setCreateNewType] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         img: '',
         cover: null,
         url: '',
-        section: 'general',
         sort_order: 0,
         is_active: 1,
     });
     const [saving, setSaving] = useState(false);
     const sponsorFormRef = useRef(null);
-    
+
     useEffect(() => {
-        loadInitialData();
+        loadSponsors();
     }, []);
 
     useEffect(() => {
@@ -39,62 +49,88 @@ export default function AdminSponsors() {
         }
     }, [showForm, editingId]);
 
-    const loadInitialData = async () => {
-        await Promise.all([loadSponsors(), loadSections()]);
-    };
+    const groupedSponsors = useMemo(() => {
+        const groups = {};
+        sponsors.forEach((sponsor) => {
+            const typeCode = toTypeCode(sponsor.is_active, 0);
+            if (!groups[typeCode]) {
+                groups[typeCode] = { typeCode, typeName: '', sponsors: [] };
+            }
+            const labelCandidate = typeof sponsor.name === 'string' ? sponsor.name.trim() : '';
+            if (!groups[typeCode].typeName && labelCandidate) {
+                groups[typeCode].typeName = labelCandidate;
+            }
+            groups[typeCode].sponsors.push(sponsor);
+        });
+        return Object.values(groups).sort((a, b) => {
+            if (a.typeCode === 0 && b.typeCode !== 0) return 1;
+            if (b.typeCode === 0 && a.typeCode !== 0) return -1;
+            return a.typeCode - b.typeCode;
+        });
+    }, [sponsors]);
+
+    const activeTypeOptions = useMemo(
+        () =>
+            groupedSponsors
+                .filter((group) => group.typeCode > 0)
+                .map((group) => ({
+                    value: group.typeCode,
+                    label: getTypeLabel(group.typeCode, group.typeName),
+                })),
+        [groupedSponsors]
+    );
+
+    const defaultTypeCode = useMemo(
+        () => activeTypeOptions[0]?.value ?? 1,
+        [activeTypeOptions]
+    );
+    const activeTypeCodes = useMemo(
+        () => groupedSponsors.filter((group) => group.typeCode > 0).map((group) => group.typeCode),
+        [groupedSponsors]
+    );
+    const nextTypeCode = useMemo(() => {
+        const maxType = activeTypeCodes.length ? Math.max(...activeTypeCodes) : 0;
+        return Math.min(MAX_TYPE_CODE, maxType + 1);
+    }, [activeTypeCodes]);
 
     const loadSponsors = async () => {
         try {
             const response = await sponsorsService.getAllAdmin();
             setSponsors(response.data || response || []);
             setError(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur chargement:', error);
-            setError(error.message || 'Erreur lors du chargement des sponsors');
+        } catch (loadError) {
+            console.error('[ADMIN SPONSORS] Erreur chargement:', loadError);
+            setError(loadError.message || 'Erreur lors du chargement des sponsors');
         } finally {
             setLoading(false);
         }
     };
 
-    const loadSections = async () => {
-        try {
-            const response = await sponsorsService.getSections();
-            setSections(response.data || []);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur sections:', error);
-            setError(error.message || 'Erreur lors du chargement des sections');
-        }
-    };
-
-    const sectionOptions = useMemo(() => {
-        const names = new Set(['general']);
-        sections.forEach((section) => {
-            if (section?.section) names.add(section.section);
-        });
-        sponsors.forEach((sponsor) => {
-            if (sponsor?.section) names.add(sponsor.section);
-        });
-        return Array.from(names).sort((a, b) => a.localeCompare(b, 'fr'));
-    }, [sections, sponsors]);
-
-    const groupedSponsors = useMemo(() => {
-        const groups = {};
-        sponsors.forEach((sponsor) => {
-            const key = sponsor.section?.trim() || 'general';
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(sponsor);
-        });
-        return Object.entries(groups);
-    }, [sponsors]);
-
     const resetForm = () => {
-        setFormData({ name: '', img: '', cover: null, url: '', section: 'general', sort_order: 0, is_active: 1 });
+        setFormData({
+            name: '',
+            img: '',
+            cover: null,
+            url: '',
+            sort_order: 0,
+            is_active: defaultTypeCode,
+        });
+        setCreateNewType(false);
         setEditingId(null);
         setShowForm(false);
     };
-    
+
     const openCreate = () => {
-        resetForm();
+        setFormData({
+            name: '',
+            img: '',
+            cover: null,
+            url: '',
+            sort_order: 0,
+            is_active: defaultTypeCode,
+        });
+        setCreateNewType(false);
+        setEditingId(null);
         setShowForm(true);
     };
 
@@ -104,10 +140,10 @@ export default function AdminSponsors() {
             img: sponsor.img || '',
             cover: null,
             url: sponsor.url || '',
-            section: sponsor.section || 'general',
             sort_order: Number(sponsor.sort_order ?? 0),
-            is_active: Number(sponsor.is_active ?? 1),
+            is_active: toTypeCode(sponsor.is_active, 1),
         });
+        setCreateNewType(false);
         setEditingId(sponsor.id);
         setShowForm(true);
     };
@@ -130,12 +166,37 @@ export default function AdminSponsors() {
         e.preventDefault();
         setSaving(true);
         try {
+            const selectedType = createNewType
+                ? nextTypeCode
+                : Math.max(1, toTypeCode(formData.is_active, defaultTypeCode));
+            const editingSponsor = editingId
+                ? sponsors.find((s) => Number(s.id) === Number(editingId))
+                : null;
+            const hasTypeChanged = editingSponsor
+                ? toTypeCode(editingSponsor.is_active, defaultTypeCode) !== selectedType
+                : false;
+            const targetTypeSponsors = sponsors.filter(
+                (s) =>
+                    toTypeCode(s.is_active, 0) === selectedType &&
+                    Number(s.id) !== Number(editingId)
+            );
+            const nextSortOrder = targetTypeSponsors.length
+                ? Math.max(...targetTypeSponsors.map((s) => Number(s.sort_order ?? 0))) + 1
+                : 1;
+
             const payload = {
                 ...formData,
-                section: (formData.section || 'general').trim() || 'general',
-                sort_order: Number(formData.sort_order || 0),
+                sort_order:
+                    editingId && !hasTypeChanged
+                        ? Number(formData.sort_order || 0)
+                        : nextSortOrder,
+                is_active: selectedType,
                 url: normalizeSponsorUrl(formData.url),
             };
+
+            if (createNewType && !String(formData.name || '').trim()) {
+                throw new Error('Le nom du type est obligatoire pour créer un nouveau type');
+            }
 
             if (editingId) {
                 const response = await sponsorsService.update(editingId, payload);
@@ -143,114 +204,40 @@ export default function AdminSponsors() {
                 setSponsors((prev) => prev.map((s) => (s.id === editingId ? { ...s, ...updatedSponsor } : s)));
             } else {
                 const response = await sponsorsService.create(payload);
-                const createdSponsor = response?.data || { ...payload, id: Date.now(), is_active: 1 };
+                const createdSponsor = response?.data || { ...payload, id: Date.now() };
                 setSponsors((prev) => [...prev, createdSponsor]);
             }
+
             resetForm();
-            await loadSections();
             setError(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur sauvegarde:', error);
-            setError(error.message || 'Erreur lors de la sauvegarde');
+        } catch (saveError) {
+            console.error('[ADMIN SPONSORS] Erreur sauvegarde:', saveError);
+            setError(saveError.message || 'Erreur lors de la sauvegarde');
         } finally {
             setSaving(false);
         }
     };
 
-    const handlePrepareNewSection = () => {
-        const nextSection = (newSectionDraft || '').trim();
-        if (!nextSection) {
-            setError('Le nom de section est obligatoire');
-            setSectionCreationInfo('');
-            return;
-        }
-
-        const alreadyExists = sectionOptions.some(
-            (section) => section.toLowerCase() === nextSection.toLowerCase()
-        );
-
-        if (alreadyExists) {
-            setError('Cette section existe deja');
-            setSectionCreationInfo('');
-            return;
-        }
-
-        setEditingId(null);
-        setFormData({
-            name: '',
-            img: '',
-            cover: null,
-            url: '',
-            section: nextSection,
-            sort_order: 0,
-            is_active: 1,
-        });
-        setShowForm(true);
-        setError(null);
-        setSectionCreationInfo(
-            `Section "${nextSection}" preparee. Cree maintenant un sponsor pour l'enregistrer.`
-        );
-    };
-
-    const handleRenameSection = async () => {
-        const oldSection = (renameSectionForm.old_section || '').trim();
-        const newSection = (renameSectionForm.new_section || '').trim();
-        if (!oldSection || !newSection) {
-            setError('Sélectionne une section et renseigne le nouveau nom');
-            return;
-        }
-
+    const handleMoveType = async (typeCode, direction) => {
         try {
-            await sponsorsService.renameSection(oldSection, newSection);
-            setRenameSectionForm({ old_section: '', new_section: '' });
-            await Promise.all([loadSections(), loadSponsors()]);
+            await sponsorsService.moveTypeOrder(typeCode, direction);
+            await loadSponsors();
             setError(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur renommage section:', error);
-            setError(error.message || 'Erreur lors du renommage de section');
+        } catch (moveTypeError) {
+            console.error('[ADMIN SPONSORS] Erreur ordre type:', moveTypeError);
+            setError(moveTypeError.message || 'Erreur lors du deplacement du type');
         }
     };
 
-    const handleDeleteSection = async () => {
-        const section = (deleteSectionForm.section || '').trim();
-        const targetSection = (deleteSectionForm.target_section || 'general').trim() || 'general';
-        if (!section) {
-            setError('Sélectionne une section à supprimer');
-            return;
-        }
-
+    const handleSetType = async (sponsor, nextType) => {
         try {
-            await sponsorsService.deleteSection(section, targetSection);
-            setDeleteSectionForm({ section: '', target_section: 'general' });
-            await Promise.all([loadSections(), loadSponsors()]);
-            setError(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur suppression section:', error);
-            setError(error.message || 'Erreur lors de la suppression de section');
-        }
-    };
-
-    const handleMoveSection = async (section, direction) => {
-        try {
-            await sponsorsService.moveSection(section, direction);
-            await Promise.all([loadSections(), loadSponsors()]);
-            setError(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur ordre section:', error);
-            setError(error.message || 'Erreur lors du deplacement de la section');
-        }
-    };
-
-    const handleToggleVisibility = async (sponsor) => {
-        try {
-            const nextIsActive = Number(sponsor.is_active ?? 1) ? 0 : 1;
-            const response = await sponsorsService.setVisibility(sponsor.id, nextIsActive);
-            const updatedSponsor = response?.data || { ...sponsor, is_active: nextIsActive };
+            const response = await sponsorsService.setVisibility(sponsor.id, toTypeCode(nextType, 0));
+            const updatedSponsor = response?.data || { ...sponsor, is_active: toTypeCode(nextType, 0) };
             setSponsors((prev) => prev.map((s) => (s.id === sponsor.id ? { ...s, ...updatedSponsor } : s)));
             setError(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur visibilité:', error);
-            setError(error.message || 'Erreur lors du changement de visibilité');
+        } catch (updateError) {
+            console.error('[ADMIN SPONSORS] Erreur type:', updateError);
+            setError(updateError.message || 'Erreur lors de la mise à jour du type');
         }
     };
 
@@ -259,20 +246,20 @@ export default function AdminSponsors() {
             await sponsorsService.moveOrder(id, direction);
             await loadSponsors();
             setError(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur ordre:', error);
-            setError(error.message || "Erreur lors du deplacement de l'ordre");
+        } catch (moveError) {
+            console.error('[ADMIN SPONSORS] Erreur ordre:', moveError);
+            setError(moveError.message || "Erreur lors du deplacement de l'ordre");
         }
     };
-    
+
     const handleDelete = async (id) => {
         try {
             await sponsorsService.delete(id);
-            setSponsors(prev => prev.filter(s => s.id !== id));
+            setSponsors((prev) => prev.filter((s) => s.id !== id));
             setDeleteConfirm(null);
-        } catch (error) {
-            console.error('[ADMIN SPONSORS] Erreur suppression:', error);
-            setError(error.message || 'Erreur lors de la suppression');
+        } catch (deleteError) {
+            console.error('[ADMIN SPONSORS] Erreur suppression:', deleteError);
+            setError(deleteError.message || 'Erreur lors de la suppression');
         }
     };
 
@@ -283,7 +270,7 @@ export default function AdminSponsors() {
             </div>
         );
     }
-    
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -293,69 +280,119 @@ export default function AdminSponsors() {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
                 >
                     <Plus size={16} />
-                    Ajouter un sponsor</button>
+                    Ajouter un sponsor
+                </button>
             </div>
+
             <p className="text-sm text-gray-400">{sponsors.length} sponsor{sponsors.length > 1 ? 's' : ''}</p>
+
             {showForm && (
                 <div ref={sponsorFormRef} className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold">
-                            {editingId ? 'Modifier le sponsor' : 'Nouveau sponsor'}
-                        </h2>
+                        <h2 className="text-lg font-bold">{editingId ? 'Modifier le sponsor' : 'Nouveau sponsor'}</h2>
                         <button onClick={resetForm} className="text-gray-400 hover:text-white">
                             <X size={20} />
                         </button>
                     </div>
+
                     {error && (
                         <div className="p-3 rounded-lg bg-red-900/20 border border-red-500/20 text-sm text-red-400">
                             {error}
                         </div>
                     )}
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-400">Nom</label>
-                                <input type="text" id="name" name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500" />
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-400">Nom du type</label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
+                                    placeholder="Ex: Partenaires Gold"
+                                />
                             </div>
+                            {!editingId && (
+                                <div className="flex items-end">
+                                    <label className="flex items-center gap-2 text-sm text-gray-300">
+                                        <input
+                                            type="checkbox"
+                                            checked={createNewType}
+                                            onChange={(e) => setCreateNewType(e.target.checked)}
+                                            className="rounded border-gray-600 bg-gray-800"
+                                        />
+                                        Créer un nouveau type
+                                    </label>
+                                </div>
+                            )}
                             <div>
                                 <label htmlFor="cover" className="block text-sm font-medium text-gray-400">Image</label>
-                                <input type="file" id="cover" name="cover" accept="image/*" onChange={(e) => setFormData({ ...formData, cover: e.target.files?.[0] || null })} className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500" />
+                                <input
+                                    type="file"
+                                    id="cover"
+                                    name="cover"
+                                    accept="image/*"
+                                    onChange={(e) => setFormData({ ...formData, cover: e.target.files?.[0] || null })}
+                                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
+                                />
                             </div>
                             <div>
                                 <label htmlFor="url" className="block text-sm font-medium text-gray-400">URL</label>
-                                <input type="text" id="url" name="url" value={formData.url} onChange={(e) => setFormData({ ...formData, url: e.target.value })} className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500" />
-                            </div>
-                            <div>
-                                <label htmlFor="section" className="block text-sm font-medium text-gray-400">Section</label>
                                 <input
                                     type="text"
-                                    id="section"
-                                    name="section"
-                                    list="sections-list"
-                                    value={formData.section}
-                                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                                    id="url"
+                                    name="url"
+                                    value={formData.url}
+                                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                                     className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
                                 />
-                                <datalist id="sections-list">
-                                    {sectionOptions.map((section) => (
-                                        <option key={section} value={section} />
-                                    ))}
-                                </datalist>
                             </div>
+                            {editingId && (
+                                <div>
+                                    <label htmlFor="sort_order" className="block text-sm font-medium text-gray-400">Ordre d'affichage</label>
+                                    <input
+                                        type="number"
+                                        id="sort_order"
+                                        name="sort_order"
+                                        min="1"
+                                        max="65535"
+                                        value={formData.sort_order}
+                                        onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
+                                        className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                            )}
                             <div>
-                                <label htmlFor="sort_order" className="block text-sm font-medium text-gray-400">Ordre d'affichage</label>
-                                <input
-                                    type="number"
-                                    id="sort_order"
-                                    name="sort_order"
-                                    min="0"
-                                    max="65535"
-                                    value={formData.sort_order}
-                                    onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
-                                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
-                                />
+                                <label htmlFor="is_active" className="block text-sm font-medium text-gray-400">Type</label>
+                                {!editingId && createNewType ? (
+                                    <div className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2">
+                                        Nouveau type: {nextTypeCode}
+                                    </div>
+                                ) : (
+                                    <select
+                                        id="is_active"
+                                        name="is_active"
+                                        value={formData.is_active}
+                                        onChange={(e) => setFormData({ ...formData, is_active: e.target.value })}
+                                        className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
+                                    >
+                                        {activeTypeOptions.length === 0 ? (
+                                            <option value={defaultTypeCode}>Type {defaultTypeCode}</option>
+                                        ) : (
+                                            activeTypeOptions.map((type) => (
+                                                <option key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                )}
                             </div>
                         </div>
+
                         <div className="flex gap-3">
                             <button
                                 type="submit"
@@ -376,233 +413,151 @@ export default function AdminSponsors() {
                     </form>
                 </div>
             )}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-                <h2 className="text-lg font-bold">Gestion des sections</h2>
-                <p className="text-xs text-gray-400">
-                    Sans table dédiée, une section existe dès qu&apos;au moins un sponsor lui est associé.
-                </p>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="rounded-xl border border-white/10 bg-black/10 p-4 space-y-3">
-                        <h3 className="font-semibold">Créer une section</h3>
-                        <input
-                            type="text"
-                            value={newSectionDraft}
-                            onChange={(e) => setNewSectionDraft(e.target.value)}
-                            placeholder="Ex: Premium"
-                            className="w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
-                        />
-                        <button
-                            type="button"
-                            onClick={handlePrepareNewSection}
-                            className="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700"
-                        >
-                            Creer la section
-                        </button>
-                        {sectionCreationInfo && (
-                            <p className="text-xs text-green-300">{sectionCreationInfo}</p>
-                        )}
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-black/10 p-4 space-y-3">
-                        <h3 className="font-semibold">Renommer une section</h3>
-                        <select
-                            value={renameSectionForm.old_section}
-                            onChange={(e) => setRenameSectionForm((prev) => ({ ...prev, old_section: e.target.value }))}
-                            className="w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
-                        >
-                            <option value="">Choisir une section</option>
-                            {sections.map((section) => (
-                                <option key={section.section} value={section.section}>
-                                    {section.section}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            value={renameSectionForm.new_section}
-                            onChange={(e) => setRenameSectionForm((prev) => ({ ...prev, new_section: e.target.value }))}
-                            placeholder="Nouveau nom"
-                            className="w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
-                        />
-                        <button
-                            type="button"
-                            onClick={handleRenameSection}
-                            className="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-bold hover:bg-amber-700"
-                        >
-                            Renommer
-                        </button>
-                    </div>
-                    <div className="rounded-xl border border-white/10 bg-black/10 p-4 space-y-3">
-                        <h3 className="font-semibold">Supprimer une section</h3>
-                        <select
-                            value={deleteSectionForm.section}
-                            onChange={(e) => setDeleteSectionForm((prev) => ({ ...prev, section: e.target.value }))}
-                            className="w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
-                        >
-                            <option value="">Section à supprimer</option>
-                            {sections.map((section) => (
-                                <option key={section.section} value={section.section}>
-                                    {section.section}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            value={deleteSectionForm.target_section}
-                            onChange={(e) => setDeleteSectionForm((prev) => ({ ...prev, target_section: e.target.value }))}
-                            placeholder="Réaffecter vers (default: general)"
-                            className="w-full rounded-md border-gray-700 bg-gray-800 text-white focus:border-blue-500 focus:ring-blue-500"
-                        />
-                        <button
-                            type="button"
-                            onClick={handleDeleteSection}
-                            className="px-3 py-2 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700"
-                        >
-                            Supprimer et réaffecter
-                        </button>
-                    </div>
-                </div>
-                {sections.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        {sections.map((section, index) => (
-                            <div
-                                key={section.section}
-                                className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-white/10 text-gray-200"
-                            >
-                                <button
-                                    type="button"
-                                    title="Monter la section"
-                                    onClick={() => handleMoveSection(section.section, 'up')}
-                                    disabled={index === 0}
-                                    className="p-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
-                                >
-                                    <ArrowUp size={12} />
-                                </button>
-                                <button
-                                    type="button"
-                                    title="Descendre la section"
-                                    onClick={() => handleMoveSection(section.section, 'down')}
-                                    disabled={index === sections.length - 1}
-                                    className="p-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
-                                >
-                                    <ArrowDown size={12} />
-                                </button>
-                                <span>{section.section} ({section.sponsors_count})</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+
             {sponsors.length === 0 ? (
                 <p className="text-center text-gray-400 py-10">Aucun sponsor</p>
             ) : (
                 <div className="space-y-6">
-                    {groupedSponsors.map(([sectionName, sectionSponsors]) => (
-                        <section key={sectionName} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4">
+                    {groupedSponsors.map(({ typeCode, typeName, sponsors: typeSponsors }) => (
+                        <section key={typeCode} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4">
                             <div className="flex items-center justify-between gap-3">
-                                <h3 className="text-lg font-bold capitalize">{sectionName}</h3>
-                                <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-gray-300">
-                                    {sectionSponsors.length} sponsor{sectionSponsors.length > 1 ? 's' : ''}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {sectionSponsors.map((sponsor) => (
-                                    <div key={sponsor.id} className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <h4 className="font-bold">{sponsor.name}</h4>
-                                                <span
-                                                    className={`text-[10px] px-2 py-1 rounded-full ${
-                                                        Number(sponsor.is_active ?? 1)
-                                                            ? 'bg-green-500/20 text-green-300'
-                                                            : 'bg-yellow-500/20 text-yellow-300'
-                                                    }`}
-                                                >
-                                                    {Number(sponsor.is_active ?? 1) ? 'Actif' : 'Masqué'}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-gray-400">
-                                                Section: {sponsor.section || 'general'} | Ordre: {Number(sponsor.sort_order ?? 0)}
-                                            </p>
-                                            {sponsor.img && (
-                                                <img
-                                                    src={resolveImgUrl(sponsor.img)}
-                                                    alt={sponsor.name}
-                                                    className="w-full h-32 object-contain rounded-lg bg-white"
-                                                />
-                                            )}
-                                            {sponsor.url && (
-                                                <a
-                                                    href={normalizeSponsorUrl(sponsor.url)}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="text-xs text-blue-400 hover:underline break-all"
-                                                >
-                                                    {sponsor.url}
-                                                </a>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex items-center gap-2">
+                                    {typeCode > 0 && (
+                                        <>
+                                            {/*
+                                              Les types visibles sont > 0, la position de déplacement
+                                              doit ignorer le groupe "masqué (0)".
+                                            */}
                                             <button
-                                                onClick={() => handleMoveOrder(sponsor.id, 'up')}
-                                                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 transition-colors"
-                                                title="Monter"
+                                                type="button"
+                                                title="Monter le type"
+                                                onClick={() => handleMoveType(typeCode, 'up')}
+                                                disabled={activeTypeCodes.indexOf(typeCode) === 0}
+                                                className="p-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
                                             >
                                                 <ArrowUp size={12} />
                                             </button>
                                             <button
-                                                onClick={() => handleMoveOrder(sponsor.id, 'down')}
-                                                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 transition-colors"
-                                                title="Descendre"
+                                                type="button"
+                                                title="Descendre le type"
+                                                onClick={() => handleMoveType(typeCode, 'down')}
+                                                disabled={activeTypeCodes.indexOf(typeCode) === activeTypeCodes.length - 1}
+                                                className="p-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
                                             >
                                                 <ArrowDown size={12} />
                                             </button>
-                                            <button
-                                                onClick={() => handleToggleVisibility(sponsor)}
-                                                title={Number(sponsor.is_active ?? 1) ? 'Masquer' : 'Afficher'}
-                                                className={`flex items-center justify-center p-2 rounded-lg text-xs font-bold transition-colors ${
-                                                    Number(sponsor.is_active ?? 1)
-                                                        ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30'
-                                                        : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
-                                                }`}
-                                            >
-                                                {Number(sponsor.is_active ?? 1) ? <EyeOff size={14} /> : <Eye size={14} />}
-                                            </button>
-                                            <button
-                                                onClick={() => openEdit(sponsor)}
-                                                title="Modifier"
-                                                className="flex items-center justify-center p-2 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-bold hover:bg-blue-500/30 transition-colors"
-                                            >
-                                                <Pencil size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => setDeleteConfirm(sponsor.id)}
-                                                title="Supprimer"
-                                                className="flex items-center justify-center p-2 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                        {deleteConfirm === sponsor.id && (
-                                            <div className="p-3 rounded-lg bg-red-900/20 border border-red-500/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                                <p className="text-xs text-red-400">Confirmer ?</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <button
-                                                        onClick={() => handleDelete(sponsor.id)}
-                                                        className="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700"
+                                        </>
+                                    )}
+                                    <h3 className="text-lg font-bold">{getTypeLabel(Number(typeCode), typeName)}</h3>
+                                </div>
+                                <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-gray-300">
+                                    {typeSponsors.length} sponsor{typeSponsors.length > 1 ? 's' : ''}
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {typeSponsors.map((sponsor) => {
+                                    const sponsorType = toTypeCode(sponsor.is_active, 0);
+                                    return (
+                                        <div key={sponsor.id} className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span
+                                                        className={`text-[10px] px-2 py-1 rounded-full ${
+                                                            sponsorType > 0
+                                                                ? 'bg-green-500/20 text-green-300'
+                                                                : 'bg-yellow-500/20 text-yellow-300'
+                                                        }`}
                                                     >
-                                                        Oui
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setDeleteConfirm(null)}
-                                                        className="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-bold hover:bg-gray-600"
-                                                    >
-                                                        Non
-                                                    </button>
+                                                        {getTypeLabel(sponsorType, sponsor.name)}
+                                                    </span>
                                                 </div>
+                                                <p className="text-xs text-gray-400">
+                                                    Ordre: {Number(sponsor.sort_order ?? 0)}
+                                                </p>
+                                                {sponsor.img && (
+                                                    <img
+                                                        src={resolveImgUrl(sponsor.img)}
+                                                        alt="Sponsor"
+                                                        className="w-full h-32 object-contain rounded-lg bg-white"
+                                                    />
+                                                )}
+                                                {sponsor.url && (
+                                                    <a
+                                                        href={normalizeSponsorUrl(sponsor.url)}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="text-xs text-blue-400 hover:underline break-all"
+                                                    >
+                                                        {sponsor.url}
+                                                    </a>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                ))}
+
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <button
+                                                    onClick={() => handleMoveOrder(sponsor.id, 'up')}
+                                                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 transition-colors"
+                                                    title="Monter"
+                                                >
+                                                    <ArrowUp size={12} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleMoveOrder(sponsor.id, 'down')}
+                                                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-white/10 text-gray-200 text-xs font-bold hover:bg-white/20 transition-colors"
+                                                    title="Descendre"
+                                                >
+                                                    <ArrowDown size={12} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSetType(sponsor, sponsorType > 0 ? 0 : 1)}
+                                                    title={sponsorType > 0 ? 'Masquer (type 0)' : 'Activer (type 1)'}
+                                                    className={`flex items-center justify-center p-2 rounded-lg text-xs font-bold transition-colors ${
+                                                        sponsorType > 0
+                                                            ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30'
+                                                            : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                                                    }`}
+                                                >
+                                                    {sponsorType > 0 ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                </button>
+                                                <button
+                                                    onClick={() => openEdit(sponsor)}
+                                                    title="Modifier"
+                                                    className="flex items-center justify-center p-2 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-bold hover:bg-blue-500/30 transition-colors"
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => setDeleteConfirm(sponsor.id)}
+                                                    title="Supprimer"
+                                                    className="flex items-center justify-center p-2 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+
+                                            {deleteConfirm === sponsor.id && (
+                                                <div className="p-3 rounded-lg bg-red-900/20 border border-red-500/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                    <p className="text-xs text-red-400">Confirmer ?</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <button
+                                                            onClick={() => handleDelete(sponsor.id)}
+                                                            className="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700"
+                                                        >
+                                                            Oui
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setDeleteConfirm(null)}
+                                                            className="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-bold hover:bg-gray-600"
+                                                        >
+                                                            Non
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </section>
                     ))}

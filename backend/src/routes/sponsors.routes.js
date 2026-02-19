@@ -14,10 +14,7 @@ router.use(checkAuth);
 router.use(restrictTo('superadmin'));
 
 router.post('/admin/all', sponsorsController.getAllAdmin);
-router.post('/admin/sections', sponsorsController.getSections);
-router.post('/admin/sections/order', sponsorsController.moveSection);
-router.post('/admin/sections/rename', sponsorsController.renameSection);
-router.post('/admin/sections/delete', sponsorsController.deleteSection);
+router.post('/admin/types/order', sponsorsController.moveTypeOrder);
 router.post('/', uploadSponsorCover, sponsorsController.create);
 router.put('/:id', uploadSponsorCover, sponsorsController.update);
 router.post('/:id/order', sponsorsController.moveOrder);
