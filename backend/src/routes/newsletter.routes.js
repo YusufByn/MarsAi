@@ -5,19 +5,22 @@ import {
   validateUnsubscribe, 
   validateSendCampaign, 
   validatePreviewRecipients 
-} from '../../../shared/validators/newsletter.validator.js';
-import { checkAuth } from '../middlewares/auth.middleware.js';
-import { restrictTo } from '../middlewares/auth.middleware.js';
+} from '../middlewares/validator/newsletter.validator.js';
+import { checkAuth, restrictTo } from '../middlewares/auth.middleware.js';
+import { apiLimiter, authLimiter } from '../middlewares/rateLimiter.middleware.js';
 
 const router = Router();
 
-// route publiques 
-// route pour s'abonner
+router.use(authLimiter);
+
 router.post('/subscribe', validateSubscribe, newsletterController.subscribe);
 // route pour se désabonner
 router.post('/unsubscribe', validateUnsubscribe, newsletterController.unsubscribe);
 // route pour compter kes inscrit
 router.get('/count', newsletterController.getCount);
+
+
+router.use(apiLimiter);
 
 router.use(checkAuth);
 
