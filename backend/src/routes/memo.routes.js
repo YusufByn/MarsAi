@@ -1,15 +1,9 @@
 import express from 'express';
 import { memoController } from '../controllers/memo.controller.js';
 import { validateMemoUpsert } from '../../../shared/validators/memo.validator.js';
-import { validateMemoUpsert } from '../middlewares/validator/memo.validator.js';
 import { apiLimiter } from '../middlewares/rateLimiter.middleware.js';
 
 const router = express.Router();
-
-
-
-
-
 
 router.use(apiLimiter);
 router.get('/user/:userId', memoController.getAllByUser);
