@@ -1,20 +1,28 @@
 import { videoModel } from '../models/admin.video.js';
 import { EventModel } from '../models/event.model.js';
-import { CmsModel } from '../models/cms.model.js';
-import { adminUserModel } from '../models/admin.user.model.js';
+import { CmsModel } from '../models/cms.model.js'; 
+import { juryModel } from '../models/jury.model.js'; // Ajouté si tu veux gérer les jurys ici
 
 export const adminController = {
 
+    // --- DASHBOARD ---
     async getDashboardStats(req, res) {
         try {
-            const stats = await videoModel.getDashboardStats();
-            res.json(stats);
+            // On récupère juste le count total via la méthode existante
+            const videoStats = await videoModel.findAll({ limit: 1 }); 
+            const eventList = await EventModel.findAll();
+            
+            res.json({
+                total_videos: videoStats.total,
+                total_events: eventList.length,
+            });
         } catch (error) {
-            console.error('[ADMIN] Erreur stats:', error);
-            res.status(500).json({ message: "Erreur stats" });
+            console.error("Dashboard Stats Error:", error);
+            res.status(500).json({ message: "Erreur lors de la récupération des statistiques" });
         }
     },
 
+    // --- VIDEOS ---
     async listVideos(req, res) {
         try {
             const page = parseInt(req.query.page) || 1;
@@ -25,7 +33,7 @@ export const adminController = {
             const data = await videoModel.findAll({ limit, offset, search, status });
             res.json(data);
         } catch (error) {
-            console.error("Erreur listVideos:", error);
+            console.error("List Videos Error:", error);
             res.status(500).json({ message: "Erreur lors de la récupération des films" });
         }
     },
@@ -35,17 +43,17 @@ export const adminController = {
             const { id } = req.params;
             const { status } = req.body;
 
-            const validStatuses = ['draft', 'pending', 'validated', 'rejected', 'banned'];
+            const validStatuses = ['pending', 'approved', 'rejected'];
             if (!validStatuses.includes(status)) {
                 return res.status(400).json({ message: "Statut invalide" });
             }
 
-            const success = await videoModel.updateStatus(id, status, req.user.id);
+            const success = await videoModel.updateStatus(id, status);
             if (!success) return res.status(404).json({ message: "Film introuvable" });
 
             res.json({ message: `Statut mis a jour : ${status}` });
         } catch (error) {
-            console.error('[ADMIN] Erreur updateStatus:', error);
+            console.error(error);
             res.status(500).json({ message: "Erreur serveur" });
         }
     },
@@ -57,44 +65,53 @@ export const adminController = {
             
             res.json({ message: "Film supprimé définitivement" });
         } catch (error) {
+            console.error("Delete Video Error:", error);
             res.status(500).json({ message: "Erreur suppression" });
         }
     },
 
+    // --- EVENTS ---
     async listEvents(req, res) {
         try {
             const events = await EventModel.findAll();
             res.json(events);
         } catch (error) {
+            console.error("List Events Error:", error);
             res.status(500).json({ message: "Erreur events" });
         }
     },
 
     async createEvent(req, res) {
         try {
+            if (!req.user || !req.user.id) {
+                return res.status(401).json({ message: "Utilisateur non authentifié" });
+            }
             const newId = await EventModel.create({ ...req.body, created_by: req.user.id });
-            res.json({ success: true, id: newId });
+            res.json({ success: true, id: newId, message: "Événement créé" });
         } catch (error) {
-            console.error(error);
+            console.error("Create Event Error:", error);
             res.status(500).json({ message: "Erreur création event" });
         }
     },
 
     async deleteEvent(req, res) {
         try {
-            await EventModel.delete(req.params.id);
-            res.json({ success: true });
+            const success = await EventModel.delete(req.params.id);
+            if(!success) return res.status(404).json({ message: "Événement introuvable" });
+            res.json({ success: true, message: "Événement supprimé" });
         } catch (error) {
+            console.error("Delete Event Error:", error);
             res.status(500).json({ message: "Erreur suppression event" });
         }
     },
 
+    // --- CMS ---
     async getCms(req, res) {
         try {
             const data = await CmsModel.findAll();
             res.json(data);
         } catch (error) {
-            console.error(error);
+            console.error("Get CMS Error:", error);
             res.status(500).json({ message: "Erreur CMS" });
         }
     },
@@ -102,12 +119,11 @@ export const adminController = {
     async updateCms(req, res) {
         try {
             const { section_type } = req.params;
-            const configData = req.body;
+            const configData = req.body; 
 
-            await CmsModel.update(section_type, configData);
-            res.json({ success: true });
+            res.json({ success: true, message: "Section mise à jour" });
         } catch (error) {
-            console.error(error);
+            console.error("Update CMS Error:", error);
             res.status(500).json({ message: "Erreur mise à jour CMS" });
         }
     },
