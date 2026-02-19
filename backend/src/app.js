@@ -39,7 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', securityGuard);
 
 // uploads
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // toutes les routes
 app.use('/api', routes);

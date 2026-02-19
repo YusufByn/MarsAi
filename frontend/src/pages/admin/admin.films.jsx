@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { API_URL } from '../../config';
 
 export default function AdminFilms() {
   const [films, setFilms] = useState([]);
@@ -55,6 +56,12 @@ export default function AdminFilms() {
     e.preventDefault();
     setPage(1);
     fetchFilms();
+  };
+
+  const getCoverUrl = (cover) => {
+    if (!cover) return null;
+    if (cover.startsWith('http')) return cover;
+    return `${API_URL}/uploads/covers/${cover}`;
   };
 
   const statusBadge = (status) => {
@@ -117,9 +124,9 @@ export default function AdminFilms() {
             <div key={film.id} className="rounded-xl border border-white/10 bg-white/5 p-4 hover:border-white/20 transition-colors">
               <div className="flex flex-col md:flex-row gap-4">
                 {/* Miniature */}
-                {film.poster_url && (
+                {getCoverUrl(film.poster_url) && (
                   <div className="w-full md:w-40 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                    <img src={film.poster_url} alt={film.title} className="w-full h-full object-cover" />
+                    <img src={getCoverUrl(film.poster_url)} alt={film.title} className="w-full h-full object-cover" />
                   </div>
                 )}
 
