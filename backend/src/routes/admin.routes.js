@@ -2,9 +2,11 @@ import express from 'express';
 import { adminController } from '../controllers/admin.controller.js';
 import { checkAuth, restrictTo } from '../middlewares/auth.middleware.js';
 import { securityController } from '../controllers/security.controller.js';
+import { apiLimiter } from '../middlewares/rateLimiter.middleware.js';
 
 const router = express.Router();
 
+router.use(apiLimiter);
 router.use(checkAuth); 
 router.use(restrictTo('admin'));
 

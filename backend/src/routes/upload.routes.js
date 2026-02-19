@@ -3,8 +3,12 @@ import { Router} from 'express';
 import videoController from '../controllers/video.controller.js';
 // import uploadController from '../controllers/upload.controller.js';
 import  upload  from '../middlewares/upload.middleware.js';
+import { apiLimiter } from '../middlewares/rateLimiter.middleware.js';
 
 const router = Router();
+
+router.use(apiLimiter);
+
 // const uploadController = require('../controllers/uploadController');
 
 // router.post(

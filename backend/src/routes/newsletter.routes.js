@@ -7,13 +7,18 @@ import {
   validatePreviewRecipients 
 } from '../middlewares/validator/newsletter.validator.js';
 import { checkAuth, restrictTo } from '../middlewares/auth.middleware.js';
+import { apiLimiter, authLimiter } from '../middlewares/rateLimiter.middleware.js';
+
 const router = Router();
 
+router.use(authLimiter);
 
 router.post('/subscribe', validateSubscribe, newsletterController.subscribe);
 router.post('/unsubscribe', validateUnsubscribe, newsletterController.unsubscribe);
 router.get('/count', newsletterController.getCount);
 
+
+router.use(apiLimiter);
 
 router.use(checkAuth);
 

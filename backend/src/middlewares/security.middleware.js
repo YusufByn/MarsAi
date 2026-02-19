@@ -1,8 +1,9 @@
 import pool from '../config/db.js';
+
 const ATTACK_PATTERNS = {
     SQLi: /(\%27)|(\')|(\-\-)|(\%23)|(#)/i, 
     SQLi_Advanced: /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i, 
-    PathTraversal: /(\.\.\/|\.\.\\)/ //
+    PathTraversal: /(\.\.\/|\.\.\\)/
 };
 
 export const securityGuard = async (req, res, next) => {

@@ -7,6 +7,8 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
+import { securityGuard } from './middlewares/security.middleware.js';
+
 
 import routes from './routes/index.js';
 
@@ -33,13 +35,16 @@ app.use(compression());
 app.use(express.urlencoded({ extended: true }));
 
 
+// anti attacks
+app.use('/api', securityGuard);
+
+// uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // toutes les routes
 app.use('/api', routes);
 
 // middleware pour gérer les erreurs
-
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({
