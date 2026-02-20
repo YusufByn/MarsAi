@@ -15,6 +15,7 @@ router.delete('/videos/:id', adminController.deleteVideo);
 
 router.get('/events', adminController.listEvents);
 router.post('/events', adminController.createEvent);
+// router.post('/events/:id/update', adminController.updateEvent);
 router.delete('/events/:id', adminController.deleteEvent);
 
 router.get('/cms', adminController.getCms);
