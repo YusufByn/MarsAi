@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { createReadStream } from 'fs';
 import { videoModel } from '../../models/video.model.js';
-import { sendCustomEmail } from '../../services/email.service.js';
+import { sendSelectorEmailToCreator } from '../../services/email.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -204,8 +204,7 @@ const PlayerVideoController = {
 
       console.log('[EMAIL] Envoi email au realisateur:', video.email, 'pour video:', video_id);
 
-      const subject = `MarsAI - Message d'un selecteur a propos de "${video.title}"`;
-      const result = await sendCustomEmail(video.email, subject, message);
+      const result = await sendSelectorEmailToCreator({ title: video.title, email: video.email }, message);
 
       if (!result.success) {
         console.error('[EMAIL ERROR] Echec envoi:', result.error);

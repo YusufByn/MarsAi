@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authService } from '../../services/authService';
 
 const Register = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('token');
+
+  const [tokenStatus, setTokenStatus] = useState('validating'); // 'validating' | 'valid' | 'invalid'
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -14,6 +18,23 @@ const Register = () => {
   });
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (!inviteToken) {
+      setTokenStatus('invalid');
+      return;
+    }
+    authService.validateInviteToken(inviteToken).then((data) => {
+      if (data?.valid) {
+        setTokenStatus('valid');
+        setFormData((prev) => ({ ...prev, email: data.email }));
+      } else {
+        setTokenStatus('invalid');
+      }
+    }).catch(() => {
+      setTokenStatus('invalid');
+    });
+  }, [inviteToken]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -26,7 +47,7 @@ const Register = () => {
     setMessage('');
 
     try {
-      await authService.register(formData);
+      await authService.register(formData, inviteToken);
       setStatus('success');
       setMessage(t('register.success'));
       navigate('/login');
@@ -35,6 +56,27 @@ const Register = () => {
       setMessage(error.message || t('register.error'));
     }
   };
+
+  if (tokenStatus === 'validating') {
+    return (
+      <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10 flex items-center justify-center">
+        <p className="text-gray-400">Vérification de l'invitation...</p>
+      </div>
+    );
+  }
+
+  if (tokenStatus === 'invalid') {
+    return (
+      <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
+        <div className="max-w-md mx-auto text-center space-y-4">
+          <h1 className="text-3xl font-bold">Lien invalide</h1>
+          <p className="text-gray-400">
+            Ce lien d'invitation est invalide ou a expiré. Contactez un administrateur pour recevoir une nouvelle invitation.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
@@ -79,10 +121,8 @@ const Register = () => {
                 type="email"
                 name="email"
                 value={formData.email}
-                onChange={handleChange}
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-                placeholder="email@marsai.com"
-                required
+                readOnly
+                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-gray-400 cursor-not-allowed focus:outline-none"
               />
             </div>
             <div className="space-y-2">

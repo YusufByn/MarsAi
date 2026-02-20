@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.use(apiLimiter);
 router.use(checkAuth); 
-router.use(restrictTo('admin'));
+router.use(restrictTo('admin', 'superadmin'));
 
 router.get('/stats', adminController.getDashboardStats);
 
@@ -29,6 +29,8 @@ router.get('/users', adminController.listUsers);
 router.post('/users', adminController.createUser);
 router.put('/users/:id', adminController.updateUser);
 router.delete('/users/:id', adminController.deleteUser);
+
+router.post('/invite', adminController.sendInvite);
 
 router.get('/security/logs', securityController.getSecurityLogs);
 router.get('/security/blacklist', securityController.getBlacklist);
