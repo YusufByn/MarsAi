@@ -4,6 +4,8 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
+import { MulterError } from 'multer';
+import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
@@ -52,7 +54,38 @@ app.use('/uploads', express.static(uploadsFromRoot));
 app.use('/api', routes);
 
 // middleware pour gérer les erreurs
-app.use((err, req, res, next) => {
+app.use(async (err, req, res, next) => {
+  const uploadedFilePath = req?.file?.path;
+  if (uploadedFilePath) {
+    try {
+      await fs.unlink(uploadedFilePath);
+    } catch (cleanupError) {
+      if (cleanupError?.code !== 'ENOENT') {
+        console.error('[UPLOAD] cleanup error:', cleanupError.message);
+      }
+    }
+  }
+
+  if (err instanceof MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({
+        message: 'Fichier trop volumineux (max 5MB).',
+        success: false,
+      });
+    }
+    return res.status(400).json({
+      message: 'Erreur lors de l upload du fichier.',
+      success: false,
+    });
+  }
+
+  if (typeof err?.message === 'string' && err.message.startsWith('File type not supported:')) {
+    return res.status(400).json({
+      message: 'Type de fichier non autorisé. Formats: JPEG, PNG, WEBP.',
+      success: false,
+    });
+  }
+
   console.error(err);
   res.status(500).json({
     message: 'Internal server error',

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Countdown from '../components/Countdown';
-import Sponsors from './sponsors/Sponsors';
+import SponsorsPreview from './sponsors/SponsorsPreview';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ const HomePage = () => {
 
         {/* Sponsors Section */}
         <div className="h-full mt-25">
-          <Sponsors />
+          <SponsorsPreview />
         </div>
         
       </header>

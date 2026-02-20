@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { promises as fs } from 'fs';
 
 const MAX_NAME_LENGTH = 120;
 const MAX_URL_LENGTH = 500;
@@ -40,13 +41,26 @@ const zodErrors = (error) => {
   }));
 };
 
-const validatePayload = (schema, source = 'body') => (req, res, next) => {
+const removeUploadedFileIfAny = async (req) => {
+  const filePath = req?.file?.path;
+  if (!filePath) return;
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      console.error('[SPONSORS] cleanup validation upload error:', error.message);
+    }
+  }
+};
+
+const validatePayload = (schema, source = 'body') => async (req, res, next) => {
   try {
     const validated = schema.parse(req[source]);
     req[source] = validated;
     return next();
   } catch (error) {
     if (error instanceof z.ZodError) {
+      await removeUploadedFileIfAny(req);
       return res.status(400).json({
         success: false,
         message: 'Validation failed',

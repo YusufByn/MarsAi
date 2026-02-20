@@ -46,21 +46,25 @@ function Sponsors() {
     }, [sponsors]);
 
     if (loading) {
-        return <section className="py-6 text-center text-white/60">Chargement des sponsors...</section>;
+        return <section className="pt-28 md:pt-32 pb-6 px-6 text-center text-white/60">Chargement des sponsors...</section>;
     }
 
     if (error) {
-        return <section className="py-6 text-center text-red-400">Impossible de charger les sponsors.</section>;
+        return <section className="pt-28 md:pt-32 pb-6 px-6 text-center text-red-400">Impossible de charger les sponsors.</section>;
     }
 
     return (
-        <div className="space-y-10">
+        <div className="pt-28 md:pt-32 pb-12 px-6 max-w-7xl mx-auto space-y-10">
             {groupedSponsors.map(({ typeCode, typeName, sponsors: typeSponsors }) => (
                 <section key={typeCode} className="space-y-4">
                     <h1 className="text-2xl font-bold text-white">
                         {typeName || `Type ${typeCode}`}
                     </h1>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className={`grid gap-4 ${
+                        (typeSponsors.length === 2 || typeSponsors.length === 4)
+                            ? 'grid-cols-1 sm:grid-cols-2' 
+                            : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+                    }`}>
                         {typeSponsors.map((sponsor) => (
                             <SponsorsTemplate
                                 key={sponsor.id}

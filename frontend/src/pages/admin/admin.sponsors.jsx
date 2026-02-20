@@ -45,13 +45,19 @@ const getActionErrorMessage = (error, fallbackMessage) => {
     return error?.message || fallbackMessage;
 };
 
-const validateSponsorForm = ({ formData, createNewType, editingId }) => {
+const validateSponsorForm = ({ formData, createNewType, editingId, nextTypeCode }) => {
     const errors = [];
     const trimmedName = String(formData.name || '').trim();
     const trimmedUrl = String(formData.url || '').trim();
 
     if (createNewType && !trimmedName) {
         errors.push({ field: 'name', message: 'Le nom du type est obligatoire' });
+    }
+    if (createNewType && (nextTypeCode === null || nextTypeCode === undefined)) {
+        errors.push({
+            field: 'is_active',
+            message: `Impossible de creer un nouveau type: limite atteinte (${MAX_TYPE_CODE})`,
+        });
     }
     if (trimmedName.length > MAX_NAME_LENGTH) {
         errors.push({
@@ -195,9 +201,15 @@ export default function AdminSponsors() {
         [groupedSponsors]
     );
     const nextTypeCode = useMemo(() => {
-        const maxType = activeTypeCodes.length ? Math.max(...activeTypeCodes) : 0;
-        return Math.min(MAX_TYPE_CODE, maxType + 1);
+        const usedTypeCodes = new Set(activeTypeCodes.map((value) => Number(value)));
+        for (let code = 1; code <= MAX_TYPE_CODE; code += 1) {
+            if (!usedTypeCodes.has(code)) {
+                return code;
+            }
+        }
+        return null;
     }, [activeTypeCodes]);
+    const canCreateNewType = nextTypeCode !== null;
 
     const loadSponsors = async () => {
         try {
@@ -277,7 +289,7 @@ export default function AdminSponsors() {
         e.preventDefault();
         setValidationErrors([]);
         setError(null);
-        const localErrors = validateSponsorForm({ formData, createNewType, editingId });
+        const localErrors = validateSponsorForm({ formData, createNewType, editingId, nextTypeCode });
         if (localErrors.length > 0) {
             setValidationErrors(localErrors);
             return;
@@ -285,6 +297,12 @@ export default function AdminSponsors() {
 
         setSaving(true);
         try {
+            if (createNewType && !canCreateNewType) {
+                setValidationErrors([
+                    { field: 'is_active', message: `Limite de types atteinte (${MAX_TYPE_CODE})` },
+                ]);
+                return;
+            }
             const selectedType = createNewType
                 ? nextTypeCode
                 : Math.max(1, toTypeCode(formData.is_active, defaultTypeCode));
@@ -466,6 +484,7 @@ export default function AdminSponsors() {
                                         <input
                                             type="checkbox"
                                             checked={createNewType}
+                                            disabled={!canCreateNewType}
                                             onChange={(e) => {
                                                 clearFieldErrors('name', 'is_active');
                                                 setCreateNewType(e.target.checked);
@@ -474,6 +493,11 @@ export default function AdminSponsors() {
                                         />
                                         Créer un nouveau type
                                     </label>
+                                    {!canCreateNewType && (
+                                        <p className="text-xs text-yellow-300 mt-2">
+                                            Limite atteinte ({MAX_TYPE_CODE} types max)
+                                        </p>
+                                    )}
                                 </div>
                             )}
                             <div>
@@ -535,7 +559,9 @@ export default function AdminSponsors() {
                                 <label htmlFor="is_active" className="block text-sm font-medium text-gray-400">Type</label>
                                 {!editingId && createNewType ? (
                                     <div className="mt-1 block w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-2">
-                                        Nouveau type: {nextTypeCode}
+                                        {canCreateNewType
+                                            ? `Nouveau type: ${nextTypeCode}`
+                                            : `Aucun type disponible (max ${MAX_TYPE_CODE})`}
                                     </div>
                                 ) : (
                                     <select

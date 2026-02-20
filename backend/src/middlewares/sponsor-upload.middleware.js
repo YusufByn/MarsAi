@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { randomBytes } from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +21,9 @@ const storage = multer.diskStorage({
     cb(null, coversDir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}${path.extname(file.originalname)}`);
+    const uniqueSuffix = randomBytes(6).toString('hex');
+    const extension = path.extname(file.originalname || '').toLowerCase();
+    cb(null, `${Date.now()}-${uniqueSuffix}${extension}`);
   },
 });
 

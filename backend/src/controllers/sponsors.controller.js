@@ -1,87 +1,43 @@
 import pool from '../config/db.js';
+import { promises as fs } from 'fs';
+import {
+  MAX_SORT_ORDER,
+  createSponsor,
+  deleteSponsor,
+  getActiveTypeCodes,
+  getAllSponsorsForAdmin,
+  getAllVisibleSponsors,
+  getOrderContextBySponsorId,
+  getSponsorById,
+  getSponsorByIdWithTypeName,
+  getSponsorsByType,
+  getVisibleSponsorById,
+  normalizeSponsorUrl,
+  parseIsActive,
+  parseSortOrder,
+  resolveTypeName,
+  swapTypeCodes,
+  updateSponsor,
+  updateSponsorSortOrder,
+  updateSponsorVisibility,
+} from '../models/sponsors.model.js';
 
-const TABLE = 'sponsor';
-const URL_PROTOCOL_REGEX = /^https?:\/\//i;
-const MAX_SORT_ORDER = 32767;
-const MAX_TYPE_CODE = 255;
-
-const normalizeSponsorUrl = (value) => {
-  if (typeof value !== 'string') {
-    return value ?? null;
+const cleanupUploadedCoverIfAny = async (req, context = 'unknown') => {
+  const filePath = req?.file?.path;
+  if (!filePath) return;
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      console.error(`[SPONSORS] ${context} cleanup upload error:`, error.message);
+    }
   }
-
-  const trimmedValue = value.trim();
-  if (!trimmedValue) {
-    return null;
-  }
-
-  return URL_PROTOCOL_REGEX.test(trimmedValue) ? trimmedValue : `https://${trimmedValue}`;
 };
-
-const parseIsActive = (value, fallback = 1) => {
-  if (value === undefined || value === null) return fallback;
-  const raw = Number(value);
-  if (!Number.isFinite(raw)) return fallback;
-  const normalized = Math.trunc(raw);
-  if (normalized < 0) return 0;
-  if (normalized > MAX_TYPE_CODE) return MAX_TYPE_CODE;
-  return normalized;
-};
-
-const parseSortOrder = (value, fallback = 0) => {
-  const raw = Number(value);
-  if (!Number.isFinite(raw)) return fallback;
-  const normalized = Math.trunc(raw);
-  if (normalized < 0) return 0;
-  if (normalized > MAX_SORT_ORDER) return MAX_SORT_ORDER;
-  return normalized;
-};
-
-const resolveTypeName = async (typeCode, options = {}) => {
-  const { excludeId = null } = options;
-  if (!Number.isFinite(Number(typeCode)) || Number(typeCode) <= 0) return '';
-
-  const params = [Number(typeCode)];
-  let sql = `
-    SELECT name
-    FROM ${TABLE}
-    WHERE is_active = ?
-      AND name IS NOT NULL
-      AND TRIM(name) <> ''
-  `;
-
-  if (excludeId !== null && excludeId !== undefined) {
-    sql += ' AND id <> ?';
-    params.push(Number(excludeId));
-  }
-
-  sql += ' ORDER BY sort_order ASC, id ASC LIMIT 1';
-  const [rows] = await pool.execute(sql, params);
-  return rows[0]?.name ? String(rows[0].name).trim() : '';
-};
-
-const sponsorSelectWithTypeName = `
-  SELECT s.id, s.name, s.img, s.url, s.sort_order, s.is_active,
-    (
-      SELECT s2.name
-      FROM ${TABLE} s2
-      WHERE s2.is_active = s.is_active
-        AND s2.name IS NOT NULL
-        AND TRIM(s2.name) <> ''
-      ORDER BY s2.sort_order ASC, s2.id ASC
-      LIMIT 1
-    ) AS type_name
-  FROM ${TABLE} s
-`;
 
 export const sponsorsController = {
   async getAll(req, res) {
     try {
-      const [rows] = await pool.execute(
-        `${sponsorSelectWithTypeName}
-         WHERE s.is_active > 0
-         ORDER BY s.is_active ASC, s.sort_order ASC, s.id DESC`
-      );
+      const rows = await getAllVisibleSponsors();
       return res.json({ success: true, data: rows });
     } catch (error) {
       console.error('[SPONSORS] getAll error:', error.message);
@@ -94,10 +50,7 @@ export const sponsorsController = {
 
   async getAllAdmin(req, res) {
     try {
-      const [rows] = await pool.execute(
-        `${sponsorSelectWithTypeName}
-         ORDER BY s.is_active ASC, s.sort_order ASC, s.id DESC`
-      );
+      const rows = await getAllSponsorsForAdmin();
       return res.json({ success: true, data: rows });
     } catch (error) {
       console.error('[SPONSORS] getAllAdmin error:', error.message);
@@ -111,21 +64,16 @@ export const sponsorsController = {
   async getById(req, res) {
     try {
       const { id } = req.params;
-      const [rows] = await pool.execute(
-        `${sponsorSelectWithTypeName}
-         WHERE s.id = ? AND s.is_active > 0
-         LIMIT 1`,
-        [id]
-      );
+      const sponsor = await getVisibleSponsorById(id);
 
-      if (!rows.length) {
+      if (!sponsor) {
         return res.status(404).json({
           success: false,
           message: 'Sponsor introuvable',
         });
       }
 
-      return res.json({ success: true, data: rows[0] });
+      return res.json({ success: true, data: sponsor });
     } catch (error) {
       console.error('[SPONSORS] getById error:', error.message);
       return res.status(500).json({
@@ -149,22 +97,19 @@ export const sponsorsController = {
         : '';
       const nextName = inputName || inheritedTypeName;
 
-      const [result] = await pool.execute(
-        `INSERT INTO ${TABLE} (name, img, url, sort_order, is_active) VALUES (?, ?, ?, ?, ?)`,
-        [nextName, nextImg, nextUrl, nextSortOrder, nextIsActive]
-      );
-
-      const [createdRows] = await pool.execute(
-        `${sponsorSelectWithTypeName}
-         WHERE s.id = ?
-         LIMIT 1`,
-        [result.insertId]
-      );
+      const result = await createSponsor({
+        name: nextName,
+        img: nextImg,
+        url: nextUrl,
+        sortOrder: nextSortOrder,
+        isActive: nextIsActive,
+      });
+      const createdSponsor = await getSponsorByIdWithTypeName(result.insertId);
 
       return res.status(201).json({
         success: true,
         message: 'Sponsor créé avec succès',
-        data: createdRows[0] || {
+        data: createdSponsor || {
           id: result.insertId,
           name: nextName,
           img: nextImg,
@@ -174,6 +119,7 @@ export const sponsorsController = {
         },
       });
     } catch (error) {
+      await cleanupUploadedCoverIfAny(req, 'create');
       console.error('[SPONSORS] create error:', error.message);
       return res.status(500).json({
         success: false,
@@ -188,19 +134,14 @@ export const sponsorsController = {
       const { name, img, url, sort_order, is_active } = req.body;
       const uploadedImg = req.file ? `/uploads/covers/${req.file.filename}` : null;
 
-      const [currentRows] = await pool.execute(
-        `SELECT id, name, img, url, sort_order, is_active FROM ${TABLE} WHERE id = ? LIMIT 1`,
-        [id]
-      );
+      const current = await getSponsorById(id);
 
-      if (!currentRows.length) {
+      if (!current) {
         return res.status(404).json({
           success: false,
           message: 'Sponsor introuvable',
         });
       }
-
-      const current = currentRows[0];
       const inputName = name !== undefined
         ? (typeof name === 'string' ? name.trim() : '')
         : undefined;
@@ -222,10 +163,13 @@ export const sponsorsController = {
         nextName = inheritedTypeName || (typeof current.name === 'string' ? current.name.trim() : '');
       }
 
-      const [result] = await pool.execute(
-        `UPDATE ${TABLE} SET name = ?, img = ?, url = ?, sort_order = ?, is_active = ? WHERE id = ?`,
-        [nextName, nextImg, nextUrl, nextSortOrder, nextIsActive, id]
-      );
+      const result = await updateSponsor(id, {
+        name: nextName,
+        img: nextImg,
+        url: nextUrl,
+        sortOrder: nextSortOrder,
+        isActive: nextIsActive,
+      });
 
       if (!result.affectedRows) {
         return res.status(404).json({
@@ -234,17 +178,12 @@ export const sponsorsController = {
         });
       }
 
-      const [updatedRows] = await pool.execute(
-        `${sponsorSelectWithTypeName}
-         WHERE s.id = ?
-         LIMIT 1`,
-        [id]
-      );
+      const updatedSponsor = await getSponsorByIdWithTypeName(id);
 
       return res.json({
         success: true,
         message: 'Sponsor mis à jour avec succès',
-        data: updatedRows[0] || {
+        data: updatedSponsor || {
           id: Number(id),
           name: nextName,
           img: nextImg,
@@ -254,6 +193,7 @@ export const sponsorsController = {
         },
       });
     } catch (error) {
+      await cleanupUploadedCoverIfAny(req, 'update');
       console.error('[SPONSORS] update error:', error.message);
       return res.status(500).json({
         success: false,
@@ -275,19 +215,14 @@ export const sponsorsController = {
         });
       }
 
-      const [currentRows] = await pool.execute(
-        `SELECT id, name FROM ${TABLE} WHERE id = ? LIMIT 1`,
-        [id]
-      );
+      const current = await getSponsorById(id);
 
-      if (!currentRows.length) {
+      if (!current) {
         return res.status(404).json({
           success: false,
           message: 'Sponsor introuvable',
         });
       }
-
-      const current = currentRows[0];
       let nextName = typeof current.name === 'string' ? current.name.trim() : '';
       if (nextIsActive > 0) {
         const inheritedTypeName = await resolveTypeName(nextIsActive, { excludeId: id });
@@ -296,10 +231,10 @@ export const sponsorsController = {
         }
       }
 
-      const [result] = await pool.execute(
-        `UPDATE ${TABLE} SET is_active = ?, name = ? WHERE id = ?`,
-        [nextIsActive, nextName, id]
-      );
+      const result = await updateSponsorVisibility(id, {
+        isActive: nextIsActive,
+        name: nextName,
+      });
 
       if (!result.affectedRows) {
         return res.status(404).json({
@@ -308,17 +243,12 @@ export const sponsorsController = {
         });
       }
 
-      const [updatedRows] = await pool.execute(
-        `${sponsorSelectWithTypeName}
-         WHERE s.id = ?
-         LIMIT 1`,
-        [id]
-      );
+      const updatedSponsor = await getSponsorByIdWithTypeName(id);
 
       return res.json({
         success: true,
         message: 'Type du sponsor mis à jour avec succès',
-        data: updatedRows[0] || { id: Number(id), is_active: nextIsActive },
+        data: updatedSponsor || { id: Number(id), is_active: nextIsActive },
       });
     } catch (error) {
       console.error('[SPONSORS] setVisibility error:', error.message);
@@ -344,12 +274,9 @@ export const sponsorsController = {
 
       await connection.beginTransaction();
 
-      const [currentRows] = await connection.execute(
-        `SELECT id, is_active, sort_order FROM ${TABLE} WHERE id = ? LIMIT 1`,
-        [id]
-      );
+      const current = await getOrderContextBySponsorId(connection, id);
 
-      if (!currentRows.length) {
+      if (!current) {
         await connection.rollback();
         return res.status(404).json({
           success: false,
@@ -357,16 +284,9 @@ export const sponsorsController = {
         });
       }
 
-      const current = currentRows[0];
       const currentType = parseIsActive(current.is_active, 0);
 
-      const [sectionRows] = await connection.execute(
-        `SELECT id, sort_order
-         FROM ${TABLE}
-         WHERE is_active = ?
-         ORDER BY sort_order ASC, id ASC`,
-        [currentType]
-      );
+      const sectionRows = await getSponsorsByType(connection, currentType);
 
       const currentIndex = sectionRows.findIndex((row) => Number(row.id) === Number(id));
       if (currentIndex === -1) {
@@ -394,27 +314,19 @@ export const sponsorsController = {
       for (let index = 0; index < reordered.length; index += 1) {
         const row = reordered[index];
         const nextSortOrder = parseSortOrder(index + 1, MAX_SORT_ORDER);
-        await connection.execute(
-          `UPDATE ${TABLE} SET sort_order = ? WHERE id = ?`,
-          [nextSortOrder, row.id]
-        );
+        await updateSponsorSortOrder(connection, row.id, nextSortOrder);
       }
 
       await connection.commit();
 
-      const [updatedRows] = await pool.execute(
-        `${sponsorSelectWithTypeName}
-         WHERE s.id = ?
-         LIMIT 1`,
-        [id]
-      );
+      const updatedSponsor = await getSponsorByIdWithTypeName(id);
 
       return res.json({
         success: true,
         message: direction === 'up'
           ? 'Sponsor deplace vers le haut'
           : 'Sponsor deplace vers le bas',
-        data: updatedRows[0] || { id: Number(id), is_active: currentType },
+        data: updatedSponsor || { id: Number(id), is_active: currentType },
       });
     } catch (error) {
       try {
@@ -454,13 +366,7 @@ export const sponsorsController = {
 
       await connection.beginTransaction();
 
-      const [typesRows] = await connection.execute(
-        `SELECT is_active AS type_code
-         FROM ${TABLE}
-         WHERE is_active > 0
-         GROUP BY is_active
-         ORDER BY type_code ASC`
-      );
+      const typesRows = await getActiveTypeCodes(connection);
 
       const currentIndex = typesRows.findIndex((row) => Number(row.type_code) === Number(currentType));
       if (currentIndex === -1) {
@@ -485,16 +391,7 @@ export const sponsorsController = {
       const reorderedTypes = [...typesRows];
       [reorderedTypes[currentIndex], reorderedTypes[targetIndex]] = [reorderedTypes[targetIndex], reorderedTypes[currentIndex]];
       const targetType = Number(reorderedTypes[currentIndex].type_code);
-      await connection.execute(
-        `UPDATE ${TABLE}
-         SET is_active = CASE
-           WHEN is_active = ? THEN ?
-           WHEN is_active = ? THEN ?
-           ELSE is_active
-         END
-         WHERE is_active IN (?, ?)`,
-        [currentType, targetType, targetType, currentType, currentType, targetType]
-      );
+      await swapTypeCodes(connection, currentType, targetType);
 
       await connection.commit();
 
@@ -523,7 +420,7 @@ export const sponsorsController = {
   async delete(req, res) {
     try {
       const { id } = req.params;
-      const [result] = await pool.execute(`DELETE FROM ${TABLE} WHERE id = ?`, [id]);
+      const result = await deleteSponsor(id);
 
       if (!result.affectedRows) {
         return res.status(404).json({
