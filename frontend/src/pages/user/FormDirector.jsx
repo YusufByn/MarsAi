@@ -73,7 +73,7 @@ const FormDirector = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-black selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white selection:bg-[#8B5CF6] selection:text-white overflow-x-hidden">
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <header className="relative pt-44 pb-14 px-6 flex flex-col items-center text-center bg-black">
