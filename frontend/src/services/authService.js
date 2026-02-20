@@ -24,10 +24,20 @@ export const clearAuth = () => {
 };
 
 export const authService = {
-  async register(payload) {
+  async validateInviteToken(token) {
+    const response = await fetch(`${API_URL}/api/auth/invite/validate`, {
+      headers: { 'X-Invite-Token': token },
+    });
+    return parseResponse(response);
+  },
+
+  async register(payload, inviteToken) {
     const response = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Invite-Token': inviteToken,
+      },
       body: JSON.stringify(payload),
     });
     return parseResponse(response);

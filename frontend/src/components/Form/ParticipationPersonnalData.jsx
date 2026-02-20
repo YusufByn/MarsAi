@@ -9,7 +9,8 @@ import ParticipationContributorsData from './ParticipationContributorsData';
 import ParticipationSocialNetworks from './ParticipationSocialNetworks';
 import { createPortal } from 'react-dom';
 
-// Modal des contributeurs (en dehors du composant pour éviter les re-créations)
+// ─── Modals ───────────────────────────────────────────────────────────────────
+
 const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsData, onSave }) => {
   useEffect(() => {
     if (isOpen) {
@@ -25,19 +26,19 @@ const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsD
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="relative bg-[#07070a] border border-white/10 rounded-2xl p-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
-        {/* Bouton de fermeture */}
-        <button 
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+      <div className="relative bg-[#07070a] border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+        <button
           onClick={onClose}
-          className="sticky top-0 right-0 float-right ml-4 text-white hover:text-gray-300 text-2xl font-bold leading-none z-10"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20
+            flex items-center justify-center transition-colors"
           aria-label="Close modal"
         >
-          ×
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
-        
-        {/* Contenu de la modal */}
-        <ParticipationContributorsData 
+        <ParticipationContributorsData
           contributorsData={contributorsData}
           setContributorsData={setContributorsData}
           onSave={onSave}
@@ -48,7 +49,6 @@ const ContributorsModal = ({ isOpen, onClose, contributorsData, setContributorsD
   );
 };
 
-// Modal des réseaux sociaux (en dehors du composant pour éviter les re-créations)
 const SocialNetworksModal = ({ isOpen, onClose, realisatorSocialNetworks, setRealisatorSocialNetworks, onSave }) => {
   useEffect(() => {
     if (isOpen) {
@@ -60,19 +60,19 @@ const SocialNetworksModal = ({ isOpen, onClose, realisatorSocialNetworks, setRea
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="relative bg-[#07070a] border border-white/10 rounded-2xl p-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
-        {/* Bouton de fermeture */}
-        <button 
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+      <div className="relative bg-[#07070a] border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+        <button
           onClick={onClose}
-          className="sticky top-0 right-0 float-right ml-4 text-white hover:text-gray-300 text-2xl font-bold leading-none z-10"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20
+            flex items-center justify-center transition-colors"
           aria-label="Close modal"
         >
-          ×
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
-        
-        {/* Contenu de la modal */}
-        <ParticipationSocialNetworks 
+        <ParticipationSocialNetworks
           realisatorSocialNetworks={realisatorSocialNetworks}
           setRealisatorSocialNetworks={setRealisatorSocialNetworks}
           onSave={onSave}
@@ -83,38 +83,99 @@ const SocialNetworksModal = ({ isOpen, onClose, realisatorSocialNetworks, setRea
   );
 };
 
+// ─── Design tokens ────────────────────────────────────────────────────────────
+
+const inputBase =
+  'bg-[#080810] border rounded-xl px-4 py-3 w-full text-sm text-white ' +
+  'transition-all duration-200 focus:outline-none focus:ring-2 placeholder:text-white/20';
+
+const inputBorder = (hasError) =>
+  hasError
+    ? 'border-rose-500/70 focus:ring-rose-500/15'
+    : 'border-white/10 focus:border-[#8B5CF6]/50 focus:ring-[#8B5CF6]/15';
+
+const labelCls =
+  'block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40 mb-2';
+
+const errorCls = 'text-rose-400 text-xs mt-1.5';
+
+const SectionHeader = ({ children }) => (
+  <div className="flex items-center gap-3 mb-5">
+    <div
+      className="h-4 w-px rounded-full flex-shrink-0"
+      style={{ background: 'linear-gradient(to bottom, #8B5CF6, #EC4899)' }}
+    />
+    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/35">
+      {children}
+    </span>
+  </div>
+);
+
+const Divider = () => <div className="h-px bg-white/[0.05]" />;
+
+// ─── Country Select styles ────────────────────────────────────────────────────
+
+const countrySelectStyles = (hasError) => ({
+  control: (base, state) => ({
+    ...base,
+    minHeight: '46px',
+    borderRadius: '0.75rem',
+    backgroundColor: '#080810',
+    borderColor: hasError
+      ? 'rgba(244, 63, 94, 0.7)'
+      : state.isFocused
+      ? 'rgba(139, 92, 246, 0.5)'
+      : 'rgba(255,255,255,0.1)',
+    boxShadow: state.isFocused
+      ? hasError
+        ? '0 0 0 2px rgba(244, 63, 94, 0.15)'
+        : '0 0 0 2px rgba(139, 92, 246, 0.15)'
+      : 'none',
+    '&:hover': {
+      borderColor: hasError ? 'rgba(244, 63, 94, 0.7)' : 'rgba(139, 92, 246, 0.4)',
+    },
+    transition: 'all 0.2s ease',
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: '#08080f',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '0.75rem',
+    overflow: 'hidden',
+    boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? 'rgba(139,92,246,0.12)' : 'transparent',
+    color: '#ffffff',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+  }),
+  singleValue: (base) => ({ ...base, color: '#ffffff' }),
+  input: (base) => ({ ...base, color: '#ffffff' }),
+  placeholder: (base) => ({ ...base, color: 'rgba(255,255,255,0.2)', fontSize: '0.875rem' }),
+});
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const normalizeCountryText = (value = '') =>
-  String(value)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+  String(value).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 const customCountryFilter = (option, inputValue) => {
   if (!inputValue) return true;
-
-  const normalizedInput = normalizeCountryText(inputValue);
-  const normalizedLabel = normalizeCountryText(option.label);
-  const normalizedValue = normalizeCountryText(option.value);
-
-  return normalizedLabel.includes(normalizedInput) || normalizedValue.includes(normalizedInput);
+  const n = normalizeCountryText(inputValue);
+  return normalizeCountryText(option.label).includes(n) || normalizeCountryText(option.value).includes(n);
 };
 
 const formatCountryOption = (option) => {
   const iso = String(option?.value || '').toLowerCase();
   const flagSrc = iso ? `https://flagcdn.com/w20/${iso}.png` : '';
-
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-      {flagSrc ? (
-        <img
-          src={flagSrc}
-          alt=""
-          width={18}
-          height={13}
-          style={{ borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }}
-          loading="lazy"
-        />
-      ) : null}
+      {flagSrc && (
+        <img src={flagSrc} alt="" width={18} height={13}
+          style={{ borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} loading="lazy" />
+      )}
       <span>{option?.label || ''}</span>
     </span>
   );
@@ -125,29 +186,43 @@ const SOCIAL_NETWORK_OPTIONS = ['instagram', 'tiktok', 'youtube', 'facebook', 'l
 
 const parseAcquisitionSource = (sourceValue = '') => {
   const normalizedSource = String(sourceValue || '').trim().toLowerCase();
-
-  if (!normalizedSource) {
-    return { main: '', social: '', legacyOther: '' };
-  }
-
+  if (!normalizedSource) return { main: '', social: '', legacyOther: '' };
   if (normalizedSource.startsWith('social_networks:')) {
     const socialValue = normalizedSource.slice('social_networks:'.length);
-    return {
-      main: 'social_networks',
-      social: SOCIAL_NETWORK_OPTIONS.includes(socialValue) ? socialValue : '',
-      legacyOther: '',
-    };
+    return { main: 'social_networks', social: SOCIAL_NETWORK_OPTIONS.includes(socialValue) ? socialValue : '', legacyOther: '' };
   }
-
-  if (ACQUISITION_MAIN_OPTIONS.includes(normalizedSource)) {
-    return { main: normalizedSource, social: '', legacyOther: '' };
-  }
-
-  // Compatibilité avec d'anciennes valeurs en texte libre.
+  if (ACQUISITION_MAIN_OPTIONS.includes(normalizedSource)) return { main: normalizedSource, social: '', legacyOther: '' };
   return { main: 'other', social: '', legacyOther: String(sourceValue || '').trim() };
 };
 
-const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDataProp}) => {
+// ─── Toggle switch ─────────────────────────────────────────────────────────────
+
+const Toggle = ({ id, name, checked, onChange }) => (
+  <label className="relative inline-flex items-center cursor-pointer">
+    <input
+      type="checkbox"
+      id={id}
+      name={name}
+      checked={checked}
+      onChange={onChange}
+      className="sr-only peer"
+    />
+    <div className="
+      w-11 h-6 rounded-full
+      bg-white/10
+      peer-focus:ring-2 peer-focus:ring-[#8B5CF6]/30
+      peer-checked:bg-gradient-to-r peer-checked:from-violet-600 peer-checked:to-fuchsia-600
+      after:content-[''] after:absolute after:top-[2px] after:start-[2px]
+      after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+      peer-checked:after:translate-x-full
+      transition-all duration-200
+    " />
+  </label>
+);
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDataProp }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -156,111 +231,50 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contributorsData, setContributorsData] = useState([]);
   const [realisatorSocialNetworks, setRealisatorSocialNetworks] = useState({
-    facebook: '',
-    instagram: '',
-    X: '',
-    LinkedIn: '',
-    youtube: '',
-    TikTok: '',
-    other: '',
+    facebook: '', instagram: '', X: '', LinkedIn: '', youtube: '', TikTok: '', other: '',
   });
   const [isSocialNetworksModalOpen, setIsSocialNetworksModalOpen] = useState(false);
-  const inputBaseClass = 'bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-sm text-white transition-colors';
-  const inputBorderClass = (hasError) => hasError ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70';
-  const fieldWrapperClass = 'w-full max-w-md';
-  const labelClass = 'block text-left text-xs text-gray-300 mb-1 ml-1';
-  const emptyAddressParts = {
-    street: '',
-    street2: '',
-    zipcode: '',
-    city: '',
-    stateRegion: '',
-    country: '',
-  };
 
-  const getAddressParts = () => ({
-    ...emptyAddressParts,
-    ...(formData.addressParts || {}),
-  });
+  const emptyAddressParts = { street: '', street2: '', zipcode: '', city: '', stateRegion: '', country: '' };
+  const getAddressParts = () => ({ ...emptyAddressParts, ...(formData.addressParts || {}) });
+
   const countryOptions = useMemo(() => countryList().getData(), []);
   const selectedCountryOption = useMemo(
-    () => countryOptions.find(
-      (option) => option.label.toLowerCase() === String(formData.country || '').trim().toLowerCase()
-    ) || null,
+    () => countryOptions.find(o => o.label.toLowerCase() === String(formData.country || '').trim().toLowerCase()) || null,
     [countryOptions, formData.country]
   );
   const selectedPhoneCountry = selectedCountryOption?.value?.toUpperCase() || 'FR';
-  const parsedAcquisition = useMemo(
-    () => parseAcquisitionSource(formData.acquisitionSource),
-    [formData.acquisitionSource]
-  );
+  const parsedAcquisition = useMemo(() => parseAcquisitionSource(formData.acquisitionSource), [formData.acquisitionSource]);
   const acquisitionMainValue = parsedAcquisition.main;
   const acquisitionSocialValue = parsedAcquisition.social;
-  const acquisitionOtherValue = String(
-    formData.acquisitionSourceOther ?? parsedAcquisition.legacyOther
-  );
+  const acquisitionOtherValue = String(formData.acquisitionSourceOther ?? parsedAcquisition.legacyOther);
 
   const validateAcquisitionSelection = (sourceValue, otherValue) => {
     const { main, social, legacyOther } = parseAcquisitionSource(sourceValue);
-
-    if (!main) {
-      return {
-        acquisitionSource: 'Please tell us how you heard about us',
-        acquisitionSourceOther: null,
-      };
-    }
-
-    if (main === 'social_networks' && !social) {
-      return {
-        acquisitionSource: 'Please select a social network',
-        acquisitionSourceOther: null,
-      };
-    }
-
+    if (!main) return { acquisitionSource: 'Please tell us how you heard about us', acquisitionSourceOther: null };
+    if (main === 'social_networks' && !social) return { acquisitionSource: 'Please select a social network', acquisitionSourceOther: null };
     if (main === 'other') {
-      const normalizedOtherValue = String(otherValue || legacyOther || '').trim();
-      return {
-        acquisitionSource: null,
-        acquisitionSourceOther: validateAcquisitionSource(normalizedOtherValue),
-      };
+      const normalized = String(otherValue || legacyOther || '').trim();
+      return { acquisitionSource: null, acquisitionSourceOther: validateAcquisitionSource(normalized) };
     }
-
-    return {
-      acquisitionSource: null,
-      acquisitionSourceOther: null,
-    };
+    return { acquisitionSource: null, acquisitionSourceOther: null };
   };
 
   const buildAddressFromParts = (parts = {}) => {
-    const normalizedParts = {
-      ...emptyAddressParts,
-      ...parts,
-    };
-
-    return [
-      normalizedParts.street,
-      normalizedParts.street2,
-      normalizedParts.city,
-      normalizedParts.stateRegion,
-      normalizedParts.zipcode,
-      normalizedParts.country,
-    ]
-      .map((value) => String(value || '').trim())
-      .filter(Boolean)
-      .join(', ');
+    const p = { ...emptyAddressParts, ...parts };
+    return [p.street, p.street2, p.city, p.stateRegion, p.zipcode, p.country]
+      .map(v => String(v || '').trim()).filter(Boolean).join(', ');
   };
 
   const validateAddressPart = (fieldName, value) => {
-    const trimmedValue = String(value || '').trim();
-
+    const v = String(value || '').trim();
     if (fieldName === 'zipcode') {
-      if (!trimmedValue) return 'Zip code is required';
-      if (trimmedValue.length > 20) return 'Zip code is too long';
+      if (!v) return 'Zip code is required';
+      if (v.length > 20) return 'Zip code is too long';
       return null;
     }
-
-    if (!trimmedValue) return null;
-    if (trimmedValue.length > 120) return `${fieldName} is too long`;
+    if (!v) return null;
+    if (v.length > 120) return `${fieldName} is too long`;
     return null;
   };
 
@@ -275,12 +289,8 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
   useEffect(() => {
     if (formData.addressParts) return;
-
     const initialAddressParts = { ...emptyAddressParts };
-    if (formData.address) {
-      initialAddressParts.street = formData.address;
-    }
-
+    if (formData.address) initialAddressParts.street = formData.address;
     setFormDataProp({
       ...formData,
       addressParts: initialAddressParts,
@@ -288,7 +298,6 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
     });
   }, [formData, setFormDataProp]);
 
-  // Gestion des changements de champs
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const fieldValue = type === 'checkbox' ? checked : value;
@@ -297,248 +306,113 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       const currentAddressParts = getAddressParts();
       const currentAddressCountry = String(currentAddressParts.country || '').trim();
       const previousCountry = String(formData.country || '').trim();
-      const shouldAutofillAddressCountry = !currentAddressCountry
-        || isAddressCountryAutoFilled
-        || currentAddressCountry.toLowerCase() === previousCountry.toLowerCase();
-      const nextAddressParts = shouldAutofillAddressCountry
-        ? { ...currentAddressParts, country: fieldValue }
-        : currentAddressParts;
-      const composedAddress = buildAddressFromParts(nextAddressParts);
-
-      setFormDataProp({
-        ...formData,
-        country: fieldValue,
-        addressParts: nextAddressParts,
-        address: composedAddress,
-      });
-      setIsAddressCountryAutoFilled(shouldAutofillAddressCountry);
-
+      const shouldAutofill = !currentAddressCountry || isAddressCountryAutoFilled || currentAddressCountry.toLowerCase() === previousCountry.toLowerCase();
+      const nextAddressParts = shouldAutofill ? { ...currentAddressParts, country: fieldValue } : currentAddressParts;
+      setFormDataProp({ ...formData, country: fieldValue, addressParts: nextAddressParts, address: buildAddressFromParts(nextAddressParts) });
+      setIsAddressCountryAutoFilled(shouldAutofill);
       validateField('country', fieldValue);
-      if (shouldAutofillAddressCountry) {
-        validateField('addressParts.country', fieldValue);
-      }
+      if (shouldAutofill) validateField('addressParts.country', fieldValue);
       return;
     }
-    
-    setFormDataProp({
-      ...formData,
-      [name]: fieldValue
-    });
 
-    // Validation en temps réel
+    setFormDataProp({ ...formData, [name]: fieldValue });
     validateField(name, fieldValue);
   };
 
-  // Gestion spécifique pour les champs PhoneInput
   const handlePhoneChange = (fieldName, value) => {
     const nextValue = value || '';
-
     if (fieldName === 'mobileNumber') {
-      const currentPhoneNumber = String(formData.phoneNumber || '').trim();
-      const previousMobileNumber = String(formData.mobileNumber || '').trim();
-      const shouldAutofillPhoneNumber = !currentPhoneNumber
-        || isPhoneAutoFilled
-        || currentPhoneNumber === previousMobileNumber;
-      const nextPhoneNumber = shouldAutofillPhoneNumber ? nextValue : (formData.phoneNumber || '');
-
-      setFormDataProp({
-        ...formData,
-        mobileNumber: nextValue,
-        phoneNumber: nextPhoneNumber,
-      });
-      setIsPhoneAutoFilled(shouldAutofillPhoneNumber);
-
+      const currentPhone = String(formData.phoneNumber || '').trim();
+      const previousMobile = String(formData.mobileNumber || '').trim();
+      const shouldAutofill = !currentPhone || isPhoneAutoFilled || currentPhone === previousMobile;
+      const nextPhone = shouldAutofill ? nextValue : (formData.phoneNumber || '');
+      setFormDataProp({ ...formData, mobileNumber: nextValue, phoneNumber: nextPhone });
+      setIsPhoneAutoFilled(shouldAutofill);
       validateField('mobileNumber', nextValue);
-      if (shouldAutofillPhoneNumber) {
-        validateField('phoneNumber', nextPhoneNumber);
-      }
+      if (shouldAutofill) validateField('phoneNumber', nextPhone);
       return;
     }
-
-    if (fieldName === 'phoneNumber') {
-      setIsPhoneAutoFilled(false);
-    }
-
-    setFormDataProp({
-      ...formData,
-      [fieldName]: nextValue
-    });
-
-    // Validation en temps réel
+    if (fieldName === 'phoneNumber') setIsPhoneAutoFilled(false);
+    setFormDataProp({ ...formData, [fieldName]: nextValue });
     validateField(fieldName, nextValue);
   };
 
   const handleCountrySelect = (selectedOption) => {
-    handleChange({
-      target: {
-        name: 'country',
-        value: selectedOption?.label || '',
-        type: 'text',
-      },
-    });
+    handleChange({ target: { name: 'country', value: selectedOption?.label || '', type: 'text' } });
   };
 
   const handleAddressPartChange = (fieldName, value) => {
     const currentAddressParts = getAddressParts();
-    const nextAddressParts = {
-      ...currentAddressParts,
-      [fieldName]: value,
-    };
-    const composedAddress = buildAddressFromParts(nextAddressParts);
-
-    setFormDataProp({
-      ...formData,
-      addressParts: nextAddressParts,
-      address: composedAddress,
-    });
-
-    if (fieldName === 'country') {
-      setIsAddressCountryAutoFilled(false);
-    }
-
+    const nextAddressParts = { ...currentAddressParts, [fieldName]: value };
+    setFormDataProp({ ...formData, addressParts: nextAddressParts, address: buildAddressFromParts(nextAddressParts) });
+    if (fieldName === 'country') setIsAddressCountryAutoFilled(false);
     validateField(`addressParts.${fieldName}`, value);
   };
 
   const handleAcquisitionMainChange = (e) => {
     const nextMain = e.target.value;
-    let nextAcquisitionSource = '';
-
-    if (nextMain === 'social_networks') {
-      nextAcquisitionSource = acquisitionSocialValue
-        ? `social_networks:${acquisitionSocialValue}`
-        : 'social_networks';
-    } else if (nextMain) {
-      nextAcquisitionSource = nextMain;
-    }
-
-    const acquisitionErrors = validateAcquisitionSelection(nextAcquisitionSource, acquisitionOtherValue);
-
-    setFormDataProp({
-      ...formData,
-      acquisitionSource: nextAcquisitionSource,
-      acquisitionSourceOther: acquisitionOtherValue,
-    });
-    setErrors((prev) => ({
-      ...prev,
-      acquisitionSource: acquisitionErrors.acquisitionSource,
-      acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
-    }));
+    let nextSource = '';
+    if (nextMain === 'social_networks') nextSource = acquisitionSocialValue ? `social_networks:${acquisitionSocialValue}` : 'social_networks';
+    else if (nextMain) nextSource = nextMain;
+    const errs = validateAcquisitionSelection(nextSource, acquisitionOtherValue);
+    setFormDataProp({ ...formData, acquisitionSource: nextSource, acquisitionSourceOther: acquisitionOtherValue });
+    setErrors(prev => ({ ...prev, acquisitionSource: errs.acquisitionSource, acquisitionSourceOther: errs.acquisitionSourceOther }));
   };
 
   const handleAcquisitionSocialChange = (e) => {
     const nextSocial = String(e.target.value || '').trim().toLowerCase();
-    const nextAcquisitionSource = nextSocial
-      ? `social_networks:${nextSocial}`
-      : 'social_networks';
-    const acquisitionErrors = validateAcquisitionSelection(nextAcquisitionSource, acquisitionOtherValue);
-
-    setFormDataProp({
-      ...formData,
-      acquisitionSource: nextAcquisitionSource,
-      acquisitionSourceOther: acquisitionOtherValue,
-    });
-    setErrors((prev) => ({
-      ...prev,
-      acquisitionSource: acquisitionErrors.acquisitionSource,
-      acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
-    }));
+    const nextSource = nextSocial ? `social_networks:${nextSocial}` : 'social_networks';
+    const errs = validateAcquisitionSelection(nextSource, acquisitionOtherValue);
+    setFormDataProp({ ...formData, acquisitionSource: nextSource, acquisitionSourceOther: acquisitionOtherValue });
+    setErrors(prev => ({ ...prev, acquisitionSource: errs.acquisitionSource, acquisitionSourceOther: errs.acquisitionSourceOther }));
   };
 
   const handleAcquisitionOtherChange = (e) => {
-    const nextOtherValue = e.target.value;
-    const acquisitionErrors = validateAcquisitionSelection(formData.acquisitionSource, nextOtherValue);
-
-    setFormDataProp({
-      ...formData,
-      acquisitionSourceOther: nextOtherValue,
-    });
-    setErrors((prev) => ({
-      ...prev,
-      acquisitionSource: acquisitionErrors.acquisitionSource,
-      acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
-    }));
+    const next = e.target.value;
+    const errs = validateAcquisitionSelection(formData.acquisitionSource, next);
+    setFormDataProp({ ...formData, acquisitionSourceOther: next });
+    setErrors(prev => ({ ...prev, acquisitionSource: errs.acquisitionSource, acquisitionSourceOther: errs.acquisitionSourceOther }));
   };
 
-  // Validation d'un champ spécifique
   const validateField = (fieldName, value) => {
     let error = null;
-
-    switch(fieldName) {
-      case 'gender':
-        error = validateGender(value);
-        break;
-      case 'firstName':
-        error = validateFirstName(value);
-        break;
-      case 'lastName':
-        error = validateLastName(value);
-        break;
-      case 'email':
-        error = validateEmail(value);
-        break;
-      case 'country':
-        error = validateCountry(value);
-        break;
-      case 'phoneNumber':
-        error = validatePhoneNumber(value);
-        break;
-      case 'mobileNumber':
-        error = validateMobileNumber(value);
-        break;
-      case 'address':
-        error = null;
-        break;
+    switch (fieldName) {
+      case 'gender': error = validateGender(value); break;
+      case 'firstName': error = validateFirstName(value); break;
+      case 'lastName': error = validateLastName(value); break;
+      case 'email': error = validateEmail(value); break;
+      case 'country': error = validateCountry(value); break;
+      case 'phoneNumber': error = validatePhoneNumber(value); break;
+      case 'mobileNumber': error = validateMobileNumber(value); break;
+      case 'address': error = null; break;
       case 'addressParts.street':
       case 'addressParts.street2':
       case 'addressParts.zipcode':
       case 'addressParts.city':
       case 'addressParts.stateRegion':
       case 'addressParts.country':
-        error = validateAddressPart(fieldName.replace('addressParts.', ''), value);
-        break;
-      case 'acquisitionSource':
-        {
-          const acquisitionErrors = validateAcquisitionSelection(value, formData.acquisitionSourceOther);
-          setErrors((prev) => ({
-            ...prev,
-            acquisitionSource: acquisitionErrors.acquisitionSource,
-            acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
-          }));
-          return;
-        }
-      case 'acquisitionSourceOther':
-        {
-          const acquisitionErrors = validateAcquisitionSelection(formData.acquisitionSource, value);
-          setErrors((prev) => ({
-            ...prev,
-            acquisitionSource: acquisitionErrors.acquisitionSource,
-            acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
-          }));
-          return;
-        }
-      case 'ageVerificator':
-        error = validateAgeVerification(value);
-        break;
-      default:
-        break;
+        error = validateAddressPart(fieldName.replace('addressParts.', ''), value); break;
+      case 'acquisitionSource': {
+        const errs = validateAcquisitionSelection(value, formData.acquisitionSourceOther);
+        setErrors(prev => ({ ...prev, acquisitionSource: errs.acquisitionSource, acquisitionSourceOther: errs.acquisitionSourceOther }));
+        return;
+      }
+      case 'acquisitionSourceOther': {
+        const errs = validateAcquisitionSelection(formData.acquisitionSource, value);
+        setErrors(prev => ({ ...prev, acquisitionSource: errs.acquisitionSource, acquisitionSourceOther: errs.acquisitionSourceOther }));
+        return;
+      }
+      case 'ageVerificator': error = validateAgeVerification(value); break;
+      default: break;
     }
-
-    setErrors(prev => ({
-      ...prev,
-      [fieldName]: error
-    }));
+    setErrors(prev => ({ ...prev, [fieldName]: error }));
   };
 
-  // Validation complète du formulaire
   const validateForm = () => {
     const addressParts = getAddressParts();
     const composedAddress = buildAddressFromParts(addressParts);
     const addressPartErrors = validateAddressParts(addressParts);
-    const acquisitionErrors = validateAcquisitionSelection(
-      formData.acquisitionSource,
-      formData.acquisitionSourceOther
-    );
-
+    const acquisitionErrors = validateAcquisitionSelection(formData.acquisitionSource, formData.acquisitionSourceOther);
     const newErrors = {
       gender: validateGender(formData.gender),
       firstName: validateFirstName(formData.firstName),
@@ -551,81 +425,46 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
       acquisitionSourceOther: acquisitionErrors.acquisitionSourceOther,
       ageVerificator: validateAgeVerification(formData.ageVerificator),
     };
-
-    // Valider phoneNumber seulement s'il n'est pas vide
     if (formData.phoneNumber && formData.phoneNumber.trim() !== '') {
       newErrors.phoneNumber = validatePhoneNumber(formData.phoneNumber);
     }
-
     setErrors(newErrors);
-
-    // Retourne true si aucune erreur
-    const isValid = !Object.values(newErrors).some(error => error !== null);
-    return {
-      isValid,
-      addressParts,
-      composedAddress,
-    };
+    return { isValid: !Object.values(newErrors).some(e => e !== null), addressParts, composedAddress };
   };
 
-  // Fonction pour sauvegarder les données des contributeurs
   const handleSaveContributor = () => {
-    setFormDataProp({
-      ...formData,
-      contributors: contributorsData
-    });
+    setFormDataProp({ ...formData, contributors: contributorsData });
     setIsModalOpen(false);
   };
 
-  // Fonction pour sauvegarder les données des réseaux sociaux
   const handleSaveSocialNetworks = () => {
-    setFormDataProp({
-      ...formData,
-      socialNetworks: realisatorSocialNetworks
-    });
+    setFormDataProp({ ...formData, socialNetworks: realisatorSocialNetworks });
     setIsSocialNetworksModalOpen(false);
   };
 
   const handleCloseContributorsModal = () => {
     const hasContributors = Array.isArray(contributorsData) && contributorsData.length > 0;
     setIsModalOpen(false);
-
     if (!hasContributors && (formData.withContributors || false)) {
-      setFormDataProp({
-        ...formData,
-        withContributors: false,
-      });
+      setFormDataProp({ ...formData, withContributors: false });
     }
   };
 
   const handleCloseSocialNetworksModal = () => {
-    const hasAnySocialValue = Object.values(realisatorSocialNetworks || {})
-      .some((value) => String(value || '').trim() !== '');
+    const hasAnySocialValue = Object.values(realisatorSocialNetworks || {}).some(v => String(v || '').trim() !== '');
     setIsSocialNetworksModalOpen(false);
-
     if (!hasAnySocialValue && (formData.withSocialNetworks || false)) {
-      setFormDataProp({
-        ...formData,
-        withSocialNetworks: false,
-      });
+      setFormDataProp({ ...formData, withSocialNetworks: false });
     }
   };
 
-  // Soumission du formulaire
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError('');
-
     const { isValid, addressParts, composedAddress } = validateForm();
-
     if (isValid) {
-      setFormDataProp({
-        ...formData,
-        addressParts,
-        address: composedAddress,
-      });
-      // Formulaire valide, passer à l'étape suivante
+      setFormDataProp({ ...formData, addressParts, address: composedAddress });
       setEtape(2);
     } else {
       setSubmitError('Please correct the errors before continuing');
@@ -635,310 +474,261 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
 
   const addressParts = getAddressParts();
 
+  // ─── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <div className="w-full max-w-3xl border border-white/10 bg-[#07070a]/95 shadow-[0_10px_60px_rgba(168,85,247,0.2)] backdrop-blur rounded-2xl p-4 sm:p-6 text-center text-white">
-      <h2 className="text-2xl font-semibold tracking-tight">Personnal Data</h2>
-      <p className="text-xs text-gray-400 mt-1">Step 1 - Tell us about yourself</p>
-      
-      <div className="text-center flex justify-center gap-2 mt-4 mb-2">
-        <div className="w-8 h-8 rounded-full border border-fuchsia-400/60 bg-linear-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-xs font-semibold">
-          1
-        </div>
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          2
-        </div>
-        <div className="w-8 h-8 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-xs">
-          3
-        </div>
+    <div className="w-full glass-card rounded-3xl p-6 sm:p-8 text-white animate-fade-in">
+
+      {/* Step title */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold tracking-tight">Personal Data</h2>
+        <p className="text-xs text-white/35 mt-1 font-light">Tell us about yourself</p>
       </div>
 
-      <section className="FormContainer">
-        <form onSubmit={handleSubmit} method="post" className="grid grid-cols-1 justify-items-center mt-6 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-8">
 
-          {/* Civility */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="gender" className={labelClass}>
-              Gender <span className="text-red-500">*</span>
-            </label>
-            <select 
-              name="gender"
-              id="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className={`${inputBaseClass} ${inputBorderClass(errors.gender)}`}
-            >
-              <option value="">Select your gender</option>
-              <option value="women">Women</option>
-              <option value="man">Man</option>
-              <option value="other">Other</option>
-            </select>
-            {errors.gender && <p className="text-rose-400 text-xs mt-1 text-left">{errors.gender}</p>}
+        {/* ── IDENTITY ─────────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader>Identity</SectionHeader>
+          <div className="space-y-4">
+
+            {/* Gender */}
+            <div>
+              <label htmlFor="gender" className={labelCls}>
+                Gender <span className="text-mars-primary">*</span>
+              </label>
+              <select
+                name="gender" id="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className={`${inputBase} ${inputBorder(errors.gender)} [&>option]:bg-[#08080f]`}
+              >
+                <option value="">Select your gender</option>
+                <option value="women">Women</option>
+                <option value="man">Man</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.gender && <p className={errorCls}>{errors.gender}</p>}
+            </div>
+
+            {/* First + Last name */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className={labelCls}>
+                  First Name <span className="text-mars-primary">*</span>
+                </label>
+                <input
+                  className={`${inputBase} ${inputBorder(errors.firstName)}`}
+                  type="text" name="firstName" id="firstName"
+                  value={formData.firstName} onChange={handleChange}
+                  placeholder="First name"
+                />
+                {errors.firstName && <p className={errorCls}>{errors.firstName}</p>}
+              </div>
+              <div>
+                <label htmlFor="lastName" className={labelCls}>
+                  Last Name <span className="text-mars-primary">*</span>
+                </label>
+                <input
+                  className={`${inputBase} ${inputBorder(errors.lastName)}`}
+                  type="text" name="lastName" id="lastName"
+                  value={formData.lastName} onChange={handleChange}
+                  placeholder="Last name"
+                />
+                {errors.lastName && <p className={errorCls}>{errors.lastName}</p>}
+              </div>
+            </div>
+
           </div>
+        </section>
 
-          <div className={fieldWrapperClass}>
-            <label htmlFor="firstName" className={labelClass}>
-              First Name <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.firstName)}`}
-              type="text"
-              name="firstName"
-              id="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="First Name"
-            />
-            {errors.firstName && <p className="text-rose-400 text-xs mt-1 text-left">{errors.firstName}</p>}
+        <Divider />
+
+        {/* ── CONTACT ──────────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader>Contact</SectionHeader>
+          <div className="space-y-4">
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className={labelCls}>
+                Email <span className="text-mars-primary">*</span>
+              </label>
+              <input
+                className={`${inputBase} ${inputBorder(errors.email)}`}
+                type="email" name="email" id="email"
+                value={formData.email} onChange={handleChange}
+                placeholder="your@email.com"
+              />
+              {errors.email && <p className={errorCls}>{errors.email}</p>}
+            </div>
+
+            {/* Country */}
+            <div>
+              <label htmlFor="country" className={labelCls}>
+                Country <span className="text-mars-primary">*</span>
+              </label>
+              <Select
+                inputId="country" name="country"
+                options={countryOptions}
+                value={countryOptions.find(o => o.label === formData.country) || null}
+                onChange={handleCountrySelect}
+                isSearchable
+                filterOption={customCountryFilter}
+                formatOptionLabel={formatCountryOption}
+                placeholder="Select your country"
+                className="text-sm"
+                styles={countrySelectStyles(errors.country)}
+              />
+              {errors.country && <p className={errorCls}>{errors.country}</p>}
+            </div>
+
+            {/* Phones */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Mobile Number <span className="text-mars-primary">*</span></label>
+                <PhoneInput
+                  international
+                  defaultCountry={selectedPhoneCountry}
+                  value={formData.mobileNumber}
+                  onChange={(value) => handlePhoneChange('mobileNumber', value)}
+                  className={`${inputBase} ${inputBorder(errors.mobileNumber)}`}
+                  placeholder="Mobile number"
+                />
+                {errors.mobileNumber && <p className={errorCls}>{errors.mobileNumber}</p>}
+              </div>
+              <div>
+                <label className={labelCls}>Phone Number</label>
+                <PhoneInput
+                  international
+                  defaultCountry={selectedPhoneCountry}
+                  value={formData.phoneNumber}
+                  onChange={(value) => handlePhoneChange('phoneNumber', value)}
+                  className={`${inputBase} ${inputBorder(errors.phoneNumber)}`}
+                  placeholder="Phone number"
+                />
+                {errors.phoneNumber && <p className={errorCls}>{errors.phoneNumber}</p>}
+              </div>
+            </div>
+
           </div>
+        </section>
 
-          <div className={fieldWrapperClass}>
-            <label htmlFor="lastName" className={labelClass}>
-              Last Name <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.lastName)}`}
-              type="text"
-              name="lastName"
-              id="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Last Name"
-            />
-            {errors.lastName && <p className="text-rose-400 text-xs mt-1 text-left">{errors.lastName}</p>}
+        <Divider />
+
+        {/* ── ADDRESS ──────────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader>Address</SectionHeader>
+          <div className="space-y-4">
+
+            <div>
+              <label htmlFor="street" className={labelCls}>Street</label>
+              <input
+                className={`${inputBase} ${inputBorder(errors['addressParts.street'])}`}
+                type="text" name="street" id="street"
+                value={addressParts.street}
+                onChange={(e) => handleAddressPartChange('street', e.target.value)}
+                placeholder="Street address"
+              />
+              {errors['addressParts.street'] && <p className={errorCls}>{errors['addressParts.street']}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="street2" className={labelCls}>Street 2</label>
+              <input
+                className={`${inputBase} ${inputBorder(errors['addressParts.street2'])}`}
+                type="text" name="street2" id="street2"
+                value={addressParts.street2}
+                onChange={(e) => handleAddressPartChange('street2', e.target.value)}
+                placeholder="Apt, suite, building…"
+              />
+              {errors['addressParts.street2'] && <p className={errorCls}>{errors['addressParts.street2']}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="zipcode" className={labelCls}>
+                  Zip Code <span className="text-mars-primary">*</span>
+                </label>
+                <input
+                  className={`${inputBase} ${inputBorder(errors['addressParts.zipcode'])}`}
+                  type="text" name="zipcode" id="zipcode"
+                  value={addressParts.zipcode}
+                  onChange={(e) => handleAddressPartChange('zipcode', e.target.value)}
+                  placeholder="75001"
+                />
+                {errors['addressParts.zipcode'] && <p className={errorCls}>{errors['addressParts.zipcode']}</p>}
+              </div>
+              <div>
+                <label htmlFor="city" className={labelCls}>City</label>
+                <input
+                  className={`${inputBase} ${inputBorder(errors['addressParts.city'])}`}
+                  type="text" name="city" id="city"
+                  value={addressParts.city}
+                  onChange={(e) => handleAddressPartChange('city', e.target.value)}
+                  placeholder="Paris"
+                />
+                {errors['addressParts.city'] && <p className={errorCls}>{errors['addressParts.city']}</p>}
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label htmlFor="stateRegion" className={labelCls}>State / Region</label>
+                <input
+                  className={`${inputBase} ${inputBorder(errors['addressParts.stateRegion'])}`}
+                  type="text" name="stateRegion" id="stateRegion"
+                  value={addressParts.stateRegion}
+                  onChange={(e) => handleAddressPartChange('stateRegion', e.target.value)}
+                  placeholder="Île-de-France"
+                />
+                {errors['addressParts.stateRegion'] && <p className={errorCls}>{errors['addressParts.stateRegion']}</p>}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="countryAddress" className={labelCls}>Country</label>
+              <input
+                className={`${inputBase} ${inputBorder(errors['addressParts.country'])}`}
+                type="text" name="countryAddress" id="countryAddress"
+                value={addressParts.country}
+                onChange={(e) => handleAddressPartChange('country', e.target.value)}
+                placeholder={isAddressCountryAutoFilled ? 'Auto-filled from nationality' : 'Country'}
+              />
+              {errors['addressParts.country'] && <p className={errorCls}>{errors['addressParts.country']}</p>}
+            </div>
+
           </div>
+        </section>
 
-          {/* Email */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="email" className={labelClass}>
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors.email)}`}
-              type="email"
-              name="email"
-              id="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="email"
-            />
-            {errors.email && <p className="text-rose-400 text-xs mt-1 text-left">{errors.email}</p>}
-          </div>
+        <Divider />
 
-          <div className={fieldWrapperClass}>
-            <label htmlFor="country" className={labelClass}>
-              Country <span className="text-red-500">*</span>
-            </label>
-            <Select
-              inputId="country"
-              name="country"
-              options={countryOptions}
-              value={countryOptions.find((option) => option.label === formData.country) || null}
-              onChange={handleCountrySelect}
-              isSearchable
-              filterOption={customCountryFilter}
-              formatOptionLabel={formatCountryOption}
-              placeholder="Country"
-              className="text-sm"
-              styles={{
-                control: (base, state) => ({
-                  ...base,
-                  minHeight: '42px',
-                  borderRadius: '0.75rem',
-                  backgroundColor: '#0f0f14',
-                  borderColor: errors.country
-                    ? '#f43f5e'
-                    : state.isFocused
-                      ? 'rgba(217, 70, 239, 0.7)'
-                      : 'rgba(255, 255, 255, 0.15)',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    borderColor: errors.country ? '#f43f5e' : 'rgba(217, 70, 239, 0.7)',
-                  },
-                }),
-                menu: (base) => ({
-                  ...base,
-                  backgroundColor: '#0f0f14',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isFocused ? 'rgba(168, 85, 247, 0.22)' : '#0f0f14',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                }),
-                singleValue: (base) => ({
-                  ...base,
-                  color: '#ffffff',
-                }),
-                input: (base) => ({
-                  ...base,
-                  color: '#ffffff',
-                }),
-                placeholder: (base) => ({
-                  ...base,
-                  color: '#9ca3af',
-                }),
-              }}
-            />
-            {errors.country && <p className="text-rose-400 text-xs mt-1 text-left">{errors.country}</p>}
-          </div>
+        {/* ── ADDITIONAL ───────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader>Additional</SectionHeader>
+          <div className="space-y-4">
 
-          {/* Phones */}
-          <div className={fieldWrapperClass}>
-            <label className={labelClass}>
-              Phone Number
-            </label>
-            <PhoneInput
-              international
-              defaultCountry={selectedPhoneCountry}
-              value={formData.phoneNumber}
-              onChange={(value) => handlePhoneChange('phoneNumber', value)}
-              className={`${inputBaseClass} ${inputBorderClass(errors.phoneNumber)}`}
-              placeholder="Phone Number"
-            />
-            {errors.phoneNumber && <p className="text-rose-400 text-xs mt-1 text-left">{errors.phoneNumber}</p>}
-          </div>
-          
-          <div className={fieldWrapperClass}>
-            <label className={labelClass}>
-              Mobile Number <span className="text-red-500">*</span>
-            </label>
-            <PhoneInput
-              international
-              defaultCountry={selectedPhoneCountry}
-              value={formData.mobileNumber}
-              onChange={(value) => handlePhoneChange('mobileNumber', value)}
-              className={`${inputBaseClass} ${inputBorderClass(errors.mobileNumber)}`}
-              placeholder="Mobile Number"
-            />
-            {errors.mobileNumber && <p className="text-rose-400 text-xs mt-1 text-left">{errors.mobileNumber}</p>}
-          </div>
+            {/* Acquisition source */}
+            <div>
+              <label htmlFor="acquisitionSource" className={labelCls}>
+                How did you hear about us? <span className="text-mars-primary">*</span>
+              </label>
+              <select
+                className={`${inputBase} ${inputBorder(errors.acquisitionSource)} [&>option]:bg-[#08080f]`}
+                name="acquisitionSource" id="acquisitionSource"
+                value={acquisitionMainValue}
+                onChange={handleAcquisitionMainChange}
+              >
+                <option value="">Select an option</option>
+                <option value="social_networks">Social networks</option>
+                <option value="word_of_mouth">Word of mouth</option>
+                <option value="mobile_film_festival">Mobile Film Festival</option>
+                <option value="search_engine">Search engine</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.acquisitionSource && <p className={errorCls}>{errors.acquisitionSource}</p>}
 
-          {/* Address */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="street" className={labelClass}>
-              Street
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.street'])}`}
-              type="text"
-              name="street"
-              id="street"
-              value={addressParts.street}
-              onChange={(e) => handleAddressPartChange('street', e.target.value)}
-              placeholder="Street"
-            />
-            {errors['addressParts.street'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.street']}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="street2" className={labelClass}>
-              Street 2
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.street2'])}`}
-              type="text"
-              name="street2"
-              id="street2"
-              value={addressParts.street2}
-              onChange={(e) => handleAddressPartChange('street2', e.target.value)}
-              placeholder="Street 2"
-            />
-            {errors['addressParts.street2'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.street2']}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="zipcode" className={labelClass}>
-              Zip Code <span className="text-red-500">*</span>
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.zipcode'])}`}
-              type="text"
-              name="zipcode"
-              id="zipcode"
-              value={addressParts.zipcode}
-              onChange={(e) => handleAddressPartChange('zipcode', e.target.value)}
-              placeholder="Zip Code"
-            />
-            {errors['addressParts.zipcode'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.zipcode']}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="city" className={labelClass}>
-              City
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.city'])}`}
-              type="text"
-              name="city"
-              id="city"
-              value={addressParts.city}
-              onChange={(e) => handleAddressPartChange('city', e.target.value)}
-              placeholder="City"
-            />
-            {errors['addressParts.city'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.city']}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="stateRegion" className={labelClass}>
-              State / Region
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.stateRegion'])}`}
-              type="text"
-              name="stateRegion"
-              id="stateRegion"
-              value={addressParts.stateRegion}
-              onChange={(e) => handleAddressPartChange('stateRegion', e.target.value)}
-              placeholder="State / Region"
-            />
-            {errors['addressParts.stateRegion'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.stateRegion']}</p>}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label htmlFor="countryAddress" className={labelClass}>
-              Country
-            </label>
-            <input 
-              className={`${inputBaseClass} ${inputBorderClass(errors['addressParts.country'])}`}
-              type="text"
-              name="countryAddress"
-              id="countryAddress"
-              value={addressParts.country}
-              onChange={(e) => handleAddressPartChange('country', e.target.value)}
-              placeholder={isAddressCountryAutoFilled ? 'Auto-filled from country field' : 'Country'}
-            />
-            {errors['addressParts.country'] && <p className="text-rose-400 text-xs mt-1 text-left">{errors['addressParts.country']}</p>}
-          </div>
-
-          {/* Acquisition source */}
-          <div className={fieldWrapperClass}>
-            <label htmlFor="acquisitionSource" className={labelClass}>
-              How did you hear about us? <span className="text-red-500">*</span>
-            </label>
-            <select
-              className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSource)}`}
-              name="acquisitionSource"
-              id="acquisitionSource"
-              value={acquisitionMainValue}
-              onChange={handleAcquisitionMainChange}
-            >
-              <option value="">Select an option</option>
-              <option value="social_networks">Social networks</option>
-              <option value="word_of_mouth">Word of mouth</option>
-              <option value="mobile_film_festival">Mobile Film Festival</option>
-              <option value="search_engine">Search engine</option>
-              <option value="other">Other</option>
-            </select>
-            {errors.acquisitionSource && <p className="text-rose-400 text-xs mt-1 text-left">{errors.acquisitionSource}</p>}
-
-            {acquisitionMainValue === 'social_networks' && (
-              <div className="mt-2">
+              {acquisitionMainValue === 'social_networks' && (
                 <select
-                  className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSource)}`}
-                  name="acquisitionSourceSocial"
-                  id="acquisitionSourceSocial"
+                  className={`${inputBase} ${inputBorder(errors.acquisitionSource)} mt-3 [&>option]:bg-[#08080f]`}
+                  name="acquisitionSourceSocial" id="acquisitionSourceSocial"
                   value={acquisitionSocialValue}
                   onChange={handleAcquisitionSocialChange}
                 >
@@ -950,118 +740,142 @@ const ParticipationPersonnalData = ({setEtape, formData, setFormData: setFormDat
                   <option value="linkedin">LinkedIn</option>
                   <option value="x">X</option>
                 </select>
-              </div>
-            )}
+              )}
 
-            {acquisitionMainValue === 'other' && (
-              <div className="mt-2">
-                <input
-                  className={`${inputBaseClass} ${inputBorderClass(errors.acquisitionSourceOther)}`}
-                  type="text"
-                  name="acquisitionSourceOther"
-                  id="acquisitionSourceOther"
-                  value={acquisitionOtherValue}
-                  onChange={handleAcquisitionOtherChange}
-                  placeholder="Please specify"
-                />
-                {errors.acquisitionSourceOther && (
-                  <p className="text-rose-400 text-xs mt-1 text-left">{errors.acquisitionSourceOther}</p>
+              {acquisitionMainValue === 'other' && (
+                <div className="mt-3">
+                  <input
+                    className={`${inputBase} ${inputBorder(errors.acquisitionSourceOther)}`}
+                    type="text" name="acquisitionSourceOther" id="acquisitionSourceOther"
+                    value={acquisitionOtherValue}
+                    onChange={handleAcquisitionOtherChange}
+                    placeholder="Please specify"
+                  />
+                  {errors.acquisitionSourceOther && <p className={errorCls}>{errors.acquisitionSourceOther}</p>}
+                </div>
+              )}
+            </div>
+
+            {/* Age check */}
+            <label className={`flex items-start gap-4 p-4 rounded-2xl border cursor-pointer
+              transition-all duration-200 ${
+              formData.ageVerificator
+                ? 'border-mars-primary/40 bg-mars-primary/[0.05]'
+                : errors.ageVerificator
+                ? 'border-rose-500/40 bg-rose-500/[0.04]'
+                : 'border-white/[0.07] bg-white/[0.02] hover:border-white/15'
+            }`}>
+              <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center
+                flex-shrink-0 transition-all duration-200 ${
+                formData.ageVerificator ? 'border-mars-primary bg-mars-primary' : 'border-white/20'
+              }`}>
+                {formData.ageVerificator && (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
                 )}
               </div>
-            )}
-          </div>
-
-          <div className={fieldWrapperClass}>
-            <label className="flex items-center gap-2">
-              <input 
-                className={`bg-[#0f0f14] border rounded p-2 ${errors.ageVerificator ? 'border-rose-500' : 'border-white/10'}`}
-                type="checkbox"
-                name="ageVerificator"
-                id="ageVerificator"
-                checked={formData.ageVerificator}
-                onChange={handleChange}
-              />
-              <span className="text-sm">Are you 18 years old or older? <span className="text-red-500">*</span></span>
-            </label>
-            {errors.ageVerificator && <p className="text-rose-400 text-xs mt-1 text-left">{errors.ageVerificator}</p>}
-          </div>
-          
-          <span className="text-sm text-gray-300">Do you have contributors ?</span>
-          <div className={fieldWrapperClass}>
-            <label className="relative inline-flex items-center cursor-pointer">
               <input
-                type="checkbox"
-                name="withContributors"
+                type="checkbox" name="ageVerificator" id="ageVerificator"
+                checked={formData.ageVerificator} onChange={handleChange}
+                className="hidden"
+              />
+              <span className="text-sm text-white/70 leading-relaxed">
+                I confirm I am <span className="text-white font-medium">18 years old or older</span>
+                <span className="text-mars-primary ml-1">*</span>
+              </span>
+            </label>
+            {errors.ageVerificator && <p className={errorCls}>{errors.ageVerificator}</p>}
+
+          </div>
+        </section>
+
+        <Divider />
+
+        {/* ── OPTIONAL FEATURES ────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader>Optional</SectionHeader>
+          <div className="space-y-4">
+
+            {/* Contributors toggle */}
+            <div className="flex items-center justify-between p-4 rounded-2xl
+              border border-white/[0.07] bg-white/[0.02] hover:border-white/12 transition-colors">
+              <div>
+                <p className="text-sm font-medium text-white">Contributors</p>
+                <p className="text-xs text-white/35 mt-0.5">Add crew members or collaborators</p>
+              </div>
+              <Toggle
                 id="withContributors"
+                name="withContributors"
                 checked={formData.withContributors || false}
                 onChange={(e) => {
                   handleChange(e);
-                  if (e.target.checked) {
-                    setIsModalOpen(true);
-                  }
+                  if (e.target.checked) setIsModalOpen(true);
                 }}
-                className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fuchsia-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-violet-600 peer-checked:to-fuchsia-600"></div>
-            </label>
-          </div>
-          <span className="text-sm text-gray-300">Do you have social networks ?</span>
-          <div className={fieldWrapperClass}>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="withSocialNetworks"
+            </div>
+
+            {/* Social networks toggle */}
+            <div className="flex items-center justify-between p-4 rounded-2xl
+              border border-white/[0.07] bg-white/[0.02] hover:border-white/12 transition-colors">
+              <div>
+                <p className="text-sm font-medium text-white">Social Networks</p>
+                <p className="text-xs text-white/35 mt-0.5">Link your profiles</p>
+              </div>
+              <Toggle
                 id="withSocialNetworks"
+                name="withSocialNetworks"
                 checked={formData.withSocialNetworks || false}
                 onChange={(e) => {
                   handleChange(e);
-                  if (e.target.checked) {
-                    setIsSocialNetworksModalOpen(true);
-                  }
+                  if (e.target.checked) setIsSocialNetworksModalOpen(true);
                 }}
-                className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fuchsia-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-linear-to-r peer-checked:from-violet-600 peer-checked:to-fuchsia-600"></div>
-            </label>
-          </div>
-
-          {/* Message d'erreur général */}
-          {submitError && (
-            <div className="w-full max-w-md text-rose-400 text-xs text-center">
-              {submitError}
             </div>
-          )}
 
-          {/* Button */}
-          <div className="mt-4 p-1 place-self-centered">
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-linear-to-r from-violet-600 to-fuchsia-600 border border-white/10 rounded-xl px-7 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-fuchsia-500 shadow-[0_8px_24px_rgba(168,85,247,0.35)] transition-all">
-              {isSubmitting ? 'Loading...' : 'Next'}
-            </button>
           </div>
+        </section>
 
-        </form>
-      </section>
+        {/* ── ERROR + SUBMIT ────────────────────────────────────────────────── */}
+        {submitError && (
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/[0.07]
+            border border-rose-500/20 text-rose-400 text-sm">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {submitError}
+          </div>
+        )}
 
-      {/* Modal des contributeurs */}
-      <ContributorsModal 
-        isOpen={isModalOpen} 
+        <div className="flex justify-end pt-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="mars-button-primary px-8 py-3 text-sm font-bold uppercase
+              tracking-[0.12em] disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Loading…' : 'Next Step'}
+          </button>
+        </div>
+
+      </form>
+
+      {/* Modals */}
+      <ContributorsModal
+        isOpen={isModalOpen}
         onClose={handleCloseContributorsModal}
         contributorsData={contributorsData}
         setContributorsData={setContributorsData}
         onSave={handleSaveContributor}
       />
-      {/* Modal des réseaux sociaux */}
-      <SocialNetworksModal 
+      <SocialNetworksModal
         isOpen={isSocialNetworksModalOpen}
         onClose={handleCloseSocialNetworksModal}
         realisatorSocialNetworks={realisatorSocialNetworks}
         setRealisatorSocialNetworks={setRealisatorSocialNetworks}
         onSave={handleSaveSocialNetworks}
       />
-
     </div>
   );
 };

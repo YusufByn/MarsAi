@@ -7,17 +7,25 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
+import { securityGuard } from './middlewares/security.middleware.js';
+
 
 import routes from './routes/index.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsFromRoot = path.join(__dirname, '..', 'uploads');
 
 const app = express();
 
 // middleware pour sécuriser l'application
-app.use(helmet());
+app.use(
+  helmet({
+    // Permet de servir les images statiques /uploads vers le front (port différent)
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 // app.use(rateLimit({ windowMs: 15*60*1_000, max: 5000 })); // rate limite pour eviter les boucle côté cms
 
 // middleware pour gérer les CORS
@@ -33,15 +41,12 @@ app.use(compression());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.use(
-  '/uploads',
-  express.static(path.join(__dirname, '../uploads'), {
-    setHeaders: (res) => {
-      // Autorise l'affichage des images uploadées depuis un autre origin (ex: frontend Vite).
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    },
-  })
-);
+// anti attacks
+app.use('/api', securityGuard);
+
+// uploads
+// Source unique des médias: backend/uploads
+app.use('/uploads', express.static(uploadsFromRoot));
 
 // toutes les routes
 app.use('/api', routes);

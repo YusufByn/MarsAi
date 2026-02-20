@@ -116,6 +116,23 @@ const VideoDetails = () => {
         </button>
       </div>
 
+      {/* Galerie stills */}
+      {video.stills && video.stills.length > 0 && (
+        <div className="max-w-4xl mx-auto px-6 pt-6">
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {video.stills.map((still) => (
+              <div key={still.id} className="flex-shrink-0 w-48 h-32 rounded-xl overflow-hidden border border-white/10">
+                <img
+                  src={`${API_URL}/uploads/stills/${still.file_name}`}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Contenu principal */}
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
 
