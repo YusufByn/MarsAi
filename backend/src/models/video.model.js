@@ -23,7 +23,7 @@ export const videoModel = {
   },
 
   async findAll({ limit = 10 }) {
-    const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 50) : 10;
+    const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 500) : 10;
     const [rows] = await pool.execute(
       `SELECT id, title, cover, youtube_url, video_file_name, duration,
               classification, country, synopsis, language,

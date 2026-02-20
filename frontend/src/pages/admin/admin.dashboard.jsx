@@ -133,8 +133,6 @@ export default function AdminDashboard() {
     red: 'bg-red-500/10 border-red-500/20 text-red-400',
     cyan: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
     purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-    yellow: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
-    cyan: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
     orange: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
   };
 

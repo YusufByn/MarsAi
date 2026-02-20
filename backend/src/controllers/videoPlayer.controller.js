@@ -10,11 +10,21 @@ const buildVideoPayload = (video) => {
     .join(' ')
     .trim();
 
-  return {
+  const payload = {
     ...video,
     author: fullName || null,
     video_url: video.video_file_name ? `/uploads/videos/${video.video_file_name}` : null,
+    cover_url: video.cover ? `/uploads/covers/${video.cover}` : null,
   };
+
+  if (Array.isArray(video.stills)) {
+    payload.stills = video.stills.map(s => ({
+      ...s,
+      file_url: s.file_url || (s.file_name ? `/uploads/stills/${s.file_name}` : null),
+    }));
+  }
+
+  return payload;
 };
 
 export const videoPlayerController = {

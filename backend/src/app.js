@@ -38,8 +38,13 @@ app.use(express.urlencoded({ extended: true }));
 // anti attacks
 app.use('/api', securityGuard);
 
-// uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// uploads — Cross-Origin-Resource-Policy: cross-origin requis car le frontend
+// (localhost:5173) charge des ressources depuis le backend (localhost:4000)
+// Helmet applique same-origin par défaut ce qui bloque les images/vidéos cross-origin
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // toutes les routes
 app.use('/api', routes);

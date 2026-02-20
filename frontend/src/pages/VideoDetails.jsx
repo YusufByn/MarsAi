@@ -19,6 +19,8 @@ const VideoDetails = () => {
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [coverBroken, setCoverBroken] = useState(false);
+  const [brokenStills, setBrokenStills] = useState(new Set());
 
   useEffect(() => {
     const loadVideo = async () => {
@@ -42,10 +44,11 @@ const VideoDetails = () => {
     return `${m}min ${s}s`;
   };
 
-  const getCoverUrl = (cover) => {
-    if (!cover) return null;
-    if (cover.startsWith('http')) return cover;
-    return `${API_URL}/uploads/covers/${cover}`;
+  const getCoverUrl = (video) => {
+    const src = video.cover_url || (video.cover ? `/uploads/covers/${video.cover}` : null);
+    if (!src) return null;
+    if (src.startsWith('http')) return src;
+    return `${API_URL}${src}`;
   };
 
   if (loading) {
@@ -72,18 +75,19 @@ const VideoDetails = () => {
     );
   }
 
-  const coverUrl = getCoverUrl(video.cover);
+  const coverUrl = getCoverUrl(video);
   const fullName = [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' ');
 
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Cover Hero - 1/3 de la page */}
       <div className="relative h-[33vh] w-full overflow-hidden">
-        {coverUrl ? (
+        {coverUrl && !coverBroken ? (
           <img
             src={coverUrl}
             alt={video.title}
             className="w-full h-full object-cover"
+            onError={() => setCoverBroken(true)}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-mars-primary/20 to-black flex items-center justify-center">
@@ -120,12 +124,13 @@ const VideoDetails = () => {
       {video.stills && video.stills.length > 0 && (
         <div className="max-w-4xl mx-auto px-6 pt-6">
           <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-            {video.stills.map((still) => (
+            {video.stills.map((still) => !brokenStills.has(still.id) && (
               <div key={still.id} className="flex-shrink-0 w-48 h-32 rounded-xl overflow-hidden border border-white/10">
                 <img
-                  src={`${API_URL}/uploads/stills/${still.file_name}`}
+                  src={still.file_url ? `${API_URL}${still.file_url}` : `${API_URL}/uploads/stills/${still.file_name}`}
                   alt=""
                   className="w-full h-full object-cover"
+                  onError={() => setBrokenStills(prev => new Set(prev).add(still.id))}
                 />
               </div>
             ))}

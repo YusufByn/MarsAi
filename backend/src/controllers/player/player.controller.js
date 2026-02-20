@@ -33,7 +33,7 @@ const PlayerVideoController = {
       const validVideos = [];
       for (const video of videos) {
         if (video.video_file_name) {
-          const videoPath = path.join(__dirname, '../../../uploads/videos', video.video_file_name);
+          const videoPath = path.join(__dirname, '../../uploads/videos', video.video_file_name);
           try {
             await fs.access(videoPath);
             validVideos.push(video);
@@ -116,7 +116,7 @@ const PlayerVideoController = {
   async streamVideo(req, res) {
     try {
       const { filename } = req.params;
-      const videoPath = path.join(__dirname, '../../../uploads/videos', filename);
+      const videoPath = path.join(__dirname, '../../uploads/videos', filename);
 
       try {
         await fs.access(videoPath);
