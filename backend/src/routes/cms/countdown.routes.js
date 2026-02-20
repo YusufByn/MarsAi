@@ -1,6 +1,6 @@
 import express from 'express';
 import { getHomepage } from '../../controllers/cms/countdown.controller.js';
-import { apiLimiter } from '../middlewares/rateLimiter.middleware.js';
+import { apiLimiter } from '../../middlewares/rateLimiter.middleware.js';
 
 const router = express.Router();
 
