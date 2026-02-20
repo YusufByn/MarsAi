@@ -75,7 +75,7 @@ export async function getAllCmsElements() {
 
         const query = `
             SELECT id, section_type, slug, title, sub_title, config, image_file, link, is_active, created_at, updated_at 
-            FROM cms 
+            FROM cms_section 
             ORDER BY section_type ASC
         `;
 
@@ -91,7 +91,7 @@ export async function getCmsElementBySectionType(sectionType) {
     try {
         const query = `
             SELECT id, section_type, slug, title, sub_title, config, image_file, link, is_active, created_at, updated_at 
-            FROM cms 
+            FROM cms_section 
             WHERE section_type = ?
         `;
 
@@ -126,9 +126,50 @@ export async function updateCmsElement(sectionType, payload) {
             updateValues.push(title ?? null);
         }
 
-        
+        if ("sub_title" in payload) {
+            updateFields.push("sub_title = ?");
+            updateValues.push(sub_title ?? null);
+        }
+
+        if ("config" in payload) {
+            updateFields.push("config = ?");
+            updateValues.push(config ? JSON.stringify(config) : null);
+        }
+
+        if ("image_file" in payload) {
+            updateFields.push("image_file = ?");
+            updateValues.push(image_file ?? null);
+        }
+
+        if ("link" in payload) {
+            updateFields.push("link = ?");
+            updateValues.push(link ?? null);
+        }
+
+        if ("is_active" in payload) {
+            updateFields.push("is_active = ?");
+            updateValues.push(is_active ?? null);
+        }
+
+        if (updateFields.length === 0) {
+            throw new Error("No fields to update");
+        }
+
+        updateFields.push("updated_at = NOW()");
+        updateValues.push(sectionType);
+
+        const query = `UPDATE cms_section SET ${updateFields.join(", ")} WHERE section_type = ?`;
+
+        const [result] = await pool.execute(query, updateValues);
+
+        if (result.affectedRows === 0) { 
+            throw new Error("Failed to update CMS element");
+        }
+
+        return await getCmsElementBySectionType(sectionType);
         
     } catch (error) {
-        
+        console.error('Error updating CMS element:', error);
+        throw error;
     }
 }
