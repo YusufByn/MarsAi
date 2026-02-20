@@ -1,7 +1,10 @@
 import express from 'express';
 import playerVideoController from '../../controllers/player/player.controller.js';
+import { checkAuth, restrictTo } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
+
+const ROLES_PLAYER = ['jury', 'selector', 'admin', 'superadmin'];
 
 // Routes publiques pour le player
 
@@ -14,10 +17,10 @@ router.get('/videos/:id', playerVideoController.getVideoById.bind(playerVideoCon
 // Stream vidéo avec support du range
 router.get('/stream/:filename', playerVideoController.streamVideo.bind(playerVideoController));
 
-// Envoi d'email au créateur de la vidéo
-router.post('/send-email', playerVideoController.sendEmailToCreator.bind(playerVideoController));
+// Envoi d'email au créateur de la vidéo (jury/selector/admin uniquement)
+router.post('/send-email', checkAuth, restrictTo(...ROLES_PLAYER), playerVideoController.sendEmailToCreator.bind(playerVideoController));
 
-// Gestion de la playlist (ajouter/retirer)
-router.post('/playlist', playerVideoController.togglePlaylist.bind(playerVideoController));
+// Gestion de la playlist (utilisateur authentifié requis)
+router.post('/playlist', checkAuth, playerVideoController.togglePlaylist.bind(playerVideoController));
 
 export default router;

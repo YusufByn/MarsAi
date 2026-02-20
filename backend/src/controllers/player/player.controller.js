@@ -116,7 +116,14 @@ const PlayerVideoController = {
   async streamVideo(req, res) {
     try {
       const { filename } = req.params;
-      const videoPath = path.join(__dirname, '../../uploads/videos', filename);
+
+      // Protection path traversal : on accepte uniquement le nom de fichier sans repertoire
+      const safeName = path.basename(filename);
+      if (!safeName || safeName !== filename) {
+        return res.status(400).json({ success: false, message: 'Nom de fichier invalide' });
+      }
+
+      const videoPath = path.join(__dirname, '../../uploads/videos', safeName);
 
       try {
         await fs.access(videoPath);

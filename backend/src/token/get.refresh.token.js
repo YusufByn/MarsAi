@@ -24,7 +24,7 @@ console.log('Open this URL in your browser:');
 console.log(authUrl);
 
 // après consentement, récupérer le code dans l'URL
-const code = '4/0ASc3gC0_4G0g-yTn4CUnJnms6YFiR7sPZBGQtZXwqgt5-d2zvjDXppymkDTHUSJOl3uxXA';
+const code = 'COLLE_LE_CODE_ICI';
 
 async function getTokens() {
   if (code === 'COLLE_LE_CODE_ICI') {
