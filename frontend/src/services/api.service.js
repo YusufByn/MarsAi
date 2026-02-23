@@ -3,6 +3,7 @@
  */
 
 import { API_URL } from '../config';
+import { getFingerprint } from './fingerprint.service';
 
 const API_BASE_URL = `${API_URL}/api`;
 
@@ -177,8 +178,12 @@ export const createVideo = async (videoData, recaptchaToken) => {
     if (normalizedStill3) formData.append('stills', normalizedStill3);
     if (normalizedSubtitle) formData.append('srt', normalizedSubtitle);
 
+    const deviceId = getFingerprint();
     const response = await fetch(`${API_BASE_URL}/upload/video`, {
       method: 'POST',
+      headers: {
+        ...(deviceId ? { 'x-device-id': deviceId } : {}),
+      },
       body: formData,
     });
     

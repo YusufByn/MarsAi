@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Countdown from '../components/Countdown';
+import Sponsors from './sponsors/Sponsors';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -46,6 +47,17 @@ const HomePage = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 9l-7 7-7-7"></path>
           </svg>
         </div>
+
+        {/* Sponsors Section */}
+        <div className="h-full mt-25">
+          <Sponsors
+            preview
+            previewLimit={6}
+            hideTypeTitles
+            showViewAllLink
+          />
+        </div>
+        
       </header>
 
     </div>
