@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { isTokenExpired, clearAuth } from '../services/authService';
 
 export function useAuth() {
   const [logoutFlag, setLogoutFlag] = useState(false);
@@ -9,7 +10,10 @@ export function useAuth() {
     const token = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('auth_user');
 
-    if (!storedUser) return { user: null, token: null, isSelector: false, isAdmin: false };
+    if (!storedUser || !token || isTokenExpired(token)) {
+      clearAuth();
+      return { user: null, token: null, isSelector: false, isAdmin: false };
+    }
 
     const user = JSON.parse(storedUser);
     const role = user.role;
@@ -23,8 +27,7 @@ export function useAuth() {
   };
 
   const logout = useCallback(() => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
+    clearAuth();
     setLogoutFlag(true);
   }, []);
 

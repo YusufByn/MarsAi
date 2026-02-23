@@ -29,7 +29,10 @@ app.use(
 // app.use(rateLimit({ windowMs: 15*60*1_000, max: 5000 })); // rate limite pour eviter les boucle côté cms
 
 // middleware pour gérer les CORS
-app.use(cors({ origin: env.websiteUrl }));
+app.use(cors({
+  origin: env.websiteUrl,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Invite-Token', 'x-device-id'],
+}));
 // middleware pour parser le corps des requêtes
 app.use(express.json());
 // middleware pour parser les cookies

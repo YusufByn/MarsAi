@@ -1,4 +1,4 @@
-import { validateEditToken, extractTokenFromRequest } from '../utils/editToken.util.js';
+import { validateEditToken, extractTokenFromRequest, verifyEditToken } from '../utils/editToken.util.js';
 import { videoModel } from '../models/video.model.js';
 
 /**
@@ -134,7 +134,6 @@ export const validateEditTokenOnly = (req, res, next) => {
     });
   }
 
-  const { verifyEditToken } = require('../utils/editToken.util.js');
   const decoded = verifyEditToken(token);
 
   if (!decoded) {

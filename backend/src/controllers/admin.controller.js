@@ -62,6 +62,8 @@ export const adminController = {
             const success = await videoModel.delete(req.params.id);
             if (!success) return res.status(404).json({ message: "Film introuvable" });
 
+            logActivity({ action: 'admin_video_delete', userId: req.user.id, entity: 'video', entityId: Number(req.params.id), ip: req.ip });
+
             res.json({ message: "Film supprimé définitivement" });
         } catch (error) {
             console.error('[ADMIN] Erreur deleteVideo:', error);

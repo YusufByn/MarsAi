@@ -15,7 +15,6 @@ const playlistSchema = z.preprocess(
 // memoSchema pour la gestion du memo
 const memoSchema = z
   .object({
-    user_id: z.coerce.number().int().positive(),
     video_id: z.coerce.number().int().positive(),
     statut: z.enum(['yes', 'no', 'discuss']).optional(),
     playlist: playlistSchema.optional(),

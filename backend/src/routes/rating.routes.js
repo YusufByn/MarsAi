@@ -9,8 +9,8 @@ const router = express.Router();
 router.use(apiLimiter);
 router.use(checkAuth);
 
-router.get('/:videoId/:userId', ratingController.getOne);
+router.get('/:videoId', ratingController.getOne);
 router.post('/', validateRatingUpsert, ratingController.upsert);
-router.delete('/:videoId/:userId', ratingController.deleteRating);
+router.delete('/:videoId', ratingController.deleteRating);
 
 export default router;

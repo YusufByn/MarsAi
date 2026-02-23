@@ -20,7 +20,4 @@ router.get('/stream/:filename', playerVideoController.streamVideo.bind(playerVid
 // Envoi d'email au créateur de la vidéo (jury/selector/admin uniquement)
 router.post('/send-email', checkAuth, restrictTo(...ROLES_PLAYER), playerVideoController.sendEmailToCreator.bind(playerVideoController));
 
-// Gestion de la playlist (utilisateur authentifié requis)
-router.post('/playlist', checkAuth, playerVideoController.togglePlaylist.bind(playerVideoController));
-
 export default router;

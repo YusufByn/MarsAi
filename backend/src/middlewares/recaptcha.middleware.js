@@ -31,11 +31,10 @@ async function verifyRecaptcha(req, res, next) {
     }
 
     // Token valide, on continue vers le prochain middleware/controller
-    console.log('✅ reCAPTCHA verified: Human detected');
     next();
     
   } catch (error) {
-    console.error('❌ Error in reCAPTCHA middleware:', error);
+    console.error('[RECAPTCHA ERROR] Erreur middleware:', error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error during reCAPTCHA verification'

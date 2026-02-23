@@ -10,8 +10,8 @@ const router = express.Router();
 
 router.use(apiLimiter);
 router.use(checkAuth);
-router.get('/user/:userId', memoController.getAllByUser);
-router.get('/:videoId/:userId', memoController.getOne);
+router.get('/user/me', memoController.getAllByUser);
+router.get('/:videoId', memoController.getOne);
 router.post('/', validateMemoUpsert, memoController.upsert);
 
 export default router;
