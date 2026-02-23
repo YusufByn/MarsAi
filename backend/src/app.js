@@ -19,7 +19,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // middleware pour sécuriser l'application
-app.use(helmet());
+app.use(
+  helmet({
+    // Autorise le front (autre origine/port) à charger les images statiques (/uploads).
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 // app.use(rateLimit({ windowMs: 15*60*1_000, max: 5000 })); // rate limite pour eviter les boucle côté cms
 
 // middleware pour gérer les CORS
@@ -39,7 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', securityGuard);
 
 // uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // toutes les routes
 app.use('/api', routes);

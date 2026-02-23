@@ -44,11 +44,7 @@ function ValidatedParticipation() {
           <p className="mt-3 text-sm text-gray-300 leading-relaxed">
             Your participation has been validated. You can now access your
             participation details. Thank you for your participation. You will
-            receive an email confirmation shortly. If you have any questions,
-            please contact us at{" "}
-            <a href="mailto:contact@marsai.com" className="text-fuchsia-300 underline">
-              contact@marsai.com
-            </a>
+            receive an email confirmation shortly.
           </p>
         </div>
         <Link

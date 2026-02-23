@@ -15,12 +15,10 @@ export const adminController = {
             const stats = await videoModel.getDashboardStats();
             res.json(stats);
         } catch (error) {
-            console.error('[ADMIN] Erreur getDashboardStats:', error);
+            console.error('[ADMIN] Erreur stats:', error);
             res.status(500).json({ message: "Erreur stats" });
         }
     },
-
-    // --- VIDEOS ---
 
     async listVideos(req, res) {
         try {
@@ -32,7 +30,7 @@ export const adminController = {
             const data = await videoModel.findAll({ limit, offset, search, status });
             res.json(data);
         } catch (error) {
-            console.error('[ADMIN] Erreur listVideos:', error);
+            console.error("Erreur listVideos:", error);
             res.status(500).json({ message: "Erreur lors de la récupération des films" });
         }
     },

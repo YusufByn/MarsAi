@@ -1,0 +1,128 @@
+import React from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import SponsorsTemplate from './sponsorsOption/SponsorsTemplate';
+import { API_URL } from '../../config';
+
+function Sponsors({
+    preview = false,
+    previewLimit = 6,
+    hideTypeTitles = false,
+    showViewAllLink = false,
+}) {
+    const [sponsors, setSponsors] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchSponsors = async () => {
+            try {
+                const response = await fetch(`${API_URL}/api/sponsors`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch sponsors');
+                }
+                const data = await response.json();
+                setSponsors(data.data || []);
+            } catch (error) {
+                setError(error);
+            } finally {
+                setLoading(false);  
+            }
+        }
+        fetchSponsors();
+    }, []);
+
+    const groupedSponsors = useMemo(() => {
+        const groups = {};
+        sponsors.forEach((sponsor) => {
+            const typeCode = Number(sponsor.is_active ?? 0);
+            const key = Number.isFinite(typeCode) ? typeCode : 0;
+            if (!groups[key]) {
+                groups[key] = { typeCode: key, typeName: '', sponsors: [] };
+            }
+            const labelCandidate = typeof sponsor.type_name === 'string' && sponsor.type_name.trim()
+                ? sponsor.type_name.trim()
+                : (typeof sponsor.name === 'string' ? sponsor.name.trim() : '');
+            if (!groups[key].typeName && labelCandidate) {
+                groups[key].typeName = labelCandidate;
+            }
+            groups[key].sponsors.push(sponsor);
+        });
+        return Object.values(groups)
+            .map((group) => ({
+                ...group,
+                sponsors: [...group.sponsors].sort((a, b) => {
+                    const orderA = Number(a.sort_order ?? 0);
+                    const orderB = Number(b.sort_order ?? 0);
+                    if (orderA !== orderB) return orderA - orderB;
+                    return Number(a.id ?? 0) - Number(b.id ?? 0);
+                }),
+            }))
+            .sort((a, b) => a.typeCode - b.typeCode);
+    }, [sponsors]);
+
+    const previewSponsors = useMemo(() => {
+        if (!preview) return [];
+        return sponsors.slice(0, previewLimit);
+    }, [preview, previewLimit, sponsors]);
+
+    if (loading) {
+        return <section className="py-6 text-center text-white/60">Chargement des sponsors...</section>;
+    }
+
+    if (error) {
+        return <section className="py-6 text-center text-red-400">Impossible de charger les sponsors.</section>;
+    }
+
+    if (preview) {
+        return (
+            <div className="space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
+                    {previewSponsors.map((sponsor) => (
+                        <div key={sponsor.id} className="w-full max-w-[260px]">
+                            <SponsorsTemplate {...sponsor} />
+                        </div>
+                    ))}
+                </div>
+                {showViewAllLink && (
+                    <div className="flex justify-center">
+                        <Link to="/sponsors" className="mars-button-outline">
+                            Voir tous les sponsors
+                        </Link>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-10 pt-28">
+            {groupedSponsors.map(({ typeCode, typeName, sponsors: typeSponsors }) => (
+                <section key={typeCode} className="space-y-4">
+                    {!hideTypeTitles && (
+                        <h1 className="text-2xl font-bold text-white">
+                            {typeName || `Type ${typeCode}`}
+                        </h1>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-items-center">
+                        {typeSponsors.map((sponsor) => (
+                            <div key={sponsor.id} className="w-full max-w-[260px]">
+                                <SponsorsTemplate {...sponsor} />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            ))}
+            <div className="flex justify-center pt-4">
+                <a
+                    href="mailto:contact@marsai.fr?subject=Demande%20de%20partenariat%20sponsor"
+                    className="mars-button-primary"
+                >
+                    Devenir sponsor
+                </a>
+            </div>
+        </div>
+    );
+}
+
+export default Sponsors;
