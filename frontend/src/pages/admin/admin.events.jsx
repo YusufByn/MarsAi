@@ -24,8 +24,8 @@ export default function AdminEvents() {
 
   const loadEvents = async () => {
     try {
-      const data = await adminService.listEvents();
-      setEvents(Array.isArray(data) ? data : []);
+      const res = await adminService.listEvents();
+      setEvents(Array.isArray(res?.data) ? res.data : []);
     } catch (error) {
       console.error('[ADMIN EVENTS] Erreur chargement:', error);
     } finally {
@@ -43,8 +43,12 @@ export default function AdminEvents() {
     setSaving(true);
     try {
       const result = await adminService.createEvent(formData);
-      setEvents(prev => [...prev, { id: result.id, ...formData, created_at: new Date().toISOString() }]);
-      resetForm();
+      const newId = result?.data?.id;
+      
+      setEvents(prev =>[
+        ...prev,
+        { id: newId, ...formData, created_at: new Date().toISOString() }
+      ]);
     } catch (error) {
       console.error('[ADMIN EVENTS] Erreur creation:', error);
     } finally {
