@@ -87,6 +87,13 @@ export const videoModel = {
     );
     video.social_media = socialRows;
 
+    // Joindre les stills
+    const [stillRows] = await pool.execute(
+      'SELECT id, file_name, file_url, sort_order FROM still WHERE video_id = ? ORDER BY sort_order ASC',
+      [id]
+    );
+    video.stills = stillRows;
+
     return video;
   },
 
@@ -146,7 +153,7 @@ export const videoModel = {
       data.realisator_lastname,
       data.realisator_gender,
       data.email,
-      data.birthday || null,
+      data.birthday != null ? (Number(data.birthday) ? 1 : 0) : null,
       data.mobile_number || null,
       data.fixe_number || null,
       data.address || null,

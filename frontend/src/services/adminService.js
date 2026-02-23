@@ -138,4 +138,57 @@ export const adminService = {
     if (!response.ok) throw new Error(data.message || 'Erreur suppression utilisateur');
     return data;
   },
+
+  // --- Invite ---
+  async sendInvite(email) {
+    const response = await fetch(`${API_URL}/invite`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ email }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Erreur envoi invitation");
+    return data;
+  },
+
+  // --- Security / WAF ---
+
+  async getSecurityLogs() {
+    const response = await fetch(`${API_URL}/security/logs`, {
+      headers: authHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur logs sécurité');
+    return data;
+  },
+
+  async getBlacklist() {
+    const response = await fetch(`${API_URL}/security/blacklist`, {
+      headers: authHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur blacklist');
+    return data;
+  },
+
+  async unbanEntry(id) {
+    const response = await fetch(`${API_URL}/security/unban/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur débannissement');
+    return data;
+  },
+
+  async banManual({ ip, fingerprint, reason }) {
+    const response = await fetch(`${API_URL}/security/ban`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ ip, fingerprint, reason }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur bannissement');
+    return data;
+  },
 };
