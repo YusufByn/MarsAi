@@ -1,6 +1,6 @@
 import { videoModel } from '../models/admin.video.js';
 import { EventModel } from '../models/event.model.js';
-import { CmsModel } from '../models/cms.model.js';
+import { updateCmsElement } from '../models/cms.model.js';
 import { adminUserModel } from '../models/admin.user.model.js';
 import { createInvite } from '../models/invite.model.js';
 import { sendInvitationEmail } from '../services/email.service.js';
@@ -121,11 +121,16 @@ export const adminController = {
             const { section_type } = req.params;
             const configData = req.body;
 
-            await CmsModel.update(section_type, configData);
-            res.json({ success: true });
+            const updated =await updateCmsElement(section_type, configData);
+            
+            res.status(200).json({ 
+                success: true,
+                message: "CMS element mis à jour avec succès",
+                data: updated
+            });
         } catch (error) {
             console.error('[ADMIN] Erreur updateCms:', error);
-            res.status(500).json({ message: "Erreur mise à jour CMS" });
+            res.status(500).json({ message: "Erreur lors de la mise à jour du CMS" });
         }
     },
 

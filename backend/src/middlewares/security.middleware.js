@@ -1,8 +1,9 @@
 import pool from '../config/db.js';
 
 const ATTACK_PATTERNS = {
-    SQLi: /(\%27)|(\')|(\-\-)|(\%23)|(#)/i, 
-    SQLi_Advanced: /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i, 
+    SQLi: /(\bUNION\b|\bSELECT\b|\bDROP\b|\bINSERT\b|\bDELETE\b|\bUPDATE\b|\bEXEC\b)/i,
+    SQLi_Advanced: /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i,
+    XSS: /(<script[\s\S]*?>[\s\S]*?<\/script>|javascript:|on\w+\s*=)/i,
     PathTraversal: /(\.\.\/|\.\.\\)/
 };
 
