@@ -104,14 +104,14 @@ export const sponsorsService = {
         return response.json();
     },
 
-    async setVisibility(id, isActive) {
+    async setVisibility(id, isVisible) {
         const response = await fetch(`${API_URL}/api/sponsors/${id}/visibility`, {
             method: 'POST',
             headers: {
                 ...authTokenHeaders(),
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ is_active: isActive }),
+            body: JSON.stringify({ is_visible: isVisible }),
         });
         if (!response.ok) {
             throw await parseApiError(response, 'Erreur lors de la mise à jour de la visibilité');

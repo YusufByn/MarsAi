@@ -102,6 +102,15 @@ const sponsorTypeSchema = z.preprocess(
     .max(MAX_TYPE_CODE, `Le champ is_active ne doit pas depasser ${MAX_TYPE_CODE}`)
 );
 
+const sponsorVisibilitySchema = z.preprocess(
+  toIntegerLike,
+  z
+    .number({ invalid_type_error: "Le champ is_visible doit etre un entier" })
+    .int("Le champ is_visible doit etre un entier")
+    .min(0, 'Le champ is_visible doit etre >= 0')
+    .max(1, 'Le champ is_visible ne doit pas depasser 1')
+);
+
 const sponsorIdParamsSchema = z.object({
   id: z.preprocess(
     toIntegerLike,
@@ -118,6 +127,7 @@ const createSponsorSchema = z.object({
   url: sponsorUrlSchema,
   sort_order: sponsorSortOrderSchema.default(0),
   is_active: sponsorTypeSchema.optional().default(1),
+  is_visible: sponsorVisibilitySchema.optional().default(1),
 });
 
 const updateSponsorSchema = z
@@ -127,13 +137,14 @@ const updateSponsorSchema = z
     url: sponsorUrlSchema,
     sort_order: sponsorSortOrderSchema,
     is_active: sponsorTypeSchema.optional(),
+    is_visible: sponsorVisibilitySchema.optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'Au moins un champ doit etre fourni',
   });
 
 const setSponsorVisibilitySchema = z.object({
-  is_active: sponsorTypeSchema,
+  is_visible: sponsorVisibilitySchema,
 });
 
 const moveSponsorOrderSchema = z.object({

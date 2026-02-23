@@ -42,7 +42,17 @@ function Sponsors() {
             }
             groups[key].sponsors.push(sponsor);
         });
-        return Object.values(groups).sort((a, b) => a.typeCode - b.typeCode);
+        return Object.values(groups)
+            .map((group) => ({
+                ...group,
+                sponsors: [...group.sponsors].sort((a, b) => {
+                    const orderA = Number(a.sort_order ?? 0);
+                    const orderB = Number(b.sort_order ?? 0);
+                    if (orderA !== orderB) return orderA - orderB;
+                    return Number(a.id ?? 0) - Number(b.id ?? 0);
+                }),
+            }))
+            .sort((a, b) => a.typeCode - b.typeCode);
     }, [sponsors]);
 
     if (loading) {
@@ -60,12 +70,11 @@ function Sponsors() {
                     <h1 className="text-2xl font-bold text-white">
                         {typeName || `Type ${typeCode}`}
                     </h1>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-items-center">
                         {typeSponsors.map((sponsor) => (
-                            <SponsorsTemplate
-                                key={sponsor.id}
-                                {...sponsor}
-                            />
+                            <div key={sponsor.id} className="w-full max-w-[260px]">
+                                <SponsorsTemplate {...sponsor} />
+                            </div>
                         ))}
                     </div>
                 </section>

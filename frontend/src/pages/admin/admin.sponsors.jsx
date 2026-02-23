@@ -19,6 +19,12 @@ const toTypeCode = (value, fallback = 0) => {
     return normalized;
 };
 
+const toVisibility = (value, fallback = 1) => {
+    const raw = Number(value);
+    if (!Number.isFinite(raw)) return fallback;
+    return Math.trunc(raw) > 0 ? 1 : 0;
+};
+
 const getTypeLabel = (typeCode, typeName = '') => {
     const normalizedName = typeof typeName === 'string' ? typeName.trim() : '';
     if (normalizedName) return normalizedName;
@@ -347,15 +353,15 @@ export default function AdminSponsors() {
         }
     };
 
-    const handleSetType = async (sponsor, nextType) => {
+    const handleSetVisibility = async (sponsor, nextVisibility) => {
         try {
-            const response = await sponsorsService.setVisibility(sponsor.id, toTypeCode(nextType, 0));
-            const updatedSponsor = response?.data || { ...sponsor, is_active: toTypeCode(nextType, 0) };
+            const response = await sponsorsService.setVisibility(sponsor.id, toVisibility(nextVisibility, 1));
+            const updatedSponsor = response?.data || { ...sponsor, is_visible: toVisibility(nextVisibility, 1) };
             setSponsors((prev) => prev.map((s) => (s.id === sponsor.id ? { ...s, ...updatedSponsor } : s)));
             setError(null);
         } catch (updateError) {
-            console.error('[ADMIN SPONSORS] Erreur type:', updateError);
-            setError(getActionErrorMessage(updateError, 'Erreur lors de la mise à jour du type'));
+            console.error('[ADMIN SPONSORS] Erreur visibilité:', updateError);
+            setError(getActionErrorMessage(updateError, 'Erreur lors de la mise à jour de la visibilité'));
         }
     };
 
@@ -630,6 +636,7 @@ export default function AdminSponsors() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {typeSponsors.map((sponsor, sponsorIndex) => {
                                     const sponsorType = toTypeCode(sponsor.is_active, 0);
+                                    const sponsorVisibility = toVisibility(sponsor.is_visible, 1);
                                     const isFirstSponsor = sponsorIndex === 0;
                                     const isLastSponsor = sponsorIndex === typeSponsors.length - 1;
                                     return (
@@ -686,15 +693,15 @@ export default function AdminSponsors() {
                                                     <ArrowDown size={12} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleSetType(sponsor, sponsorType > 0 ? 0 : 1)}
-                                                    title={sponsorType > 0 ? 'Masquer (type 0)' : 'Activer (type 1)'}
+                                                    onClick={() => handleSetVisibility(sponsor, sponsorVisibility > 0 ? 0 : 1)}
+                                                    title={sponsorVisibility > 0 ? 'Masquer' : 'Afficher'}
                                                     className={`flex items-center justify-center p-2 rounded-lg text-xs font-bold transition-colors ${
-                                                        sponsorType > 0
+                                                        sponsorVisibility > 0
                                                             ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30'
                                                             : 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
                                                     }`}
                                                 >
-                                                    {sponsorType > 0 ? <EyeOff size={14} /> : <Eye size={14} />}
+                                                    {sponsorVisibility > 0 ? <EyeOff size={14} /> : <Eye size={14} />}
                                                 </button>
                                                 <button
                                                     onClick={() => openEdit(sponsor)}
