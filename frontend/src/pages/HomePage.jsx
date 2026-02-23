@@ -50,7 +50,12 @@ const HomePage = () => {
 
         {/* Sponsors Section */}
         <div className="h-full mt-25">
-          <Sponsors />
+          <Sponsors
+            preview
+            previewLimit={6}
+            hideTypeTitles
+            showViewAllLink
+          />
         </div>
         
       </header>

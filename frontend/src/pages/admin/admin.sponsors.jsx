@@ -269,7 +269,8 @@ export default function AdminSponsors() {
         if (!imgPath) return '';
         if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) return imgPath;
         if (imgPath.startsWith('/')) return `${API_URL}${imgPath}`;
-        return imgPath;
+        if (!imgPath.includes('/')) return `${API_URL}/uploads/covers/${imgPath}`;
+        return `${API_URL}/${imgPath.replace(/^\/+/, '')}`;
     };
 
     const normalizeSponsorUrl = (value) => {

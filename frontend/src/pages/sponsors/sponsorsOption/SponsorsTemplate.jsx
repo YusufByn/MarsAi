@@ -1,7 +1,21 @@
 import { API_URL } from '../../../config';
 
 function SponsorsTemplate({ img, url }) {
-    const resolvedImg = img?.startsWith('/') ? `${API_URL}${img}` : img;
+    const resolveImgUrl = (value) => {
+        if (typeof value !== 'string') return '';
+        const trimmed = value.trim();
+        if (!trimmed) return '';
+
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        if (trimmed.startsWith('/')) return `${API_URL}${trimmed}`;
+
+        // Compatibilite avec les anciennes valeurs stockees en base (ex: "1771840731759.jpg").
+        if (!trimmed.includes('/')) return `${API_URL}/uploads/covers/${trimmed}`;
+
+        return `${API_URL}/${trimmed.replace(/^\/+/, '')}`;
+    };
+
+    const resolvedImg = resolveImgUrl(img);
     const resolvedUrl = url
         ? /^https?:\/\//i.test(url.trim())
             ? url.trim()

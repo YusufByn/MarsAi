@@ -1,9 +1,15 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import SponsorsTemplate from './sponsorsOption/SponsorsTemplate';
 import { API_URL } from '../../config';
 
-function Sponsors() {
+function Sponsors({
+    preview = false,
+    previewLimit = 6,
+    hideTypeTitles = false,
+    showViewAllLink = false,
+}) {
     const [sponsors, setSponsors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -55,6 +61,11 @@ function Sponsors() {
             .sort((a, b) => a.typeCode - b.typeCode);
     }, [sponsors]);
 
+    const previewSponsors = useMemo(() => {
+        if (!preview) return [];
+        return sponsors.slice(0, previewLimit);
+    }, [preview, previewLimit, sponsors]);
+
     if (loading) {
         return <section className="py-6 text-center text-white/60">Chargement des sponsors...</section>;
     }
@@ -63,13 +74,36 @@ function Sponsors() {
         return <section className="py-6 text-center text-red-400">Impossible de charger les sponsors.</section>;
     }
 
+    if (preview) {
+        return (
+            <div className="space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
+                    {previewSponsors.map((sponsor) => (
+                        <div key={sponsor.id} className="w-full max-w-[260px]">
+                            <SponsorsTemplate {...sponsor} />
+                        </div>
+                    ))}
+                </div>
+                {showViewAllLink && (
+                    <div className="flex justify-center">
+                        <Link to="/sponsors" className="mars-button-outline">
+                            Voir tous les sponsors
+                        </Link>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-10">
+        <div className="space-y-10 pt-28">
             {groupedSponsors.map(({ typeCode, typeName, sponsors: typeSponsors }) => (
                 <section key={typeCode} className="space-y-4">
-                    <h1 className="text-2xl font-bold text-white">
-                        {typeName || `Type ${typeCode}`}
-                    </h1>
+                    {!hideTypeTitles && (
+                        <h1 className="text-2xl font-bold text-white">
+                            {typeName || `Type ${typeCode}`}
+                        </h1>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-items-center">
                         {typeSponsors.map((sponsor) => (
                             <div key={sponsor.id} className="w-full max-w-[260px]">
@@ -79,6 +113,14 @@ function Sponsors() {
                     </div>
                 </section>
             ))}
+            <div className="flex justify-center pt-4">
+                <a
+                    href="mailto:contact@marsai.fr?subject=Demande%20de%20partenariat%20sponsor"
+                    className="mars-button-primary"
+                >
+                    Devenir sponsor
+                </a>
+            </div>
         </div>
     );
 }
