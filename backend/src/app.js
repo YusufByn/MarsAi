@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
 import { securityGuard } from './middlewares/security.middleware.js';
+import eventsRoutes from './routes/eventsPublic.routes.js'
 
 
 import routes from './routes/index.js';
@@ -40,6 +41,9 @@ app.use('/api', securityGuard);
 
 // uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// events
+app.use('/events', eventsRoutes);
 
 // toutes les routes
 app.use('/api', routes);

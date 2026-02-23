@@ -16,7 +16,7 @@ router.get('/videos', adminController.listVideos);
 router.patch('/videos/:id/status', adminController.updateStatus);
 router.delete('/videos/:id', adminController.deleteVideo);
 
-router.use(restrictTo('superadmin'));
+router.use(restrictTo('admin', 'superadmin'));
 
 router.get('/events', adminController.listEvents);
 router.post('/events', adminController.createEvent);
