@@ -248,19 +248,21 @@ export const uploadVideoFile = async (videoId, videoFile) => {
  */
 export const uploadCover = async (videoId, coverFile) => {
   try {
+    const token = localStorage.getItem('auth_token');
     const formData = new FormData();
-    formData.append('file', coverFile);
-    
+    formData.append('cover', coverFile);
+
     const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/upload-cover`, {
-      method: 'PUT',
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'upload de la couverture');
+      throw new Error(errorData.message || 'Erreur lors de l\'upload de la couverture');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('[API] Erreur uploadCover:', error);
@@ -276,23 +278,24 @@ export const uploadCover = async (videoId, coverFile) => {
  */
 export const uploadStills = async (videoId, stillFiles) => {
   try {
+    const token = localStorage.getItem('auth_token');
     const formData = new FormData();
-    
-    // Ajouter tous les fichiers stills
+
     stillFiles.forEach(file => {
-      if (file) formData.append('files', file);
+      if (file) formData.append('stills', file);
     });
-    
+
     const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/upload-stills`, {
-      method: 'PUT',
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'upload des stills');
+      throw new Error(errorData.message || 'Erreur lors de l\'upload des stills');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('[API] Erreur uploadStills:', error);

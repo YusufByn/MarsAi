@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { uploadCover, uploadStills } from '../../services/api.service';
 import { API_URL } from '../../config';
 
 export default function AdminFilms() {
@@ -12,6 +13,10 @@ export default function AdminFilms() {
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [uploadingCover, setUploadingCover] = useState(null);
+  const [uploadingStills, setUploadingStills] = useState(null);
+  const coverInputRefs = useRef({});
+  const stillsInputRefs = useRef({});
 
   const totalPages = Math.ceil(total / limit);
 
@@ -49,6 +54,31 @@ export default function AdminFilms() {
       setDeleteConfirm(null);
     } catch (error) {
       console.error('[ADMIN FILMS] Erreur suppression:', error);
+    }
+  };
+
+  const handleCoverUpload = async (filmId, file) => {
+    if (!file) return;
+    setUploadingCover(filmId);
+    try {
+      const result = await uploadCover(filmId, file);
+      setFilms(prev => prev.map(f => f.id === filmId ? { ...f, poster_url: result.data.cover } : f));
+    } catch (error) {
+      console.error('[ADMIN FILMS] Erreur upload cover:', error);
+    } finally {
+      setUploadingCover(null);
+    }
+  };
+
+  const handleStillsUpload = async (filmId, files) => {
+    if (!files || files.length === 0) return;
+    setUploadingStills(filmId);
+    try {
+      await uploadStills(filmId, Array.from(files));
+    } catch (error) {
+      console.error('[ADMIN FILMS] Erreur upload stills:', error);
+    } finally {
+      setUploadingStills(null);
     }
   };
 
@@ -169,6 +199,39 @@ export default function AdminFilms() {
                         En attente
                       </button>
                     )}
+                    {/* Upload cover */}
+                    <button
+                      onClick={() => coverInputRefs.current[film.id]?.click()}
+                      disabled={uploadingCover === film.id}
+                      className="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-bold hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+                    >
+                      {uploadingCover === film.id ? 'Upload...' : 'Cover'}
+                    </button>
+                    <input
+                      ref={el => { coverInputRefs.current[film.id] = el; }}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      className="hidden"
+                      onChange={e => handleCoverUpload(film.id, e.target.files[0])}
+                    />
+
+                    {/* Upload stills */}
+                    <button
+                      onClick={() => stillsInputRefs.current[film.id]?.click()}
+                      disabled={uploadingStills === film.id}
+                      className="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-xs font-bold hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+                    >
+                      {uploadingStills === film.id ? 'Upload...' : 'Stills'}
+                    </button>
+                    <input
+                      ref={el => { stillsInputRefs.current[film.id] = el; }}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      multiple
+                      className="hidden"
+                      onChange={e => handleStillsUpload(film.id, e.target.files)}
+                    />
+
                     <button
                       onClick={() => setDeleteConfirm(film.id)}
                       className="px-3 py-1 rounded-lg bg-red-900/30 text-red-300 text-xs font-bold hover:bg-red-900/50 transition-colors ml-auto"
