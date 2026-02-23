@@ -132,7 +132,7 @@ export const sponsorsModel = {
     const [rows] = await pool.execute(
       `${SPONSOR_SELECT_WITH_TYPE_NAME}
        WHERE s.is_active > 0 AND s.is_visible = 1
-       ORDER BY s.is_active ASC, s.sort_order ASC, s.id DESC`
+       ORDER BY s.is_active ASC, s.sort_order ASC, s.id ASC`
     );
     return rows;
   },
@@ -143,7 +143,7 @@ export const sponsorsModel = {
   async getAllAdmin() {
     const [rows] = await pool.execute(
       `${SPONSOR_SELECT_WITH_TYPE_NAME}
-       ORDER BY s.is_active ASC, s.sort_order ASC, s.id DESC`
+       ORDER BY s.is_active ASC, s.sort_order ASC, s.id ASC`
     );
     return rows;
   },
