@@ -65,11 +65,13 @@ export const adminService = {
   },
 
 
-  async createEvent(eventData){
+  async createEvent(payload){
     const response = await fetch(`${API_URL}/events`, {
       method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify(eventData),
+      headers: {...authHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Erreur creation event');
@@ -79,7 +81,9 @@ export const adminService = {
   async updateEvent(id, payload){
     const response = await fetch(`${API_URL}/events/${id}`, {
       method: 'PUT',
-      headers: authHeaders(),
+      headers: {...authHeaders(),
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(payload),
     });
     const data = await response.json();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, X, Save, Calendar, Pencil } from 'lucide-react';
+import { Plus, Trash2, X, Save, Calendar, Pencil, SwatchBook } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,7 +34,8 @@ export default function AdminEvents() {
     try {
       // Appel à l'API pour récupérer les events
       const res = await adminService.listEvents();
-      setEvents(Array.isArray(res) ? res : (res?.data ?? []));
+      const list = Array.isArray(res) ? res : (res?.data ?? []);
+      setEvents(list);
     } catch (error) {
       // Affiche une erreur en cas de problème lors du chargement
       console.error('[ADMIN EVENTS] Erreur chargement:', error);
@@ -59,31 +60,74 @@ export default function AdminEvents() {
     stock: raw.stock === '' ? null : Number(raw.stock)
   })
 
-  // Creation d'un nouvel event
+  const toMysqlDatetime = (v) => {
+    if (!v) return null;
+    // convertit ç"2026-04-15T14:30" en "2026-04-15 14:30:00"
+    return v.replace('T', ' ') + ':00';
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
 
-    try {
-      const payload = normalizePayload(formData);
-      const result = await adminService.createEvent(payload);
+      try {
+        const payload = {
+          title: formData.title.trim(),
+          description: formData.description.trim() || null,
+          date: toMysqlDatetime(formData.date),
+          duration: formData.duration === '' ? null : Number(formData.duration),
+          stock: formData.stock === '' ? null : Number(formData.stock),
+          illustration: formData.illustration.trim() || null,
+          location: formData.location.trim(),
+        }
 
-      const newId = result?.data?.id;
+        const result = await adminService.createEvent(payload);
+
+        const newId = result?.id;
+        setEvents(prev => [
+          ...prev,
+          { id: newId, ...payload, created_at: new Date().toISOString() }
+        ]);
+
+        resetForm(); // Ferme le formulaire après création
+      } catch (error) {
+        // Affiche une erreur en cas de problème lors de la création
+        console.error('[ADMIN EVENTS] Erreur creation:', error);
+      } finally {
+        setSaving(false);
+      }
+  }
+
+  // // Creation d'un nouvel event
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setSaving(true);
+
+  //   try {
+  //     const payload = normalizePayload(formData);
+  //     const result = await adminService.createEvent(payload);
+
+  //     const newId = result?.data?.id;
       
-      // Ajoute le nouvel event à la liste sans recharger
-      setEvents(prev =>[
-        ...prev,
-        { id: newId, ...payload, created_at: new Date().toISOString() }
-      ]);
+  //     // Ajoute le nouvel event à la liste sans recharger
+  //     setEvents(prev =>[
+  //       ...prev,
+  //       { id: newId, ...payload, created_at: new Date().toISOString() }
+  //     ]);
 
-      resetForm(); // Ferme le formulaire après création
-    } catch (error) {
-      // Affiche une erreur en cas de problème lors de la création
-      console.error('[ADMIN EVENTS] Erreur creation:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
+  //     resetForm(); // Ferme le formulaire après création
+  //   } catch (error) {
+  //     // Affiche une erreur en cas de problème lors de la création
+  //     console.error('[ADMIN EVENTS] Erreur creation:', error);
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
 
   // Suppression d'un event
   const handleDelete = async (id) => {
@@ -145,6 +189,90 @@ export default function AdminEvents() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="text-xs text-gray-400">Titre *</label>
+                <input
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  placeholder="Titre de l’événement"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Date *</label>
+                <input
+                  type="datetime-local"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Lieu *</label>
+                <input
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  placeholder="Paris, Marseille…"
+                  required
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-xs text-gray-400">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white min-h-[90px]"
+                  placeholder="Détails de l’événement…"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Durée (min)</label>
+                <input
+                  type="number"
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Places</label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  min="0"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-xs text-gray-400">Illustration (URL)</label>
+                <input
+                  name="illustration"
+                  value={formData.illustration}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
             <div className="flex gap-3">
               <button
                 type="submit"
@@ -193,7 +321,7 @@ export default function AdminEvents() {
                     {/* Actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
-                        onClick={() => navigate(`/admin/events/${event.id}`)}
+                        onClick={() => navigate(`/admin/events/edit/${event.id}`)}
                         className="px-3 py-1 rounded-lg bg-white/10 text-white text-xs font-bold hover:bg-white/15 transition-colors"
                         title="Modifier"
                       >

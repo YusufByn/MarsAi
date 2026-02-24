@@ -45,7 +45,7 @@ export default function AdminEventEdit() {
     const load = async () => {
         try {
             const res = await adminService.getEventById(eventId);
-            const e = res?.data;
+            const e = res?.data?.data ?? res?.data ?? res;
 
             setFormData({
                 title: e?.title || '',
