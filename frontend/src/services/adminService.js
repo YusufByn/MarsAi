@@ -46,7 +46,7 @@ export const adminService = {
   },
 
   // --- Events ---
-  async listEvents() {
+  async listEvents(){
     const response = await fetch(`${API_URL}/events`, {
       headers: authHeaders(),
     });
@@ -54,8 +54,18 @@ export const adminService = {
     if (!response.ok) throw new Error(data.message || 'Erreur events');
     return data;
   },
+  
+  async getEventById(id) {
+    const response = await fetch(`${API_URL}/events/${id}`, {
+      headers: authHeaders(),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur récupération event');
+    return data;
+  },
 
-  async createEvent(eventData) {
+
+  async createEvent(eventData){
     const response = await fetch(`${API_URL}/events`, {
       method: 'POST',
       headers: authHeaders(),
@@ -66,7 +76,18 @@ export const adminService = {
     return data;
   },
 
-  async deleteEvent(id) {
+  async updateEvent(id, payload){
+    const response = await fetch(`${API_URL}/events/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Erreur update event');
+    return data;
+  },
+
+  async deleteEvent(id){
     const response = await fetch(`${API_URL}/events/${id}`, {
       method: 'DELETE',
       headers: authHeaders(),

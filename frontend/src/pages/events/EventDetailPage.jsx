@@ -13,8 +13,8 @@ export default function EventDetailPage() {
         const load = async () => {
             try {
                 setError("");
-                const data = await eventService.getById(id);
-                const ev = data.data ?? data;
+                // Appel à l'API pour récupérer les détails de l'event
+                const ev = await eventService.getById(id);
                 setEvent(ev);
             } catch (e) {
                 setError(e.message);
@@ -49,7 +49,18 @@ export default function EventDetailPage() {
         );
     }
 
-    if (!event) return null;
+    if (!event){
+        return (
+            <div className="min-h-screen bg-black text-white px-6 py-16">
+                <div className="max-w-3xl mx-auto">
+                    <button onClick={() => navigate(-1)} className="mars-button-outline">
+                        Retour
+                    </button>
+                    <p className="text-gray-400 mt-6">Chargement...</p>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-black text-white px-6 py-16">

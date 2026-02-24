@@ -16,6 +16,8 @@ import VideoDetails from './pages/VideoDetails';
 import CGU from './pages/CGU';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import EventsPage from './pages/events/EventsPage';
+import EventDetailPage from './pages/events/EventDetailPage';
 
 // Admin
 import AdminLayout from './components/layout/AdminLayout';
@@ -27,6 +29,8 @@ import AdminConfig from './pages/admin/admin.config';
 import NewsletterAdmin from './pages/admin/NewsletterAdmin';
 import AdminUsers from './pages/admin/admin.users';
 import AdminMonitoring from './pages/admin/AdminMonitoring';
+import AdminEvenEdit from './pages/admin/admin.eventEdit';
+
 
 function AppContent() {
   const location = useLocation();
@@ -51,13 +55,16 @@ function AppContent() {
           <Route path="/videos" element={<Videos />} />
           <Route path="/videoDetails/:id" element={<VideoDetails />} />
           <Route path="/mentions" element={<CGU />} />
-          <Route path="/validatedparticipation" element={<ValidatedParticipation />} />
+          <Route path='/events' element={<EventsPage />} />
+          <Route path='/event/detail/:id' element={<EventDetailPage />} />
+          <Route path="/validatedparticipation" element={<ValidatedParticipation />} />:
           {/* Admin */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="films" element={<AdminFilms />} />
             <Route path="jury" element={<AdminJury />} />
             <Route path="events" element={<AdminEvents />} />
+            <Route path="events/edit/:id" element={<AdminEvenEdit />} />
             <Route path="config" element={<AdminConfig />} />
             <Route path="newsletter" element={<NewsletterAdmin />} />
             <Route path="users" element={<AdminUsers />} />

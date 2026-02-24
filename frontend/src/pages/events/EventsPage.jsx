@@ -13,9 +13,7 @@ export default function EventsPage() {
 
             try {
                 setError("");
-                const data = await eventService.getAll();
-
-                const list = data.data ?? data;
+                const list = await eventService.getAll();
                 setEvents(list);
 
             } catch (e) {
@@ -53,7 +51,7 @@ export default function EventsPage() {
                     {events.map((ev) => (
                         <button
                             key={ev.id}
-                            onClick={() => navigate(`/event/detail/${ev.id}`)}
+                            onClick={() => navigate(`/event/${ev.id}`)}
                             className="text-left rounded-3xl border border-white/10 bg-white/5 p-7 hover:border-white/20 transition-colors"
                         >
 
