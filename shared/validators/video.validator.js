@@ -52,15 +52,25 @@ const tagsSchema = z.preprocess((value) => {
   return value;
 }, z.array(tagValueSchema).max(10, 'Maximum 10 tags autorisés')).optional();
 
+const URL_PROTOCOL_REGEX = /^https?:\/\//i;
+
 const socialNetworkEntrySchema = z.object({
   platform: z.enum(SOCIAL_PLATFORMS, {
     invalid_type_error: 'Plateforme sociale invalide'
   }),
-  url: z
+  url: z.preprocess((value) => {
+    if (typeof value !== 'string') return value;
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return trimmedValue;
+
+    return URL_PROTOCOL_REGEX.test(trimmedValue)
+      ? trimmedValue
+      : `https://${trimmedValue}`;
+  }, z
     .string()
     .trim()
     .url('URL de réseau social invalide')
-    .max(VIDEO_SECURITY_LIMITS.socialUrlMaxLength, `L'URL ne doit pas dépasser ${VIDEO_SECURITY_LIMITS.socialUrlMaxLength} caractères`)
+    .max(VIDEO_SECURITY_LIMITS.socialUrlMaxLength, `L'URL ne doit pas dépasser ${VIDEO_SECURITY_LIMITS.socialUrlMaxLength} caractères`))
 });
 
 const socialNetworksSchema = z.preprocess((value) => {

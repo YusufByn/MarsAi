@@ -35,6 +35,7 @@ const AdminConfig          = lazy(() => import('./pages/admin/admin.config'));
 const NewsletterAdmin      = lazy(() => import('./pages/admin/NewsletterAdmin'));
 const AdminUsers           = lazy(() => import('./pages/admin/admin.users'));
 const AdminMonitoring      = lazy(() => import('./pages/admin/AdminMonitoring'));
+const AdminSponsors        = lazy(() => import('./pages/admin/admin.sponsors'));
 
 const ROLES_AUTHENTICATED  = ['jury', 'selector', 'admin', 'superadmin'];
 const ROLES_PLAYER         = ['jury', 'selector', 'admin', 'superadmin'];
@@ -67,6 +68,7 @@ function AppContent() {
             <Route path="/jury/profil/:id"        element={<JuryDetails />} />
             <Route path="/formsubmission"         element={<FormDirector />} />
             <Route path="/validatedparticipation" element={<ValidatedParticipation />} />
+            <Route path="/sponsors"               element={<Sponsors />} />
 
             {/* ── Compte requis ───────────────────────────────────── */}
             <Route path="/videos" element={
@@ -111,6 +113,7 @@ function AppContent() {
               <Route path="newsletter"  element={<NewsletterAdmin />} />
               <Route path="users"       element={<AdminUsers />} />
               <Route path="monitoring"  element={<AdminMonitoring />} />
+              <Route path="sponsors"    element={<AdminSponsors />} />
             </Route>
 
           </Routes>
