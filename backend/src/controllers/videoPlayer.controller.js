@@ -30,11 +30,22 @@ const buildVideoPayload = (video) => {
 export const videoPlayerController = {
   async getFeed(req, res, next) {
     try {
-      const limit = Number(req.query.limit ?? 10);
-      const videos = await videoModel.findAll({ limit });
+      const limit          = Math.min(Math.max(Number(req.query.limit)  || 24, 1), 100);
+      const offset         = Math.max(Number(req.query.offset) || 0, 0);
+      const search         = req.query.search         ?? '';
+      const classification = req.query.classification ?? '';
+
+      const { rows, total } = await videoModel.findAll({ limit, offset, search, classification });
+
       res.json({
         success: true,
-        data: videos.map(buildVideoPayload),
+        data: rows.map(buildVideoPayload),
+        meta: {
+          total,
+          limit,
+          offset,
+          hasMore: offset + limit < total,
+        },
       });
     } catch (error) {
       next(error);

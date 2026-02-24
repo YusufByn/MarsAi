@@ -7,6 +7,7 @@ import { getVideoDuration } from "../utils/video.util.js";
 import pool from "../config/db.js";
 import { sendVideoSubmissionConfirmationEmail } from "../services/email.service.js";
 import { logActivity } from "../utils/activity.util.js";
+import { uploadFileToS3, buildS3Key } from "../services/s3.service.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -208,6 +209,22 @@ export const uploadVideo = async (req, res) => {
 
     logActivity({ action: 'video_submit', entity: 'video', entityId: videoId, details: req.body.title ?? null, ip: req.ip });
 
+    // Upload S3 en parallèle (non-bloquant - ne ralentit pas la réponse)
+    const s3Uploads = [];
+    if (videoFiles) {
+      s3Uploads.push(uploadFileToS3(videoFiles.path, buildS3Key('videos', videoFiles.filename), videoFiles.mimetype));
+    }
+    if (coverFile) {
+      s3Uploads.push(uploadFileToS3(coverFile.path, buildS3Key('covers', coverFile.filename), coverFile.mimetype));
+    }
+    if (stillsFiles?.length > 0) {
+      stillsFiles.forEach(f => s3Uploads.push(uploadFileToS3(f.path, buildS3Key('stills', f.filename), f.mimetype)));
+    }
+    if (srtFile) {
+      s3Uploads.push(uploadFileToS3(srtFile.path, buildS3Key('srt', srtFile.filename), srtFile.mimetype));
+    }
+    Promise.all(s3Uploads).catch(err => console.error('[S3 ERROR] Upload video:', err.message));
+
     // Envoi email de confirmation au réalisateur (non-bloquant)
     sendVideoSubmissionConfirmationEmail({
       title: req.body.title ?? null,
@@ -284,6 +301,10 @@ export const updateVideoCover = async (req, res) => {
 
     await videoModel.update(id, { cover: coverFile.filename });
 
+    // Upload S3 (non-bloquant)
+    uploadFileToS3(coverFile.path, buildS3Key('covers', coverFile.filename), coverFile.mimetype)
+      .catch(err => console.error('[S3 ERROR] Upload cover:', err.message));
+
     logActivity({ action: 'cover_update', entity: 'video', entityId: id, details: coverFile.filename, ip: req.ip });
 
     return res.status(200).json({
@@ -328,6 +349,11 @@ export const updateVideoStills = async (req, res) => {
     }));
 
     await createStills(id, stills);
+
+    // Upload S3 (non-bloquant)
+    Promise.all(
+      stillFiles.map(f => uploadFileToS3(f.path, buildS3Key('stills', f.filename), f.mimetype))
+    ).catch(err => console.error('[S3 ERROR] Upload stills:', err.message));
 
     logActivity({ action: 'stills_update', entity: 'video', entityId: id, details: `${stills.length} stills`, ip: req.ip });
 

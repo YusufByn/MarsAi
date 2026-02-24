@@ -1,89 +1,126 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { videoService } from '../services/videoService';
 import { API_URL } from '../config';
 
+const PAGE_SIZE = 24;
+
 const Videos = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [filterClassification, setFilterClassification] = useState('all');
+
+  // Données
+  const [videos, setVideos]         = useState([]);
+  const [meta, setMeta]             = useState({ total: 0, hasMore: false });
+  const [offset, setOffset]         = useState(0);
   const [brokenCovers, setBrokenCovers] = useState(new Set());
 
+  // Chargement
+  const [loading, setLoading]         = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError]             = useState('');
+  const [authorized, setAuthorized]   = useState(null); // null=vérification, true=ok, false=refusé
+
+  // Filtres
+  const [searchTerm, setSearchTerm]               = useState(searchParams.get('q') || '');
+  const [filterClassification, setFilterClassification] = useState('all');
+
+  // Version du searchTerm réellement envoyée à l'API (débouncée)
+  const [appliedSearch, setAppliedSearch] = useState(searchParams.get('q') || '');
+  const debounceRef = useRef(null);
+
+  // — Vérification auth —
   useEffect(() => {
-    const loadData = async () => {
+    const storedUser = localStorage.getItem('auth_user');
+    if (!storedUser) {
+      navigate('/login');
+      return;
+    }
+    const { role } = JSON.parse(storedUser);
+    if (['jury', 'admin', 'superadmin'].includes(role)) {
+      setAuthorized(true);
+    } else {
+      setAuthorized(false);
+      setError('Acces reserve aux membres du jury');
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  // — Chargement initial / reset quand les filtres changent —
+  useEffect(() => {
+    if (authorized !== true) return;
+
+    let cancelled = false;
+
+    const fetchPage = async () => {
+      setLoading(true);
       try {
-        const storedUser = localStorage.getItem('auth_user');
-
-        if (!storedUser) {
-          navigate('/login');
-          return;
+        const res = await videoService.getAll({
+          limit: PAGE_SIZE,
+          offset: 0,
+          search: appliedSearch,
+          classification: filterClassification,
+        });
+        if (!cancelled) {
+          setVideos(res.data);
+          setMeta(res.meta);
+          setOffset(0);
         }
-
-        const authUser = JSON.parse(storedUser);
-        const allowedRoles = ['jury', 'admin', 'superadmin'];
-        if (!allowedRoles.includes(authUser.role)) {
-          setError('Acces reserve aux membres du jury');
-          setLoading(false);
-          return;
-        }
-
-        const videosRes = await videoService.getAll();
-        setVideos(videosRes.data);
-        setLoading(false);
       } catch (err) {
         console.log('[VIDEOS ERROR]', err);
-        setError('Erreur lors du chargement des videos');
-        setLoading(false);
+        if (!cancelled) setError('Erreur lors du chargement des videos');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
-    loadData();
-  }, [navigate]);
+    fetchPage();
+    return () => { cancelled = true; };
+  }, [authorized, appliedSearch, filterClassification]);
 
-  // Synchroniser le query param q avec le searchTerm
-  useEffect(() => {
-    if (searchTerm) {
-      setSearchParams({ q: searchTerm }, { replace: true });
-    } else {
-      setSearchParams({}, { replace: true });
+  // — Chargement de la page suivante —
+  const handleLoadMore = async () => {
+    const nextOffset = offset + PAGE_SIZE;
+    setLoadingMore(true);
+    try {
+      const res = await videoService.getAll({
+        limit: PAGE_SIZE,
+        offset: nextOffset,
+        search: appliedSearch,
+        classification: filterClassification,
+      });
+      setVideos(prev => [...prev, ...res.data]);
+      setMeta(res.meta);
+      setOffset(nextOffset);
+    } catch (err) {
+      console.log('[VIDEOS ERROR] load more:', err);
+    } finally {
+      setLoadingMore(false);
     }
-  }, [searchTerm, setSearchParams]);
+  };
 
-  // Mettre a jour searchTerm si le query param change (navigation depuis la navbar)
+  // — Searchbar : mise à jour locale immédiate, API débouncée (400 ms) —
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setAppliedSearch(value);
+      setSearchParams(value ? { q: value } : {}, { replace: true });
+    }, 400);
+  };
+
+  // — Sync depuis l'URL (recherche déclenchée depuis la navbar) —
   useEffect(() => {
-    const q = searchParams.get('q');
-    if (q !== null && q !== searchTerm) {
+    const q = searchParams.get('q') ?? '';
+    if (q !== appliedSearch) {
       setSearchTerm(q);
+      setAppliedSearch(q);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const filteredVideos = useMemo(() => {
-    let result = [...videos];
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (video) =>
-          video.title?.toLowerCase().includes(term) ||
-          video.author?.toLowerCase().includes(term) ||
-          video.realisator_name?.toLowerCase().includes(term) ||
-          video.realisator_lastname?.toLowerCase().includes(term) ||
-          (video.tags && video.tags.some((tag) => tag.name?.toLowerCase().includes(term)))
-      );
-    }
-
-    if (filterClassification !== 'all') {
-      result = result.filter((video) => video.classification === filterClassification);
-    }
-
-    return result;
-  }, [videos, searchTerm, filterClassification]);
-
+  // — Helpers —
   const getCoverUrl = (video) => {
     const src = video.cover_url || (video.cover ? `/uploads/covers/${video.cover}` : null);
     if (!src) return null;
@@ -96,6 +133,7 @@ const Videos = () => {
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   };
 
+  // — États d'erreur / chargement —
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -121,8 +159,8 @@ const Videos = () => {
   }
 
   const classificationOptions = [
-    { value: 'all', label: 'Tous' },
-    { value: 'ia', label: 'IA' },
+    { value: 'all',    label: 'Tous'   },
+    { value: 'ia',     label: 'IA'     },
     { value: 'hybrid', label: 'Hybrid' },
   ];
 
@@ -132,11 +170,10 @@ const Videos = () => {
 
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-5xl md:text-6xl font-black tracking-tighter italic">
-            Films
-          </h1>
+          <h1 className="text-5xl md:text-6xl font-black tracking-tighter italic">Films</h1>
           <p className="text-white/40 text-sm">
-            {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''}
+            {meta.total} video{meta.total !== 1 ? 's' : ''}
+            {videos.length < meta.total && ` — ${videos.length} chargées`}
           </p>
         </div>
 
@@ -152,7 +189,7 @@ const Videos = () => {
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 placeholder="Titre, realisateur ou tag..."
                 className="w-full rounded-xl bg-white/5 border border-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-mars-primary/50 focus:border-mars-primary/50 transition"
               />
@@ -181,90 +218,106 @@ const Videos = () => {
         </div>
 
         {/* Grille de videos */}
-        {filteredVideos.length === 0 ? (
+        {videos.length === 0 ? (
           <p className="text-center text-white/40 py-16">Aucune video trouvee</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVideos.map((video) => {
-              const coverUrl = getCoverUrl(video);
-              const authorName = video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' ');
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {videos.map((video) => {
+                const coverUrl   = getCoverUrl(video);
+                const authorName = video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' ');
 
-              return (
-                <div
-                  key={video.id}
-                  onClick={() => navigate(`/videoDetails/${video.id}`)}
-                  className="relative rounded-2xl overflow-hidden cursor-pointer group h-80 border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02]"
-                >
-                  {/* Image de fond */}
-                  {coverUrl && !brokenCovers.has(video.id) ? (
-                    <img
-                      src={coverUrl}
-                      alt={video.title}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={() => setBrokenCovers(prev => new Set(prev).add(video.id))}
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black flex items-center justify-center">
-                      <svg className="w-16 h-16 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Glassmorphism overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-                  {/* Badge classification */}
-                  <div className="absolute top-3 left-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
-                      video.classification === 'ia'
-                        ? 'bg-purple-500/30 text-purple-200 border border-purple-400/30'
-                        : 'bg-orange-500/30 text-orange-200 border border-orange-400/30'
-                    }`}>
-                      {video.classification?.toUpperCase() || 'N/A'}
-                    </span>
-                  </div>
-
-                  {/* Duree */}
-                  {video.duration && (
-                    <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-xs text-white/80">
-                      {formatDuration(video.duration)}
-                    </div>
-                  )}
-
-                  {/* Infos en bas */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-                    <h3 className="font-bold text-lg text-white line-clamp-2 leading-tight">
-                      {video.title || 'Sans titre'}
-                    </h3>
-
-                    {authorName && (
-                      <p className="text-white/60 text-xs">{authorName}</p>
-                    )}
-
-                    {/* Tags */}
-                    {video.tags && video.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {video.tags.slice(0, 3).map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="px-2 py-0.5 rounded-full text-[10px] bg-white/10 text-white/60 backdrop-blur-sm"
-                          >
-                            {tag.name}
-                          </span>
-                        ))}
-                        {video.tags.length > 3 && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/10 text-white/40">
-                            +{video.tags.length - 3}
-                          </span>
-                        )}
+                return (
+                  <div
+                    key={video.id}
+                    onClick={() => navigate(`/videoDetails/${video.id}`)}
+                    className="relative rounded-2xl overflow-hidden cursor-pointer group h-80 border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02]"
+                  >
+                    {/* Image de fond */}
+                    {coverUrl && !brokenCovers.has(video.id) ? (
+                      <img
+                        src={coverUrl}
+                        alt={video.title}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={() => setBrokenCovers(prev => new Set(prev).add(video.id))}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black flex items-center justify-center">
+                        <svg className="w-16 h-16 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
                       </div>
                     )}
+
+                    {/* Glassmorphism overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+                    {/* Badge classification */}
+                    <div className="absolute top-3 left-3">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
+                        video.classification === 'ia'
+                          ? 'bg-purple-500/30 text-purple-200 border border-purple-400/30'
+                          : 'bg-orange-500/30 text-orange-200 border border-orange-400/30'
+                      }`}>
+                        {video.classification?.toUpperCase() || 'N/A'}
+                      </span>
+                    </div>
+
+                    {/* Duree */}
+                    {video.duration && (
+                      <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-xs text-white/80">
+                        {formatDuration(video.duration)}
+                      </div>
+                    )}
+
+                    {/* Infos en bas */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+                      <h3 className="font-bold text-lg text-white line-clamp-2 leading-tight">
+                        {video.title || 'Sans titre'}
+                      </h3>
+
+                      {authorName && (
+                        <p className="text-white/60 text-xs">{authorName}</p>
+                      )}
+
+                      {/* Tags */}
+                      {video.tags && video.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {video.tags.slice(0, 3).map((tag) => (
+                            <span
+                              key={tag.id}
+                              className="px-2 py-0.5 rounded-full text-[10px] bg-white/10 text-white/60 backdrop-blur-sm"
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                          {video.tags.length > 3 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/10 text-white/40">
+                              +{video.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Bouton charger plus */}
+            {meta.hasMore && (
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="px-8 py-3 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition disabled:opacity-50"
+                >
+                  {loadingMore ? 'Chargement...' : `Charger plus (${meta.total - videos.length} restantes)`}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

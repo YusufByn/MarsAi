@@ -27,3 +27,4 @@ backend/src/upload/*.mo
 *.pdf
 *.doc
 *.docx
+scripts_test_s3/

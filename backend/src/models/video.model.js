@@ -22,22 +22,57 @@ export const videoModel = {
     return rows;
   },
 
-  async findAll({ limit = 10 }) {
-    const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 500) : 10;
+  async findAll({ limit = 24, offset = 0, search = '', classification = '' } = {}) {
+    const safeLimit  = Math.min(Math.max(Number(limit)  || 24, 1), 100);
+    const safeOffset = Math.max(Number(offset) || 0, 0);
+
+    const conditions = [];
+    const params     = [];
+
+    if (search) {
+      const like = `%${search}%`;
+      conditions.push(
+        `(v.title LIKE ? OR v.realisator_name LIKE ? OR v.realisator_lastname LIKE ?
+          OR EXISTS (
+            SELECT 1 FROM video_tag vt2
+            JOIN tag t2 ON t2.id = vt2.tag_id
+            WHERE vt2.video_id = v.id AND t2.name LIKE ?
+          ))`
+      );
+      params.push(like, like, like, like);
+    }
+
+    if (classification && classification !== 'all') {
+      conditions.push('v.classification = ?');
+      params.push(classification);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Nombre total de résultats (pour hasMore)
+    const [countRows] = await pool.execute(
+      `SELECT COUNT(*) AS total FROM video v ${where}`,
+      params
+    );
+    const total = countRows[0].total;
+
+    // Page courante
     const [rows] = await pool.execute(
-      `SELECT id, title, cover, youtube_url, video_file_name, duration,
-              classification, country, synopsis, language,
-              realisator_name, realisator_lastname, created_at
-       FROM video
-       ORDER BY created_at DESC
-       LIMIT ${safeLimit}`
+      `SELECT v.id, v.title, v.cover, v.youtube_url, v.video_file_name, v.duration,
+              v.classification, v.country, v.synopsis, v.language,
+              v.realisator_name, v.realisator_lastname, v.created_at
+       FROM video v
+       ${where}
+       ORDER BY v.created_at DESC
+       LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+      params
     );
 
-    // Joindre les tags pour chaque video
+    // Tags pour cette page uniquement
     if (rows.length > 0) {
-      const videoIds = rows.map(v => v.id);
+      const videoIds    = rows.map(v => v.id);
       const placeholders = videoIds.map(() => '?').join(',');
-      const [tagRows] = await pool.execute(
+      const [tagRows]   = await pool.execute(
         `SELECT vt.video_id, t.id AS tag_id, t.name
          FROM video_tag vt
          JOIN tag t ON t.id = vt.tag_id
@@ -56,7 +91,7 @@ export const videoModel = {
       }
     }
 
-    return rows;
+    return { rows, total };
   },
 
   async findById(id) {
