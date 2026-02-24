@@ -13,7 +13,18 @@
     "seconds": "Seconds"
   },
   "navbar": {
-    "langToggle": "EN"
+    "langToggle": "EN",
+    "home": "Home",
+    "jury": "Jury",
+    "admin": "Administration",
+    "videoList": "Video list",
+    "player": "Player",
+    "selectorProfile": "My selector profile",
+    "searchPlaceholder": "Title, director, tag...",
+    "searchFilm": "Search for a film",
+    "logout": "Log out",
+    "login": "Log in",
+    "menuLabel": "Navigation menu"
   },
   "footer": {
     "description": "The global platform for generative storytelling. Explore the future of cinema powered by artificial intelligence.",
@@ -44,6 +55,7 @@
     "title": "Login",
     "subtitle": "Access your marsAI space",
     "email": "Email",
+    "emailPlaceholder": "e.g. user@mail.com",
     "password": "Password",
     "logging": "Logging in...",
     "submit": "Log in",
@@ -62,7 +74,10 @@
     "creating": "Creating...",
     "submit": "Create my account",
     "success": "Account created, you can now log in",
-    "error": "Error creating account"
+    "error": "Error creating account",
+    "validating": "Verifying invitation...",
+    "invalidLink": "Invalid link",
+    "invalidLinkMessage": "This invitation link is invalid or has expired. Contact an administrator to receive a new invitation."
   },
   "jury": {
     "loading": "Initializing Jury...",
@@ -122,14 +137,32 @@
     "noVideos": "No videos available",
     "selected": "Selected",
     "toReview": "To review",
-    "notSelected": "Not selected"
+    "notSelected": "Not selected",
+    "lastVideo": "Last video reached",
+    "videoRejected": "Video rejected",
+    "addedToDiscuss": "Added to discuss",
+    "saveError": "Error while saving",
+    "notConnected": "Error: user not connected",
+    "ratedSuccess": "Video selected with rating {{rating}}/10",
+    "ratingError": "Error while rating",
+    "emailSent": "Email sent to director",
+    "emailError": "Error while sending email",
+    "backToProfile": "Back to selector profile",
+    "profileSelector": "My Selector Profile",
+    "fullscreen": "Fullscreen",
+    "collapse": "Collapse",
+    "showMore": "Show more",
+    "filmPage": "Film page",
+    "chooseStatus": "Choose a status to continue"
   },
   "actionButtons": {
     "no": "No",
     "discuss": "To discuss",
-    "yesRate": "Yes - Rate",
-    "quickNote": "Quick note",
-    "emailDirector": "Email director"
+    "yesRate": "Yes + Rate",
+    "quickNote": "Note",
+    "emailDirector": "Email",
+    "sound": "Sound",
+    "details": "Details"
   },
   "ratingModal": {
     "title": "Rate the video",

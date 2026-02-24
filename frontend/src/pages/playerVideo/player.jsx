@@ -417,7 +417,7 @@ const Player = () => {
         goToVideo(idx + 1);
       }, 1000);
     } else {
-      showNotification('Derniere video atteinte', 'success');
+      showNotification(t('player.lastVideo'), 'success');
     }
   };
 
@@ -491,7 +491,7 @@ const Player = () => {
 
     if (!videoId || !userId) {
       console.error('[PLAYER ERROR] Missing videoId or userId', { videoId, userId, currentIndex });
-      showNotification('Erreur: utilisateur non connecte', 'error');
+      showNotification(t('player.notConnected'), 'error');
       return;
     }
 
@@ -530,16 +530,16 @@ const Player = () => {
 
       // Afficher message de succès selon le statut
       if (newStatus === 'no') {
-        showNotification('Video rejetee', 'error');
+        showNotification(t('player.videoRejected'), 'error');
       } else if (newStatus === 'discuss') {
-        showNotification('Ajoutee a discuter', 'success');
+        showNotification(t('player.addedToDiscuss'), 'success');
       }
 
       // Passer à la vidéo suivante
       goToNextVideo();
     } catch (error) {
       console.error('[PLAYER ERROR] Saving status:', error);
-      showNotification('Erreur lors de la sauvegarde', 'error');
+      showNotification(t('player.saveError'), 'error');
       // Remettre l'ancien statut en cas d'erreur
       setStatuses(prev => ({ ...prev, [videoId]: oldStatus || null }));
     }
@@ -551,7 +551,7 @@ const Player = () => {
     const videoId = videos[idx]?.id;
     if (!videoId || !userId) {
       console.error('[PLAYER ERROR] Missing videoId or userId');
-      showNotification('Erreur: utilisateur non connecte', 'error');
+      showNotification(t('player.notConnected'), 'error');
       return;
     }
 
@@ -589,13 +589,13 @@ const Player = () => {
       console.log('[PLAYER] Rating saved:', rating);
 
       // Afficher message de succès
-      showNotification(`Video selectionnee avec note ${rating}/10`, 'success');
+      showNotification(t('player.ratedSuccess', { rating }), 'success');
 
       // Passer à la vidéo suivante
       goToNextVideo();
     } catch (error) {
       console.error('[PLAYER ERROR] Saving rating:', error);
-      showNotification('Erreur lors de la notation', 'error');
+      showNotification(t('player.ratingError'), 'error');
       // Remettre les anciens états en cas d'erreur
       setRatings(prev => ({ ...prev, [videoId]: oldRating || 0 }));
       setStatuses(prev => ({ ...prev, [videoId]: oldStatus || null }));
@@ -631,7 +631,7 @@ const Player = () => {
     const videoId = videos[currentIndexRef.current]?.id;
     if (!videoId || !userId) {
       console.error('[PLAYER ERROR] Missing videoId or userId');
-      showNotification('Erreur: utilisateur non connecte', 'error');
+      showNotification(t('player.notConnected'), 'error');
       return;
     }
 
@@ -645,13 +645,13 @@ const Player = () => {
       console.log('[PLAYER] Email sent');
 
       // Afficher message de succès
-      showNotification('Email envoye au realisateur', 'success');
+      showNotification(t('player.emailSent'), 'success');
 
       // Passer à la vidéo suivante
       goToNextVideo();
     } catch (error) {
       console.error('[PLAYER ERROR] Sending email:', error);
-      showNotification('Erreur lors de l\'envoi de l\'email', 'error');
+      showNotification(t('player.emailError'), 'error');
       throw error;
     }
   };
@@ -687,12 +687,12 @@ const Player = () => {
       <button
         onClick={() => navigate('/selector')}
         className="fixed top-3 left-3 md:top-6 md:left-1/2 md:-translate-x-1/2 z-[60] flex items-center gap-1.5 px-3 py-1.5 md:px-6 md:py-3 rounded-full bg-black/50 backdrop-blur-md hover:bg-black/70 transition-all shadow-2xl border border-white/10 active:scale-95"
-        title="Retour au profil selecteur"
+        title={t('player.backToProfile')}
       >
         <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        <span className="hidden md:inline text-white text-sm font-semibold">Mon Profil Selector</span>
+        <span className="hidden md:inline text-white text-sm font-semibold">{t('player.profileSelector')}</span>
       </button>
 
       {videos.map((video, index) => (
@@ -743,7 +743,7 @@ const Player = () => {
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
             </svg>
-            <span className="text-white text-[10px] font-semibold">Plein ecran</span>
+            <span className="text-white text-[10px] font-semibold">{t('player.fullscreen')}</span>
           </button>
 
           {/* Overlay gradient */}
@@ -779,7 +779,7 @@ const Player = () => {
                 }}
                 className="action-btn md:hidden text-white/60 text-xs mt-2 hover:text-white transition-colors flex items-center gap-1"
               >
-                {expandedVideoId === video.id ? 'Reduire' : 'Afficher plus'}
+                {expandedVideoId === video.id ? t('player.collapse') : t('player.showMore')}
                 <svg
                   className={`w-3 h-3 transition-transform ${expandedVideoId === video.id ? 'rotate-180' : ''}`}
                   fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -807,7 +807,7 @@ const Player = () => {
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="text-white text-xs font-semibold">Page du film</span>
+                  <span className="text-white text-xs font-semibold">{t('player.filmPage')}</span>
                 </button>
               </div>
             </div>
@@ -883,7 +883,7 @@ const Player = () => {
       {showStatusWarning && (
         <div className="fixed bottom-24 md:bottom-32 left-1/2 -translate-x-1/2 z-[70] animate-bounce max-w-[85vw]">
           <div className="px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-white/90 backdrop-blur-md shadow-2xl">
-            <span className="text-black text-xs md:text-sm font-bold">Choisissez un statut pour continuer</span>
+            <span className="text-black text-xs md:text-sm font-bold">{t('player.chooseStatus')}</span>
           </div>
         </div>
       )}

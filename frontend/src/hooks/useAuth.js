@@ -21,7 +21,7 @@ export function useAuth() {
     return {
       user,
       token,
-      isSelector: role === 'jury' || role === 'admin' || role === 'superadmin',
+      isSelector: role === 'jury' || role === 'selector' || role === 'admin' || role === 'superadmin',
       isAdmin: role === 'admin' || role === 'superadmin',
     };
   };

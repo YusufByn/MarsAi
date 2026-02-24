@@ -48,14 +48,14 @@ const Login = () => {
           className="rounded-3xl border border-white/10 bg-white/5 p-6 space-y-4"
         >
           <div className="space-y-2">
-            <label className="text-xs text-gray-400">Email</label>
+            <label className="text-xs text-gray-400">{t('login.email')}</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-mars-primary/50"
-              placeholder="ex: user@mail.com"
+              placeholder={t('login.emailPlaceholder')}
               required
             />
           </div>
