@@ -3,7 +3,110 @@
     "badge": "Immersion Protocol 2026",
     "subtitle": "The pinnacle of generative cinema. Push the boundaries of digital storytelling.",
     "submitFilm": "SUBMIT MY FILM",
-    "discoverJury": "DISCOVER THE JURY"
+    "discoverJury": "DISCOVER THE JURY",
+    "events": {
+      "days": {
+        "day01": "Day 01",
+        "day02": "Day 02",
+        "day03": "Day 03"
+      },
+      "items": {
+        "day01": {
+          "event1": { "title": "Opening Keynote" },
+          "event2": { "title": "Workshop: AI Storytelling" },
+          "event3": { "title": "Panel: Ethics & Cinema" },
+          "event4": { "title": "Workshop: Prompt to Film" }
+        },
+        "day02": {
+          "event1": { "title": "Conference: Future of AI Cinema" },
+          "event2": { "title": "Workshop: Visual Generation" },
+          "event3": { "title": "Conference: Creative Pipelines" },
+          "event4": { "title": "Workshop: Sound & AI" }
+        },
+        "day03": {
+          "event1": { "title": "Conference: Ecology & Tech" },
+          "event2": { "title": "Workshop: Documentary with AI" },
+          "event3": { "title": "Conference: Democracy & Media" },
+          "event4": { "title": "Closing Talk" }
+        }
+      },
+      "type": {
+        "workshop": "Workshop",
+        "conference": "Conference"
+      },
+      "kicker": "Agenda",
+      "title": "Events",
+      "dayPicker": {
+        "title": "Choose a day",
+        "subtitle": "Filter events"
+      },
+      "empty": "No events for this day."
+    },
+    "objectives": {
+      "films": "films in competition",
+      "countries": "countries represented",
+      "days": "days of immersion",
+      "talks": "conferences",
+      "kicker": "Objectives",
+      "title": "Key Figures"
+    },
+    "desirableFuture": {
+      "ecology": {
+        "title": "Ecology",
+        "desc": "Using AI as a tool to imagine ecological futures and raise awareness through generative storytelling."
+      },
+      "possibleFuture": {
+        "title": "Possible Future",
+        "desc": "Exploring how generative cinema can open new perspectives and prototype worlds worth living in."
+      },
+      "democracy": {
+        "title": "Democracy",
+        "desc": "Examining the role of AI and media in shaping democratic societies and collective narratives."
+      },
+      "kicker": "Vision",
+      "title": "A Desirable Future"
+    },
+    "jury": {
+      "items": {
+        "1": { "name": "C. Del Toro", "expertise": "Filmmaker" },
+        "2": { "name": "C. Nolan", "expertise": "Filmmaker" },
+        "3": { "name": "Tarantino", "expertise": "Filmmaker" },
+        "4": { "name": "Spielberg", "expertise": "Filmmaker" }
+      },
+      "kicker": "The International Jury",
+      "title": "The International Jury"
+    },
+    "awards": {
+      "items": {
+        "grandJury": { "title": "Grand Jury Prize" },
+        "bestScript": { "title": "Best AI Screenplay" },
+        "techInnovation": { "title": "Technical Innovation" }
+      },
+      "kicker": "Awards",
+      "title": "Prizes & Awards"
+    },
+    "sponsors": {
+      "kicker": "Partners",
+      "title": "Our Sponsors",
+      "viewAll": "SEE OUR PARTNERS"
+    },
+    "location": {
+      "venueName": "Festival Venue",
+      "address1": "Marseille, France",
+      "address2": "Full address to be confirmed",
+      "transport": {
+        "train": "Metro / Train",
+        "trainDesc": "Nearest stop: to be confirmed (e.g. Metro M1).",
+        "bus": "Bus",
+        "busDesc": "Lines: to be confirmed (e.g. 49, 52).",
+        "info": "Tips",
+        "infoDesc": "Allow 10 min walk from the stop."
+      },
+      "kicker": "Location",
+      "title": "Festival Location",
+      "accessTitle": "How to get there",
+      "openMap": "Open in Google Maps"
+    }
   },
   "countdown": {
     "expectedImpact": "Expected Impact",
@@ -225,5 +328,21 @@
     "notSelected": "Not selected",
     "discuss": "To discuss",
     "yesRate": "Yes - Rate"
+  },
+  "common": {
+    "back": "Back",
+    "loading": "Loading..."
+  },
+  "pages": {
+    "events": {
+      "title": "Events",
+      "subtitle": "Festival programme"
+    },
+    "eventDetail": {
+      "duration": "Duration",
+      "minutes": "min",
+      "capacity": "Capacity",
+      "seats": "seats"
+    }
   }
 }

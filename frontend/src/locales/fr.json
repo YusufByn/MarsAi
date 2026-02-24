@@ -3,7 +3,110 @@
     "badge": "Protocole d'immersion 2026",
     "subtitle": "L'apogée du cinéma génératif. Repoussez les limites de la narration numérique.",
     "submitFilm": "SOUMETTRE MON FILM",
-    "discoverJury": "DÉCOUVRIR LE JURY"
+    "discoverJury": "DÉCOUVRIR LE JURY",
+    "events": {
+      "days": {
+        "day01": "Jour 01",
+        "day02": "Jour 02",
+        "day03": "Jour 03"
+      },
+      "items": {
+        "day01": {
+          "event1": { "title": "Keynote d'ouverture" },
+          "event2": { "title": "Atelier : Narration IA" },
+          "event3": { "title": "Débat : Éthique & Cinéma" },
+          "event4": { "title": "Atelier : Du Prompt au Film" }
+        },
+        "day02": {
+          "event1": { "title": "Conférence : L'avenir du cinéma IA" },
+          "event2": { "title": "Atelier : Génération visuelle" },
+          "event3": { "title": "Conférence : Pipelines créatifs" },
+          "event4": { "title": "Atelier : Son & IA" }
+        },
+        "day03": {
+          "event1": { "title": "Conférence : Écologie & Tech" },
+          "event2": { "title": "Atelier : Documentaire avec l'IA" },
+          "event3": { "title": "Conférence : Démocratie & Médias" },
+          "event4": { "title": "Conférence de clôture" }
+        }
+      },
+      "type": {
+        "workshop": "Atelier",
+        "conference": "Conférence"
+      },
+      "kicker": "Agenda",
+      "title": "Événements",
+      "dayPicker": {
+        "title": "Choisir un jour",
+        "subtitle": "Filtrer les événements"
+      },
+      "empty": "Aucun événement pour ce jour."
+    },
+    "objectives": {
+      "films": "films en compétition",
+      "countries": "pays représentés",
+      "days": "jours d'immersion",
+      "talks": "conférences",
+      "kicker": "Objectifs",
+      "title": "Chiffres clés"
+    },
+    "desirableFuture": {
+      "ecology": {
+        "title": "Écologie",
+        "desc": "Utiliser l'IA comme outil pour imaginer des futurs écologiques et sensibiliser grâce à la narration générative."
+      },
+      "possibleFuture": {
+        "title": "Futur Possible",
+        "desc": "Explorer comment le cinéma génératif peut ouvrir de nouvelles perspectives et prototyper des mondes désirables."
+      },
+      "democracy": {
+        "title": "Démocratie",
+        "desc": "Examiner le rôle de l'IA et des médias dans la formation des sociétés démocratiques et des récits collectifs."
+      },
+      "kicker": "Vision",
+      "title": "Un Futur Désirable"
+    },
+    "jury": {
+      "items": {
+        "1": { "name": "C. Del Toro", "expertise": "Réalisateur" },
+        "2": { "name": "C. Nolan", "expertise": "Réalisateur" },
+        "3": { "name": "Tarantino", "expertise": "Réalisateur" },
+        "4": { "name": "Spielberg", "expertise": "Réalisateur" }
+      },
+      "kicker": "Le Jury International",
+      "title": "Le Jury International"
+    },
+    "awards": {
+      "items": {
+        "grandJury": { "title": "Grand Prix du Jury" },
+        "bestScript": { "title": "Meilleur Scénario IA" },
+        "techInnovation": { "title": "Innovation Technique" }
+      },
+      "kicker": "Récompenses",
+      "title": "Prix & Récompenses"
+    },
+    "sponsors": {
+      "kicker": "Partenaires",
+      "title": "Nos Sponsors",
+      "viewAll": "VOIR NOS PARTENAIRES"
+    },
+    "location": {
+      "venueName": "Lieu du Festival",
+      "address1": "Marseille, France",
+      "address2": "Adresse complète à préciser",
+      "transport": {
+        "train": "Métro / Train",
+        "trainDesc": "Arrêt le plus proche : à définir (ex : Métro M1).",
+        "bus": "Bus",
+        "busDesc": "Lignes : à définir (ex : 49, 52).",
+        "info": "Conseils",
+        "infoDesc": "Prévoir 10 min à pied depuis l'arrêt."
+      },
+      "kicker": "Localisation",
+      "title": "Lieu du Festival",
+      "accessTitle": "Comment s'y rendre",
+      "openMap": "Ouvrir dans Google Maps"
+    }
   },
   "countdown": {
     "expectedImpact": "Impact prévu",
@@ -225,5 +328,21 @@
     "notSelected": "Non sélectionné",
     "discuss": "À discuter",
     "yesRate": "Oui - Noter"
+  },
+  "common": {
+    "back": "Retour",
+    "loading": "Chargement..."
+  },
+  "pages": {
+    "events": {
+      "title": "Événements",
+      "subtitle": "Programme du festival"
+    },
+    "eventDetail": {
+      "duration": "Durée",
+      "minutes": "min",
+      "capacity": "Capacité",
+      "seats": "places"
+    }
   }
 }

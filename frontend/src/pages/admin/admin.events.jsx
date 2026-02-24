@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, X, Save, Calendar } from 'lucide-react';
+import { Plus, Trash2, X, Save, Calendar, Pencil, SwatchBook } from 'lucide-react';
 import { adminService } from '../../services/adminService';
+import { useNavigate } from 'react-router-dom';
 
+// Page d'administration des evenements
 export default function AdminEvents() {
+
+  const navigate = useNavigate();
+
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [saving, setSaving] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -18,40 +24,112 @@ export default function AdminEvents() {
     location: '',
   });
 
+  // Chargement des events au montage du composant
   useEffect(() => {
     loadEvents();
   }, []);
 
+  // Chargement de la liste des events
   const loadEvents = async () => {
     try {
-      const data = await adminService.listEvents();
-      setEvents(Array.isArray(data) ? data : []);
+      // Appel à l'API pour récupérer les events
+      const res = await adminService.listEvents();
+      const list = Array.isArray(res) ? res : (res?.data ?? []);
+      setEvents(list);
     } catch (error) {
+      // Affiche une erreur en cas de problème lors du chargement
       console.error('[ADMIN EVENTS] Erreur chargement:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Réinitialisation du formulaire de création
   const resetForm = () => {
     setFormData({ title: '', description: '', date: '', duration: '', stock: '', illustration: '', location: '' });
     setShowForm(false);
   };
 
+  const normalizePayload = (raw) => ({
+    title: raw.title.trim(),
+    location: raw.location.trim(),
+    date: raw.date,
+    description: raw.description.trim() || null,
+    illustration: raw.illustration.trim() || null,
+    duration: raw.duration === '' ? null : Number(raw.duration),
+    stock: raw.stock === '' ? null : Number(raw.stock)
+  })
+
+  const toMysqlDatetime = (v) => {
+    if (!v) return null;
+    // convertit ç"2026-04-15T14:30" en "2026-04-15 14:30:00"
+    return v.replace('T', ' ') + ':00';
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    try {
-      const result = await adminService.createEvent(formData);
-      setEvents(prev => [...prev, { id: result.id, ...formData, created_at: new Date().toISOString() }]);
-      resetForm();
-    } catch (error) {
-      console.error('[ADMIN EVENTS] Erreur creation:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
 
+      try {
+        const payload = {
+          title: formData.title.trim(),
+          description: formData.description.trim() || null,
+          date: toMysqlDatetime(formData.date),
+          duration: formData.duration === '' ? null : Number(formData.duration),
+          stock: formData.stock === '' ? null : Number(formData.stock),
+          illustration: formData.illustration.trim() || null,
+          location: formData.location.trim(),
+        }
+
+        const result = await adminService.createEvent(payload);
+
+        const newId = result?.id;
+        setEvents(prev => [
+          ...prev,
+          { id: newId, ...payload, created_at: new Date().toISOString() }
+        ]);
+
+        resetForm(); // Ferme le formulaire après création
+      } catch (error) {
+        // Affiche une erreur en cas de problème lors de la création
+        console.error('[ADMIN EVENTS] Erreur creation:', error);
+      } finally {
+        setSaving(false);
+      }
+  }
+
+  // // Creation d'un nouvel event
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setSaving(true);
+
+  //   try {
+  //     const payload = normalizePayload(formData);
+  //     const result = await adminService.createEvent(payload);
+
+  //     const newId = result?.data?.id;
+      
+  //     // Ajoute le nouvel event à la liste sans recharger
+  //     setEvents(prev =>[
+  //       ...prev,
+  //       { id: newId, ...payload, created_at: new Date().toISOString() }
+  //     ]);
+
+  //     resetForm(); // Ferme le formulaire après création
+  //   } catch (error) {
+  //     // Affiche une erreur en cas de problème lors de la création
+  //     console.error('[ADMIN EVENTS] Erreur creation:', error);
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
+  // Suppression d'un event
   const handleDelete = async (id) => {
     try {
       await adminService.deleteEvent(id);
@@ -62,6 +140,7 @@ export default function AdminEvents() {
     }
   };
 
+  // Formatage de la date pour l'affichage
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('fr-FR', {
@@ -84,6 +163,7 @@ export default function AdminEvents() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Gestion des Evenements</h1>
         <button
@@ -97,7 +177,7 @@ export default function AdminEvents() {
 
       <p className="text-sm text-gray-400">{events.length} evenement{events.length > 1 ? 's' : ''}</p>
 
-      {/* Formulaire creation */}
+      {/* Form create */}
       {showForm && (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
           <div className="flex items-center justify-between">
@@ -108,81 +188,89 @@ export default function AdminEvents() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400">Titre</label>
+              <div className="md:col-span-2">
+                <label className="text-xs text-gray-400">Titre *</label>
                 <input
-                  type="text"
+                  name="title"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  placeholder="Titre de l’événement"
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400">Lieu</label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  required
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-xs text-gray-400">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400">Date et heure</label>
+              <div>
+                <label className="text-xs text-gray-400">Date *</label>
                 <input
                   type="datetime-local"
+                  name="date"
                   value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400">Duree (minutes)</label>
+
+              <div>
+                <label className="text-xs text-gray-400">Lieu *</label>
                 <input
-                  type="number"
-                  value={formData.duration}
-                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                  className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  min="1"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  placeholder="Paris, Marseille…"
+                  required
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400">Places disponibles</label>
+
+              <div className="md:col-span-2">
+                <label className="text-xs text-gray-400">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white min-h-[90px]"
+                  placeholder="Détails de l’événement…"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Durée (min)</label>
                 <input
                   type="number"
-                  value={formData.stock}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
-                  className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
                   min="0"
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-xs text-gray-400">URL illustration</label>
-              <input
-                type="text"
-                value={formData.illustration}
-                onChange={(e) => setFormData(prev => ({ ...prev, illustration: e.target.value }))}
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                placeholder="https://..."
-              />
+              <div>
+                <label className="text-xs text-gray-400">Places</label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  min="0"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-xs text-gray-400">Illustration (URL)</label>
+                <input
+                  name="illustration"
+                  value={formData.illustration}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                  placeholder="https://..."
+                />
+              </div>
             </div>
 
             <div className="flex gap-3">
@@ -194,6 +282,7 @@ export default function AdminEvents() {
                 <Save size={16} />
                 {saving ? 'Creation...' : 'Creer'}
               </button>
+
               <button
                 type="button"
                 onClick={resetForm}
@@ -228,12 +317,25 @@ export default function AdminEvents() {
                         <p className="text-sm text-gray-400 mt-1">{event.description}</p>
                       )}
                     </div>
-                    <button
-                      onClick={() => setDeleteConfirm(event.id)}
-                      className="px-3 py-1 rounded-lg bg-red-900/30 text-red-300 text-xs font-bold hover:bg-red-900/50 transition-colors flex-shrink-0"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => navigate(`/admin/events/edit/${event.id}`)}
+                        className="px-3 py-1 rounded-lg bg-white/10 text-white text-xs font-bold hover:bg-white/15 transition-colors"
+                        title="Modifier"
+                      >
+                        <Pencil size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => setDeleteConfirm(event.id)}
+                        className="px-3 py-1 rounded-lg bg-red-900/30 text-red-300 text-xs font-bold hover:bg-red-900/50 transition-colors"
+                        title="Supprimer"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-4 text-xs text-gray-400">
@@ -274,3 +376,4 @@ export default function AdminEvents() {
     </div>
   );
 }
+
