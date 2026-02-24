@@ -73,34 +73,150 @@ export const adminController = {
 
     // --- EVENTS ---
 
+    // GET Tout les Events
     async listEvents(req, res) {
         try {
             const events = await EventModel.findAll();
-            res.json(events);
+            res.json({
+                success: true,
+                data: events,
+            });
         } catch (error) {
             console.error('[ADMIN] Erreur listEvents:', error);
-            res.status(500).json({ message: "Erreur events" });
+            res.status(500).json({
+                success: false,
+                message: "Erreur events"
+            });
+        }
+    },
+    
+    // Admin et SuperAdmin => GET (detail d'un event) 
+    async getEventById(req, res){
+        try {
+
+            const eventId = Number(req.params.id);
+            
+            if (!Number.isInteger(eventId) || eventId <= 0){
+                return res.status(400).json({
+                    success: false,
+                    message: "ID invalide",
+                });
+            }
+            const event = await EventModel.findById(eventId);
+
+            if (!event){
+                return res.status(404).json({
+                    success: false,
+                    message: "Event introuvable",
+                });
+            }
+
+            return res.json({
+                success: true,
+                data: event,
+            });
+
+        }catch (error){
+
+            console.error('[ADMIN] Erreur getEventById:', error);
+            
+            return res.status(500).json({
+                success: false,
+                message: "Erreur serveur",
+            });
         }
     },
 
+    // POST création d'un event (Admin et SuperAdmin)
     async createEvent(req, res) {
         try {
-            const newId = await EventModel.create({ ...req.body, created_by: req.user.id });
-            res.json({ success: true, id: newId });
+            
+            const payload = { ...req.body, created_by: req.user.id };
+            const newId = await EventModel.create(payload);
+
+            res.status(201).json({
+                success: true,
+                id: newId
+            });
+
         } catch (error) {
             console.error('[ADMIN] Erreur createEvent:', error);
-            res.status(500).json({ message: "Erreur création event" });
+            res.status(500).json({
+                message: "Erreur création event"
+            });
         }
     },
+
+    // Admin et SuperAdmin => PUT (modification d'un event)
+    async updateEvent(req, res){
+        try {
+            
+            const id = Number(req.params.id);
+
+            if (!Number.isInteger(id) || id <= 0){
+                return res.status(400).json({
+                    success: false,
+                    message: "ID invalide",
+                });
+            }
+
+            const {
+                title,
+                date,
+                location
+            } = req.body;
+
+            if (!title || !date || !location){
+                return res.status(400).json({
+                    success: false,
+                    message: "Champs requis manquants",
+                });
+            }
+
+            const updated = await EventModel.update(id, req.body);
+
+            if (!updated){
+                return res.status(404).json({
+                    success: false,
+                    message: "Event introuvable",
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: "Event mis à jour",
+            });
+
+        } catch (error){
+
+            console.error('[ADMIN] Erreur updateEvent:', error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Erreur serveur",
+            });
+        }
+    },
+
 
     async deleteEvent(req, res) {
         try {
             const success = await EventModel.delete(req.params.id);
-            if (!success) return res.status(404).json({ message: "Événement introuvable" });
+
+            if (!success) return res.status(404).json({
+                success: false,
+                message: "Événement introuvable"
+            });
+
             res.json({ success: true });
+
         } catch (error) {
             console.error('[ADMIN] Erreur deleteEvent:', error);
-            res.status(500).json({ message: "Erreur suppression event" });
+
+            res.status(500).json({
+                success: false,
+                message: "Erreur suppression event"
+            });
         }
     },
 

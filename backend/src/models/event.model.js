@@ -1,19 +1,10 @@
 import pool from '../config/db.js';
 
 export const EventModel = {
-    async findAll() {
+
+    async findAll(){
         const query = `
-            SELECT 
-                id, 
-                title, 
-                description, 
-                date, 
-                duration, 
-                stock, 
-                illustration, 
-                location,
-                created_by,
-                created_at 
+            SELECT id, title, description, date, duration, stock, illustration, location, created_by, created_at 
             FROM event 
             ORDER BY date ASC
         `;
@@ -21,7 +12,18 @@ export const EventModel = {
         return rows;
     },
 
-    async create(data) {
+    async findById(id){
+        const query = `
+            SELECT id, title, description, date, duration, stock, illustration, location, created_by, created_at
+            FROM event 
+            WHERE id = ?
+            LIMIT 1
+        `;
+        const [rows] = await pool.execute(query, [id]);
+        return rows[0];
+    },
+
+    async create(data){
         const { title, description, date, duration, stock, illustration, location, created_by } = data;
         
         const query = `
@@ -38,25 +40,29 @@ export const EventModel = {
             stock, 
             illustration, 
             location, 
-            created_by // Assure-toi que c'est un ID utilisateur valide
+            created_by 
         ]);
+
         return result.insertId;
     },
 
-    async update(id, data) {
+    async update(id, data){
         const { title, description, date, duration, stock, illustration, location } = data;
+
         const query = `
             UPDATE event 
             SET title=?, description=?, date=?, duration=?, stock=?, illustration=?, location=?
             WHERE id=?
         `;
+
         const [result] = await pool.execute(query, [
             title, description, date, duration, stock, illustration, location, id
         ]);
+        
         return result.affectedRows > 0;
     },
 
-    async delete(id) {
+    async delete(id){
         const [result] = await pool.execute('DELETE FROM event WHERE id = ?', [id]);
         return result.affectedRows > 0;
     }

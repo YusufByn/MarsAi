@@ -43,7 +43,7 @@ app.use('/api', securityGuard);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // events
-app.use('/events', eventsRoutes);
+app.use('/api/events', eventsRoutes);
 
 // toutes les routes
 app.use('/api', routes);
