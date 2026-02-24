@@ -100,7 +100,7 @@ function Sponsors({
             {groupedSponsors.map(({ typeCode, typeName, sponsors: typeSponsors }) => (
                 <section key={typeCode} className="space-y-4">
                     {!hideTypeTitles && (
-                        <h1 className="text-2xl font-bold text-white">
+                        <h1 className="text-2xl font-bold text-white text-center">
                             {typeName || `Type ${typeCode}`}
                         </h1>
                     )}
