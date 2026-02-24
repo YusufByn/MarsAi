@@ -23,25 +23,24 @@ export const EventModel = {
         return rows[0];
     },
 
-    async create(data){
-        const { title, description, date, duration, stock, illustration, location, created_by } = data;
-        
-        const query = `
-            INSERT INTO event 
-            (title, description, date, duration, stock, illustration, location, created_by, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-        `;
-        
-        const [result] = await pool.execute(query, [
-            title, 
-            description, 
-            date, 
-            duration, 
-            stock, 
-            illustration, 
-            location, 
-            created_by 
-        ]);
+    async create(payload) {
+        const {
+            title,
+            description = null,
+            date,
+            duration = null,
+            stock = null,
+            illustration = null,
+            location,
+            created_by,
+        } = payload;
+
+        const [result] = await pool.execute(
+            `INSERT INTO \`event\`
+            (title, description, date, duration, stock, illustration, location, created_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [title, description, date, duration, stock, illustration, location, created_by]
+        );
 
         return result.insertId;
     },
@@ -58,7 +57,7 @@ export const EventModel = {
         const [result] = await pool.execute(query, [
             title, description, date, duration, stock, illustration, location, id
         ]);
-        
+
         return result.affectedRows > 0;
     },
 

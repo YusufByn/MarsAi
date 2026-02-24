@@ -127,22 +127,48 @@ export const adminController = {
         }
     },
 
-    // POST création d'un event (Admin et SuperAdmin)
     async createEvent(req, res) {
         try {
-            
-            const payload = { ...req.body, created_by: req.user.id };
+            const { title, description, date, duration, stock, illustration, location } = req.body;
+
+            if (!req.user?.id) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Non authentifié"
+                });
+            }
+
+            console.log("CREATE EVENT BODY =", req.body);
+            console.log("CONTENT-TYPE =", req.headers["content-type"]);
+            if (!title || !date) {
+                return res.status(400).json({
+                    success: false,
+                    message: "title et date sont obligatoires",
+                });
+            }
+
+            const payload = {
+                title: title.trim(),
+                description: description?.trim() || null,
+                date,
+                duration: duration ?? null,
+                stock: stock ?? null,
+                illustration: illustration?.trim() || null,
+                location: location?.trim() || null,
+                created_by: req.user.id,
+            };
+
             const newId = await EventModel.create(payload);
 
-            res.status(201).json({
+            return res.status(201).json({
                 success: true,
                 id: newId
             });
-
         } catch (error) {
-            console.error('[ADMIN] Erreur createEvent:', error);
-            res.status(500).json({
-                message: "Erreur création event"
+            console.error("[ADMIN] Erreur createEvent:", error);
+            return res.status(500).json({
+            success: false,
+            message: error?.sqlMessage || error?.message || "Erreur création event",
             });
         }
     },
