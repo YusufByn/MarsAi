@@ -11,6 +11,7 @@ const Videos = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [filterClassification, setFilterClassification] = useState('all');
+  const [brokenCovers, setBrokenCovers] = useState(new Set());
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,10 +84,11 @@ const Videos = () => {
     return result;
   }, [videos, searchTerm, filterClassification]);
 
-  const getCoverUrl = (cover) => {
-    if (!cover) return null;
-    if (cover.startsWith('http')) return cover;
-    return `${API_URL}/uploads/covers/${cover}`;
+  const getCoverUrl = (video) => {
+    const src = video.cover_url || (video.cover ? `/uploads/covers/${video.cover}` : null);
+    if (!src) return null;
+    if (src.startsWith('http')) return src;
+    return `${API_URL}${src}`;
   };
 
   const formatDuration = (seconds) => {
@@ -184,7 +186,7 @@ const Videos = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => {
-              const coverUrl = getCoverUrl(video.cover);
+              const coverUrl = getCoverUrl(video);
               const authorName = video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' ');
 
               return (
@@ -194,11 +196,12 @@ const Videos = () => {
                   className="relative rounded-2xl overflow-hidden cursor-pointer group h-80 border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02]"
                 >
                   {/* Image de fond */}
-                  {coverUrl ? (
+                  {coverUrl && !brokenCovers.has(video.id) ? (
                     <img
                       src={coverUrl}
                       alt={video.title}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={() => setBrokenCovers(prev => new Set(prev).add(video.id))}
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black flex items-center justify-center">

@@ -88,6 +88,16 @@ export const login = async (req, res) => {
             });
         }
 
+        if (user.lock_until && new Date(user.lock_until) > new Date()) {
+            const remainingMs = new Date(user.lock_until) - new Date();
+            const remainingMin = Math.ceil(remainingMs / 60000);
+            console.log('[AUTH] Compte bloque jusqu a:', user.lock_until);
+            return res.status(429).json({
+                success: false,
+                message: `Compte temporairement bloque. Reessayez dans ${remainingMin} minute(s).`
+            });
+        }
+
         const hashInDb = user.password_hash || user.password;
 
         if (!hashInDb) {
