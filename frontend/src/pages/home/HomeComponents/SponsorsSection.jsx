@@ -9,28 +9,46 @@ export default function SponsorsSection() {
 
     return (
         <section className="relative px-6 py-16 md:py-24 overflow-hidden">
-            {/* Glow */}
-            <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[900px] h-[500px] bg-mars-primary/5 blur-[140px] rounded-full pointer-events-none" />
+            {/* Glow de fond */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-mars-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
             <div className="relative max-w-7xl mx-auto">
-                {/* Header section */}
-                <div className="text-center max-w-2xl mx-auto mb-10">
-                    <p className="text-xs font-bold tracking-[0.3em] uppercase text-white/40">
-                        {t("home.sponsors.kicker")}
-                    </p>
-                    <h2 className="text-3xl md:text-5xl font-black tracking-tight mt-3">
-                        {t("home.sponsors.title")}
-                    </h2>
-                </div>
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden">
 
-                {/* Sponsors grid preview */}
-                <Sponsors preview={true} previewLimit={6} hideTypeTitles={true} />
+                    {/* Header */}
+                    <div className="px-8 pt-10 pb-8 border-b border-white/5">
+                        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                            <div>
+                                <p className="text-xs font-bold tracking-[0.3em] uppercase text-mars-primary/70 mb-2">
+                                    {t("home.sponsors.kicker", { defaultValue: "Partenaires" })}
+                                </p>
+                                <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
+                                    {t("home.sponsors.title", { defaultValue: "Nos sponsors" })}
+                                </h2>
+                            </div>
+                            <button
+                                onClick={() => navigate("/sponsors")}
+                                className="mars-button-outline self-start sm:self-auto flex-shrink-0"
+                            >
+                                {t("home.sponsors.viewAll", { defaultValue: "Voir nos partenaires" })}
+                            </button>
+                        </div>
+                    </div>
 
-                {/* CTA */}
-                <div className="flex justify-center mt-10">
-                    <button onClick={() => navigate("/sponsors")} className="mars-button-outline">
-                        {t("home.sponsors.viewAll")}
-                    </button>
+                    {/* Corps : Sponsors en mode preview */}
+                    <div className="px-8 py-8">
+                        <Sponsors preview={true} previewLimit={8} hideTypeTitles={false} showViewAllLink={false} />
+                    </div>
+
+                    {/* Footer discret */}
+                    <div className="px-8 pb-6 flex justify-center border-t border-white/5 pt-4">
+                        <button
+                            onClick={() => navigate("/sponsors")}
+                            className="text-xs text-white/30 hover:text-white/60 transition tracking-widest uppercase"
+                        >
+                            {t("home.sponsors.viewAllLink")}
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

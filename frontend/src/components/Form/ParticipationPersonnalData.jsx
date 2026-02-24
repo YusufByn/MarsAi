@@ -227,7 +227,6 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isAddressCountryAutoFilled, setIsAddressCountryAutoFilled] = useState(false);
-  const [isPhoneAutoFilled, setIsPhoneAutoFilled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contributorsData, setContributorsData] = useState([]);
   const [realisatorSocialNetworks, setRealisatorSocialNetworks] = useState({
@@ -321,18 +320,6 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
 
   const handlePhoneChange = (fieldName, value) => {
     const nextValue = value || '';
-    if (fieldName === 'mobileNumber') {
-      const currentPhone = String(formData.phoneNumber || '').trim();
-      const previousMobile = String(formData.mobileNumber || '').trim();
-      const shouldAutofill = !currentPhone || isPhoneAutoFilled || currentPhone === previousMobile;
-      const nextPhone = shouldAutofill ? nextValue : (formData.phoneNumber || '');
-      setFormDataProp({ ...formData, mobileNumber: nextValue, phoneNumber: nextPhone });
-      setIsPhoneAutoFilled(shouldAutofill);
-      validateField('mobileNumber', nextValue);
-      if (shouldAutofill) validateField('phoneNumber', nextPhone);
-      return;
-    }
-    if (fieldName === 'phoneNumber') setIsPhoneAutoFilled(false);
     setFormDataProp({ ...formData, [fieldName]: nextValue });
     validateField(fieldName, nextValue);
   };

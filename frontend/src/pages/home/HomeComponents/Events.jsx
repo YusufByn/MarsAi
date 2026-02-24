@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, Clock, Mic, Wrench } from "lucide-react";
 
 export default function Events() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     // Jours des événements
     // Tableau de config pour les jours, avec une clé d'identification et un label (i18n)
@@ -221,6 +223,16 @@ return (
                         </div>
                     ))
                 )}
+            </div>
+
+            {/* CTA */}
+            <div className="flex justify-center mt-10">
+                <button
+                    onClick={() => navigate("/events")}
+                    className="mars-button-outline"
+                >
+                    {t("home.events.viewAll", { defaultValue: "Voir tous les événements" })}
+                </button>
             </div>
         </div>
     </section>

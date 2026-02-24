@@ -124,13 +124,13 @@ const Player = () => {
 
   // Récupérer les vidéos depuis le backend
   useEffect(() => {
-    // Ne pas charger les vidéos tant qu'on n'a pas le userId
-    if (!userId) return;
-
     const fetchVideos = async () => {
       try {
-        console.log('[PLAYER] Fetching videos for user:', userId);
-        const response = await fetch(`${API_URL}/api/player/videos?userId=${userId}`);
+        const url = userId
+          ? `${API_URL}/api/player/videos?userId=${userId}`
+          : `${API_URL}/api/player/videos`;
+        console.log('[PLAYER] Fetching videos, userId:', userId || 'anonymous');
+        const response = await fetch(url);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -192,7 +192,8 @@ const Player = () => {
     };
 
     fetchVideos();
-  }, [API_URL, userId, targetVideoId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, targetVideoId]);
 
   // Gestion des raccourcis clavier
   useEffect(() => {
@@ -849,20 +850,41 @@ const Player = () => {
             )}
           </div>
 
-          {/* Boutons d'action dans le slide */}
-          <ActionButtons
-            key={`actions-${video.id}-${index}`}
-            currentStatus={statuses[video.id] || null}
-            rating={ratings[video.id] || 0}
-            onStatusClick={handleStatusClick}
-            onNoteClick={() => setShowNotePanel(true)}
-            onEmailClick={() => setShowEmailPanel(true)}
-            isMuted={isMuted}
-            volume={volume}
-            onToggleMute={handleToggleMute}
-            onVolumeChange={handleVolumeChange}
-            videoId={video.id}
-          />
+          {/* Boutons d'action dans le slide - jury/admin uniquement */}
+          {userId ? (
+            <ActionButtons
+              key={`actions-${video.id}-${index}`}
+              currentStatus={statuses[video.id] || null}
+              rating={ratings[video.id] || 0}
+              onStatusClick={handleStatusClick}
+              onNoteClick={() => setShowNotePanel(true)}
+              onEmailClick={() => setShowEmailPanel(true)}
+              isMuted={isMuted}
+              volume={volume}
+              onToggleMute={handleToggleMute}
+              onVolumeChange={handleVolumeChange}
+              videoId={video.id}
+            />
+          ) : (
+            /* Contrôles minimaux pour visiteurs non connectés */
+            <div className="action-btn absolute right-3 bottom-24 md:right-6 md:bottom-28 z-30 flex flex-col gap-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleToggleMute(); }}
+                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-black/70 transition-all active:scale-95"
+              >
+                {isMuted ? (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 6v12m-3.536-9.536a5 5 0 000 7.072" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Barre de progression video */}
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/20 z-10">
@@ -888,8 +910,26 @@ const Player = () => {
         </div>
       )}
 
-      {/* Modal de notation */}
-      {videos.length > 0 && (
+      {/* Banner visiteur non connecté */}
+      {!userId && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] max-w-[90vw]">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl">
+            <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <p className="text-white/60 text-xs">Connectez-vous pour noter et commenter les films</p>
+            <a
+              href="/login"
+              className="text-xs font-bold text-white px-3 py-1 rounded-full bg-mars-primary hover:bg-mars-primary/80 transition-colors flex-shrink-0"
+            >
+              Se connecter
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de notation - jury/admin uniquement */}
+      {userId && videos.length > 0 && (
         <RatingModal
           isOpen={showRatingModal}
           onClose={() => setShowRatingModal(false)}
@@ -903,8 +943,8 @@ const Player = () => {
         />
       )}
 
-      {/* Panel note rapide */}
-      {videos.length > 0 && (
+      {/* Panel note rapide - jury/admin uniquement */}
+      {userId && videos.length > 0 && (
         <QuickNotePanel
           isOpen={showNotePanel}
           onClose={() => setShowNotePanel(false)}
@@ -917,8 +957,8 @@ const Player = () => {
         />
       )}
 
-      {/* Panel email */}
-      {videos.length > 0 && (
+      {/* Panel email - jury/admin uniquement */}
+      {userId && videos.length > 0 && (
         <EmailPanel
           isOpen={showEmailPanel}
           onClose={() => setShowEmailPanel(false)}

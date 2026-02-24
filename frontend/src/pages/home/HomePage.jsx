@@ -7,6 +7,7 @@ import Award from './HomeComponents/Award';
 import Jury from './HomeComponents/Jury';
 import FestivalLocalisation from './HomeComponents/FestivalLocalisation';
 import SponsorsSection from './HomeComponents/SponsorsSection';
+import FilmsSection from './HomeComponents/FilmsSection';
 
 const HomePage = () => {
   return (
@@ -19,6 +20,9 @@ const HomePage = () => {
 
         {/* Objectifs et Représentant */}
         <Objectives />
+
+        {/* Films en compétition */}
+        <FilmsSection />
 
         {/* événements */}
         <Events />

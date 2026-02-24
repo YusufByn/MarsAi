@@ -19,7 +19,6 @@ const Videos = () => {
   const [loading, setLoading]         = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError]             = useState('');
-  const [authorized, setAuthorized]   = useState(null); // null=vérification, true=ok, false=refusé
 
   // Filtres
   const [searchTerm, setSearchTerm]               = useState(searchParams.get('q') || '');
@@ -29,26 +28,8 @@ const Videos = () => {
   const [appliedSearch, setAppliedSearch] = useState(searchParams.get('q') || '');
   const debounceRef = useRef(null);
 
-  // — Vérification auth —
-  useEffect(() => {
-    const storedUser = localStorage.getItem('auth_user');
-    if (!storedUser) {
-      navigate('/login');
-      return;
-    }
-    const { role } = JSON.parse(storedUser);
-    if (['jury', 'admin', 'superadmin'].includes(role)) {
-      setAuthorized(true);
-    } else {
-      setAuthorized(false);
-      setError('Acces reserve aux membres du jury');
-      setLoading(false);
-    }
-  }, [navigate]);
-
   // — Chargement initial / reset quand les filtres changent —
   useEffect(() => {
-    if (authorized !== true) return;
 
     let cancelled = false;
 
@@ -76,7 +57,7 @@ const Videos = () => {
 
     fetchPage();
     return () => { cancelled = true; };
-  }, [authorized, appliedSearch, filterClassification]);
+  }, [appliedSearch, filterClassification]);
 
   // — Chargement de la page suivante —
   const handleLoadMore = async () => {

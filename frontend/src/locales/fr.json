@@ -4,6 +4,15 @@
     "subtitle": "L'apogée du cinéma génératif. Repoussez les limites de la narration numérique.",
     "submitFilm": "SOUMETTRE MON FILM",
     "discoverJury": "DÉCOUVRIR LE JURY",
+    "films": {
+      "kicker": "Sélection officielle",
+      "title1": "Films en",
+      "title2": "compétition",
+      "description": "Découvrez les films sélectionnés pour cette édition du festival. Intelligence artificielle, création hybride — une sélection qui repousse les frontières du cinéma.",
+      "viewAll": "Voir les films en compétition",
+      "launchPlayer": "Lancer le player",
+      "inSelection": "Films en sélection"
+    },
     "events": {
       "days": {
         "day01": "Jour 01",
@@ -40,7 +49,8 @@
         "title": "Choisir un jour",
         "subtitle": "Filtrer les événements"
       },
-      "empty": "Aucun événement pour ce jour."
+      "empty": "Aucun événement pour ce jour.",
+      "viewAll": "Voir tous les événements"
     },
     "objectives": {
       "films": "films en compétition",
@@ -88,7 +98,8 @@
     "sponsors": {
       "kicker": "Partenaires",
       "title": "Nos Sponsors",
-      "viewAll": "VOIR NOS PARTENAIRES"
+      "viewAll": "VOIR NOS PARTENAIRES",
+      "viewAllLink": "Voir tous les partenaires →"
     },
     "location": {
       "venueName": "Lieu du Festival",

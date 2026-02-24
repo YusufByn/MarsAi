@@ -300,9 +300,6 @@ const generateBaseTemplate = (title, content, email) => {
             </div>
 
             <div class="footer">
-                <div class="footer-contact">
-                    Une question ? <a href="mailto:contact@marsai.com">contact@marsai.com</a>
-                </div>
                 <div class="social-links">
                     <a href="#">Twitter</a> &bull;
                     <a href="#">LinkedIn</a> &bull;
@@ -417,11 +414,11 @@ const generateVideoSubmissionEmailContent = (videoData) => {
   });
   const content = `
     <div class="subheading">Soumission reçue</div>
-    <div class="heading">Votre film a bien été enregistré.</div>
+    <div class="heading">Merci pour votre soumission&nbsp;!</div>
     <div class="message">
         Bonjour ${videoData.realisator_name || 'cher réalisateur'},<br><br>
-        Votre soumission a été prise en compte. Notre équipe va l'examiner dans les prochains jours
-        et vous recontactera si nécessaire.
+        Nous avons bien reçu votre film et vous remercions de l'intérêt que vous portez au festival MarsAI.
+        Votre soumission a été enregistrée avec succès et sera examinée par notre équipe dans les meilleurs délais.
     </div>
     <div class="info-card">
         <div class="info-card-row">
@@ -441,8 +438,12 @@ const generateVideoSubmissionEmailContent = (videoData) => {
             <span class="info-card-value"><span class="badge badge-success">En cours d'examen</span></span>
         </div>
     </div>
+    <div class="message" style="font-size: 13px; color: #666666; margin-top: 0;">
+        Nous reviendrons vers vous si nous avons besoin d'informations complémentaires.
+        Nous vous souhaitons bonne chance dans cette compétition.
+    </div>
     <div class="cta-wrapper">
-        <a href="${websiteUrl}" class="cta-button">Retour au festival</a>
+        <a href="${websiteUrl}" class="cta-button">Découvrir le festival</a>
     </div>
   `;
   return generateBaseTemplate('Confirmation de soumission - MarsAI', content, videoData.email);

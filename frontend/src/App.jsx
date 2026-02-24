@@ -4,6 +4,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import AdminLayout from './components/layout/AdminLayout';
+import ScrollToTop from './components/ScrollToTop';
 
 // Public pages
 const HomePage           = lazy(() => import('./pages/home/HomePage'));
@@ -20,7 +21,7 @@ const VideoDetails       = lazy(() => import('./pages/VideoDetails'));
 const CGU                = lazy(() => import('./pages/CGU'));
 const EventsPage         = lazy(() => import('./pages/events/EventsPage'));
 const EventDetailPage    = lazy(() => import('./pages/events/EventDetailPage'));
-const SponsorsPage       = lazy(() => import('./pages/sponsors/SponsorsPage'));
+const SponsorsPage       = lazy(() => import('./pages/sponsors/Sponsors'));
 const ValidatedParticipation = lazy(() => import('./components/Form/ValidatedParticipation'));
 
 // Admin pages
@@ -48,6 +49,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
+      <ScrollToTop />
       {!isPlayerPage && !isAdminPage && <Navbar />}
       <main className="flex-grow">
         <Suspense fallback={<PageLoader />}>
