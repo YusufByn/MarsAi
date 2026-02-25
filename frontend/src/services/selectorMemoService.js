@@ -1,37 +1,30 @@
-import { API_URL } from '../config';
+import { API_URL, authHeaders } from '../config';
 
 export const selectorMemoService = {
-  /**
-   * Récupérer tous les memos d'un utilisateur
-   */
-  async getAllByUser(userId) {
-    const response = await fetch(`${API_URL}/api/memo/user/${userId}`);
+  async getAllByUser() {
+    const response = await fetch(`${API_URL}/api/memo/user/me`, {
+      headers: authHeaders(),
+    });
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des memos');
     }
     return response.json();
   },
 
-  /**
-   * Récupérer un memo spécifique (user + video)
-   */
-  async getOne(videoId, userId) {
-    const response = await fetch(`${API_URL}/api/memo/${videoId}/${userId}`);
+  async getOne(videoId) {
+    const response = await fetch(`${API_URL}/api/memo/${videoId}`, {
+      headers: authHeaders(),
+    });
     if (!response.ok) {
       throw new Error('Memo not found');
     }
     return response.json();
   },
 
-  /**
-   * Créer ou mettre à jour un memo
-   */
   async upsert(memoData) {
     const response = await fetch(`${API_URL}/api/memo`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders(),
       body: JSON.stringify(memoData),
     });
     if (!response.ok) {

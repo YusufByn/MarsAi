@@ -33,7 +33,7 @@ const PlayerVideoController = {
       const validVideos = [];
       for (const video of videos) {
         if (video.video_file_name) {
-          const videoPath = path.join(__dirname, '../../../uploads/videos', video.video_file_name);
+          const videoPath = path.join(__dirname, '../../uploads/videos', video.video_file_name);
           try {
             await fs.access(videoPath);
             validVideos.push(video);
@@ -116,7 +116,14 @@ const PlayerVideoController = {
   async streamVideo(req, res) {
     try {
       const { filename } = req.params;
-      const videoPath = path.join(__dirname, '../../../uploads/videos', filename);
+
+      // Protection path traversal : on accepte uniquement le nom de fichier sans repertoire
+      const safeName = path.basename(filename);
+      if (!safeName || safeName !== filename) {
+        return res.status(400).json({ success: false, message: 'Nom de fichier invalide' });
+      }
+
+      const videoPath = path.join(__dirname, '../../uploads/videos', safeName);
 
       try {
         await fs.access(videoPath);
@@ -236,44 +243,7 @@ const PlayerVideoController = {
     }
   },
 
-  /**
-   * Ajouter/Retirer une video de la playlist
-   * POST /api/player/playlist
-   * Body: { video_id, user_id, playlist: true/false }
-   */
-  async togglePlaylist(req, res) {
-    try {
-      const { video_id, user_id, playlist } = req.body;
-
-      if (!video_id || !user_id || playlist === undefined) {
-        return res.status(400).json({
-          success: false,
-          message: 'Parametres manquants (video_id, user_id, playlist requis)'
-        });
-      }
-
-      console.log('[PLAYER] Playlist update - Video:', video_id, 'User:', user_id, 'Playlist:', playlist);
-
-      res.json({
-        success: true,
-        message: playlist ? 'Video ajoutee a la playlist' : 'Video retiree de la playlist',
-        data: {
-          video_id,
-          user_id,
-          playlist,
-          updated_at: new Date().toISOString()
-        }
-      });
-
-    } catch (error) {
-      console.error('[PLAYER ERROR] togglePlaylist:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur lors de la mise a jour de la playlist',
-        error: error.message
-      });
-    }
-  }
 };
+
 
 export default PlayerVideoController;

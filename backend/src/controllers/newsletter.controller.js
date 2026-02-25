@@ -1,6 +1,5 @@
 import newsletterModel from '../models/newsletter.model.js';
 import emailService from '../services/email.service.js';
-import { pool } from '../db/index.js';
 
 const newsletterController = {
   /**
@@ -188,14 +187,12 @@ const newsletterController = {
    * Envoyer une campagne newsletter (admin only)
    */
   async sendCampaign(req, res, next) {
-    const connection = await pool.getConnection();
-    
     try {
       const { subject, message, recipients } = req.body;
 
       // Vérifier la limite d'envoi (2 par jour)
       const campaignsToday = await newsletterModel.countCampaignsToday();
-      if (campaignsToday >= 500) {
+      if (campaignsToday >= 2) {
         return res.status(429).json({
           success: false,
           message: 'Sending limit reached: maximum 2 newsletters per day'
@@ -212,15 +209,8 @@ const newsletterController = {
         });
       }
 
-      // Commencer la transaction
-      // beginTransaction pour la gestion des envois d'email en masse, le beginTransaction est une methode SQL pour envoyer que quand on a charger toutes les infos
-      await connection.beginTransaction();
-
       // Envoyer les emails en masse
       const results = await emailService.sendBulkEmail(emails, subject, message);
-
-      // Valider la transaction
-      await connection.commit();
 
       res.status(200).json({
         success: true,
@@ -233,12 +223,8 @@ const newsletterController = {
         }
       });
     } catch (error) {
-      // Annuler la transaction en cas d'erreur
-      await connection.rollback();
       console.error('Error during campaign sending:', error);
       next(error);
-    } finally {
-      connection.release();
     }
   }
 };

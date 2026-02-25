@@ -31,7 +31,7 @@ const Selector = () => {
         const authUser = JSON.parse(storedUser);
 
         // Vérifier que l'utilisateur a un rôle autorisé
-        const allowedRoles = ['jury', 'admin', 'superadmin'];
+        const allowedRoles = ['jury', 'selector', 'admin', 'superadmin'];
         if (!allowedRoles.includes(authUser.role)) {
           setError('Acces reserve aux membres du jury');
           setLoading(false);

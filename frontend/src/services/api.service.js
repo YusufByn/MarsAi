@@ -136,22 +136,14 @@ export const createVideo = async (videoData, recaptchaToken) => {
       }
     });
 
-    // Tags: le backend attend un tableau dans req.body.tags
+    // Tags: sérialisés en JSON pour garantir un tableau côté backend quel que soit le nombre
     if (Array.isArray(step2.tags) && step2.tags.length > 0) {
       const tagNames = step2.tags
         .map((tag) => tag?.value || tag?.label || tag)
         .map((tag) => String(tag).trim())
         .filter(Boolean);
 
-      // Garantit un tableau côté backend même avec un seul tag
-      if (tagNames.length === 1) {
-        formData.append('tags', tagNames[0]);
-        formData.append('tags', tagNames[0]);
-      } else {
-        tagNames.forEach((tag) => {
-          formData.append('tags', tag);
-        });
-      }
+      formData.append('tags', JSON.stringify(tagNames));
     }
 
     const socialNetworks = normalizeSocialNetworks(step1.socialNetworks || {});
@@ -213,34 +205,6 @@ export const createVideo = async (videoData, recaptchaToken) => {
 };
 
 /**
- * Upload du fichier vidéo
- * @param {number} videoId - ID de la vidéo
- * @param {File} videoFile - Fichier vidéo à uploader
- * @returns {Promise<Object>} - Réponse avec les détails du fichier uploadé
- */
-export const uploadVideoFile = async (videoId, videoFile) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', videoFile);
-    
-    const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/upload-video`, {
-      method: 'PUT',
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'upload de la vidéo');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('[API] Erreur uploadVideoFile:', error);
-    throw error;
-  }
-};
-
-/**
  * Upload de l'image de couverture
  * @param {number} videoId - ID de la vidéo
  * @param {File} coverFile - Fichier image de couverture
@@ -248,19 +212,21 @@ export const uploadVideoFile = async (videoId, videoFile) => {
  */
 export const uploadCover = async (videoId, coverFile) => {
   try {
+    const token = localStorage.getItem('auth_token');
     const formData = new FormData();
-    formData.append('file', coverFile);
-    
+    formData.append('cover', coverFile);
+
     const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/upload-cover`, {
-      method: 'PUT',
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'upload de la couverture');
+      throw new Error(errorData.message || 'Erreur lors de l\'upload de la couverture');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('[API] Erreur uploadCover:', error);
@@ -276,121 +242,27 @@ export const uploadCover = async (videoId, coverFile) => {
  */
 export const uploadStills = async (videoId, stillFiles) => {
   try {
+    const token = localStorage.getItem('auth_token');
     const formData = new FormData();
-    
-    // Ajouter tous les fichiers stills
+
     stillFiles.forEach(file => {
-      if (file) formData.append('files', file);
+      if (file) formData.append('stills', file);
     });
-    
+
     const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/upload-stills`, {
-      method: 'PUT',
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'upload des stills');
+      throw new Error(errorData.message || 'Erreur lors de l\'upload des stills');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('[API] Erreur uploadStills:', error);
-    throw error;
-  }
-};
-
-/**
- * Upload du fichier de sous-titres
- * @param {number} videoId - ID de la vidéo
- * @param {File} subtitleFile - Fichier de sous-titres SRT
- * @returns {Promise<Object>} - Réponse avec les détails du fichier uploadé
- */
-export const uploadSubtitles = async (videoId, subtitleFile) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', subtitleFile);
-    
-    const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/upload-subtitles`, {
-      method: 'PUT',
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'upload des sous-titres');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('[API] Erreur uploadSubtitles:', error);
-    throw error;
-  }
-};
-
-/**
- * Ajouter des contributeurs à une vidéo
- * @param {number} videoId - ID de la vidéo
- * @param {Array} contributors - Liste des contributeurs
- * @returns {Promise<Object>} - Réponse avec les contributeurs ajoutés
- */
-export const addContributors = async (videoId, contributors) => {
-  try {
-    // Vérifier que nous avons des contributeurs
-    if (!contributors || contributors.length === 0) {
-      console.log('[API] Aucun contributeur a ajouter');
-      return { success: true, contributors: [] };
-    }
-    
-    const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/contributors`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ contributors }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'ajout des contributeurs');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('[API] Erreur addContributors:', error);
-    throw error;
-  }
-};
-
-/**
- * Ajouter des réseaux sociaux à une vidéo
- * @param {number} videoId - ID de la vidéo
- * @param {Array} socialMedia - Liste des liens réseaux sociaux
- * @returns {Promise<Object>} - Réponse avec les réseaux sociaux ajoutés
- */
-export const addSocialMedia = async (videoId, socialMedia) => {
-  try {
-    if (!socialMedia || socialMedia.length === 0) {
-      console.log('[API] Aucun reseau social a ajouter');
-      return { success: true, social_media: [] };
-    }
-    
-    const response = await fetch(`${API_BASE_URL}/upload/videos/${videoId}/social-media`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ social_media: socialMedia }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'ajout des réseaux sociaux');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('[API] Erreur addSocialMedia:', error);
     throw error;
   }
 };
@@ -428,11 +300,7 @@ export const submitCompleteForm = async (formData, recaptchaToken) => {
 
 export default {
   createVideo,
-  uploadVideoFile,
   uploadCover,
   uploadStills,
-  uploadSubtitles,
-  addContributors,
-  addSocialMedia,
   submitCompleteForm
 };

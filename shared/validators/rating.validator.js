@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 const ratingSchema = z.object({
-  user_id: z.coerce.number().int().positive(),
   video_id: z.coerce.number().int().positive(),
   rating: z.coerce.number().min(0).max(10),
 });

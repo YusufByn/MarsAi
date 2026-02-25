@@ -3,7 +3,80 @@
     "badge": "Immersion Protocol 2026",
     "subtitle": "The pinnacle of generative cinema. Push the boundaries of digital storytelling.",
     "submitFilm": "SUBMIT MY FILM",
-    "discoverJury": "DISCOVER THE JURY"
+    "discoverJury": "DISCOVER THE JURY",
+    "films": {
+      "kicker": "Official Selection",
+      "title1": "Films in",
+      "title2": "competition",
+      "viewAll": "View films in competition",
+      "launchPlayer": "Launch player"
+    },
+    "events": {
+      "kicker": "Agenda",
+      "title": "Events",
+      "empty": "No events at the moment.",
+      "viewAll": "View all events"
+    },
+    "objectives": {
+      "films": "films in competition",
+      "countries": "countries represented",
+      "days": "days of immersion",
+      "talks": "conferences",
+      "kicker": "Objectives",
+      "title": "Key Figures"
+    },
+    "desirableFuture": {
+      "ecology": {
+        "title": "Ecology",
+        "desc": "Using AI as a tool to imagine ecological futures and raise awareness through generative storytelling."
+      },
+      "possibleFuture": {
+        "title": "Possible Future",
+        "desc": "Exploring how generative cinema can open new perspectives and prototype worlds worth living in."
+      },
+      "democracy": {
+        "title": "Democracy",
+        "desc": "Examining the role of AI and media in shaping democratic societies and collective narratives."
+      },
+      "kicker": "Vision",
+      "title": "A Desirable Future"
+    },
+    "jury": {
+      "title": "The International Jury",
+      "viewAll": "View the full jury"
+    },
+    "awards": {
+      "items": {
+        "grandJury": { "title": "Grand Jury Prize" },
+        "bestScript": { "title": "Best AI Screenplay" },
+        "techInnovation": { "title": "Technical Innovation" }
+      },
+      "kicker": "Awards",
+      "title": "Prizes & Awards"
+    },
+    "sponsors": {
+      "kicker": "Partners",
+      "title": "Our Sponsors",
+      "viewAll": "SEE OUR PARTNERS",
+      "viewAllLink": "View all partners →"
+    },
+    "location": {
+      "venueName": "Festival Venue",
+      "address1": "Marseille, France",
+      "address2": "Full address to be confirmed",
+      "transport": {
+        "train": "Metro / Train",
+        "trainDesc": "Nearest stop: to be confirmed (e.g. Metro M1).",
+        "bus": "Bus",
+        "busDesc": "Lines: to be confirmed (e.g. 49, 52).",
+        "info": "Tips",
+        "infoDesc": "Allow 10 min walk from the stop."
+      },
+      "kicker": "Location",
+      "title": "Festival Location",
+      "accessTitle": "How to get there",
+      "openMap": "Open in Google Maps"
+    }
   },
   "countdown": {
     "expectedImpact": "Expected Impact",
@@ -13,7 +86,18 @@
     "seconds": "Seconds"
   },
   "navbar": {
-    "langToggle": "EN"
+    "langToggle": "EN",
+    "home": "Home",
+    "jury": "Jury",
+    "admin": "Administration",
+    "videoList": "Video list",
+    "player": "Player",
+    "selectorProfile": "My selector profile",
+    "searchPlaceholder": "Title, director, tag...",
+    "searchFilm": "Search for a film",
+    "logout": "Log out",
+    "login": "Log in",
+    "menuLabel": "Navigation menu"
   },
   "footer": {
     "description": "The global platform for generative storytelling. Explore the future of cinema powered by artificial intelligence.",
@@ -44,6 +128,7 @@
     "title": "Login",
     "subtitle": "Access your marsAI space",
     "email": "Email",
+    "emailPlaceholder": "e.g. user@mail.com",
     "password": "Password",
     "logging": "Logging in...",
     "submit": "Log in",
@@ -62,7 +147,10 @@
     "creating": "Creating...",
     "submit": "Create my account",
     "success": "Account created, you can now log in",
-    "error": "Error creating account"
+    "error": "Error creating account",
+    "validating": "Verifying invitation...",
+    "invalidLink": "Invalid link",
+    "invalidLinkMessage": "This invitation link is invalid or has expired. Contact an administrator to receive a new invitation."
   },
   "jury": {
     "loading": "Initializing Jury...",
@@ -122,14 +210,32 @@
     "noVideos": "No videos available",
     "selected": "Selected",
     "toReview": "To review",
-    "notSelected": "Not selected"
+    "notSelected": "Not selected",
+    "lastVideo": "Last video reached",
+    "videoRejected": "Video rejected",
+    "addedToDiscuss": "Added to discuss",
+    "saveError": "Error while saving",
+    "notConnected": "Error: user not connected",
+    "ratedSuccess": "Video selected with rating {{rating}}/10",
+    "ratingError": "Error while rating",
+    "emailSent": "Email sent to director",
+    "emailError": "Error while sending email",
+    "backToProfile": "Back to selector profile",
+    "profileSelector": "My Selector Profile",
+    "fullscreen": "Fullscreen",
+    "collapse": "Collapse",
+    "showMore": "Show more",
+    "filmPage": "Film page",
+    "chooseStatus": "Choose a status to continue"
   },
   "actionButtons": {
     "no": "No",
     "discuss": "To discuss",
-    "yesRate": "Yes - Rate",
-    "quickNote": "Quick note",
-    "emailDirector": "Email director"
+    "yesRate": "Yes + Rate",
+    "quickNote": "Note",
+    "emailDirector": "Email",
+    "sound": "Sound",
+    "details": "Details"
   },
   "ratingModal": {
     "title": "Rate the video",
@@ -192,5 +298,21 @@
     "notSelected": "Not selected",
     "discuss": "To discuss",
     "yesRate": "Yes - Rate"
+  },
+  "common": {
+    "back": "Back",
+    "loading": "Loading..."
+  },
+  "pages": {
+    "events": {
+      "title": "Events",
+      "subtitle": "Conferences, workshops and screenings around AI cinema."
+    },
+    "eventDetail": {
+      "duration": "Duration",
+      "minutes": "min",
+      "capacity": "Capacity",
+      "seats": "seats"
+    }
   }
 }

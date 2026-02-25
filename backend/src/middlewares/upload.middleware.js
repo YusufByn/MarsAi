@@ -67,3 +67,15 @@ export const upload = multer({
     { name: "stills", maxCount: 3 },
     { name: "srt", maxCount: 1 },
 ]);
+
+export const uploadCoverOnly = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 15 * 1024 * 1024 },
+}).single('cover');
+
+export const uploadStillsOnly = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 7 * 1024 * 1024 },
+}).array('stills', 3);

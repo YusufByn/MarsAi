@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "Atelier2",
+			"path": "../../../.."
+		},
+		{
+			"name": "scripts_test_s3",
+			"path": "../../../../../Downloads/scriptS3/scripts_test_s3"
+		}
+	],
+	"settings": {}
+}

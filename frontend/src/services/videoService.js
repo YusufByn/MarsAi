@@ -2,10 +2,15 @@ import { API_URL } from '../config';
 
 export const videoService = {
   /**
-   * Récupérer toutes les vidéos (feed)
+   * Récupérer les vidéos (feed paginé)
+   * @param {{ limit?, offset?, search?, classification? }} options
    */
-  async getAll(limit = 100) {
-    const response = await fetch(`${API_URL}/api/videos?limit=${limit}`);
+  async getAll({ limit = 24, offset = 0, search = '', classification = '' } = {}) {
+    const params = new URLSearchParams({ limit, offset });
+    if (search) params.set('search', search);
+    if (classification && classification !== 'all') params.set('classification', classification);
+
+    const response = await fetch(`${API_URL}/api/videos?${params}`);
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des vidéos');
     }

@@ -1,12 +1,19 @@
 import { normalizeTags, upsertTags } from "../models/tag.model.js";
 import { addContributorsToVideo, addSocialMediaToVideo, addTagsToVideo } from "../models/video.model.js";
 import { createStills } from "../models/image.model.js";
-import { createVideo } from "../models/video.model.js";
+import { createVideo, videoModel } from "../models/video.model.js";
 import { uploadVideoToYoutube } from "../services/youtube.service.js";
 import { getVideoDuration } from "../utils/video.util.js";
 import pool from "../config/db.js";
 import { sendVideoSubmissionConfirmationEmail } from "../services/email.service.js";
 import { logActivity } from "../utils/activity.util.js";
+import { uploadFileToS3, buildS3Key } from "../services/s3.service.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // liste des plateformes sociales autorisées
 const ALLOWED_SOCIAL_PLATFORMS = new Set([
@@ -202,6 +209,22 @@ export const uploadVideo = async (req, res) => {
 
     logActivity({ action: 'video_submit', entity: 'video', entityId: videoId, details: req.body.title ?? null, ip: req.ip });
 
+    // Upload S3 en parallèle (non-bloquant - ne ralentit pas la réponse)
+    const s3Uploads = [];
+    if (videoFiles) {
+      s3Uploads.push(uploadFileToS3(videoFiles.path, buildS3Key('videos', videoFiles.filename), videoFiles.mimetype));
+    }
+    if (coverFile) {
+      s3Uploads.push(uploadFileToS3(coverFile.path, buildS3Key('covers', coverFile.filename), coverFile.mimetype));
+    }
+    if (stillsFiles?.length > 0) {
+      stillsFiles.forEach(f => s3Uploads.push(uploadFileToS3(f.path, buildS3Key('stills', f.filename), f.mimetype)));
+    }
+    if (srtFile) {
+      s3Uploads.push(uploadFileToS3(srtFile.path, buildS3Key('srt', srtFile.filename), srtFile.mimetype));
+    }
+    Promise.all(s3Uploads).catch(err => console.error('[S3 ERROR] Upload video:', err.message));
+
     // Envoi email de confirmation au réalisateur (non-bloquant)
     sendVideoSubmissionConfirmationEmail({
       title: req.body.title ?? null,
@@ -253,3 +276,93 @@ export const uploadVideo = async (req, res) => {
     });
   }
 }
+
+export const updateVideoCover = async (req, res) => {
+  const { id } = req.params;
+  const coverFile = req.file;
+
+  if (!coverFile) {
+    return res.status(400).json({ success: false, message: "Cover file is required" });
+  }
+
+  try {
+    const video = await videoModel.findById(id);
+    if (!video) {
+      return res.status(404).json({ success: false, message: "Video not found" });
+    }
+
+    // Supprime l'ancien fichier cover du disque s'il existe
+    if (video.cover) {
+      const oldPath = path.join(__dirname, '..', 'uploads', 'covers', video.cover);
+      fs.unlink(oldPath, (err) => {
+        if (err) console.log('[COVER] Ancien fichier introuvable sur le disque:', video.cover);
+      });
+    }
+
+    await videoModel.update(id, { cover: coverFile.filename });
+
+    // Upload S3 (non-bloquant)
+    uploadFileToS3(coverFile.path, buildS3Key('covers', coverFile.filename), coverFile.mimetype)
+      .catch(err => console.error('[S3 ERROR] Upload cover:', err.message));
+
+    logActivity({ action: 'cover_update', entity: 'video', entityId: id, details: coverFile.filename, ip: req.ip });
+
+    return res.status(200).json({
+      success: true,
+      message: "Cover updated successfully",
+      data: { cover: coverFile.filename }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error updating cover", error: error.message });
+  }
+};
+
+export const updateVideoStills = async (req, res) => {
+  const { id } = req.params;
+  const stillFiles = req.files;
+
+  if (!stillFiles || stillFiles.length === 0) {
+    return res.status(400).json({ success: false, message: "At least one still file is required" });
+  }
+
+  try {
+    const video = await videoModel.findById(id);
+    if (!video) {
+      return res.status(404).json({ success: false, message: "Video not found" });
+    }
+
+    // Supprime les anciens fichiers stills du disque
+    for (const still of video.stills) {
+      const oldPath = path.join(__dirname, '..', 'uploads', 'stills', still.file_name);
+      fs.unlink(oldPath, (err) => {
+        if (err) console.log('[STILLS] Ancien fichier introuvable sur le disque:', still.file_name);
+      });
+    }
+
+    // Supprime les anciens stills en DB (CASCADE non applicable ici, suppression directe)
+    await pool.execute('DELETE FROM still WHERE video_id = ?', [id]);
+
+    // Insere les nouveaux stills
+    const stills = stillFiles.map((file, index) => ({
+      file_name: file.filename,
+      sort_order: index + 1
+    }));
+
+    await createStills(id, stills);
+
+    // Upload S3 (non-bloquant)
+    Promise.all(
+      stillFiles.map(f => uploadFileToS3(f.path, buildS3Key('stills', f.filename), f.mimetype))
+    ).catch(err => console.error('[S3 ERROR] Upload stills:', err.message));
+
+    logActivity({ action: 'stills_update', entity: 'video', entityId: id, details: `${stills.length} stills`, ip: req.ip });
+
+    return res.status(200).json({
+      success: true,
+      message: "Stills updated successfully",
+      data: { stills }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Error updating stills", error: error.message });
+  }
+};

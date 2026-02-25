@@ -174,11 +174,21 @@ export default function AdminSponsors() {
             }
             groups[typeCode].sponsors.push(sponsor);
         });
-        return Object.values(groups).sort((a, b) => {
-            if (a.typeCode === 0 && b.typeCode !== 0) return 1;
-            if (b.typeCode === 0 && a.typeCode !== 0) return -1;
-            return a.typeCode - b.typeCode;
-        });
+        return Object.values(groups)
+            .map((group) => ({
+                ...group,
+                sponsors: [...group.sponsors].sort((a, b) => {
+                    const orderA = Number(a.sort_order ?? 0);
+                    const orderB = Number(b.sort_order ?? 0);
+                    if (orderA !== orderB) return orderA - orderB;
+                    return Number(a.id ?? 0) - Number(b.id ?? 0);
+                }),
+            }))
+            .sort((a, b) => {
+                if (a.typeCode === 0 && b.typeCode !== 0) return 1;
+                if (b.typeCode === 0 && a.typeCode !== 0) return -1;
+                return a.typeCode - b.typeCode;
+            });
     }, [sponsors]);
 
     const activeTypeOptions = useMemo(

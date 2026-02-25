@@ -60,7 +60,7 @@ const Register = () => {
   if (tokenStatus === 'validating') {
     return (
       <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10 flex items-center justify-center">
-        <p className="text-gray-400">Vérification de l'invitation...</p>
+        <p className="text-gray-400">{t('register.validating')}</p>
       </div>
     );
   }
@@ -69,9 +69,9 @@ const Register = () => {
     return (
       <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
         <div className="max-w-md mx-auto text-center space-y-4">
-          <h1 className="text-3xl font-bold">Lien invalide</h1>
+          <h1 className="text-3xl font-bold">{t('register.invalidLink')}</h1>
           <p className="text-gray-400">
-            Ce lien d'invitation est invalide ou a expiré. Contactez un administrateur pour recevoir une nouvelle invitation.
+            {t('register.invalidLinkMessage')}
           </p>
         </div>
       </div>
@@ -116,7 +116,7 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs text-gray-400">Email</label>
+              <label className="text-xs text-gray-400">{t('register.email')}</label>
               <input
                 type="email"
                 name="email"

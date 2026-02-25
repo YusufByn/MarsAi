@@ -6,7 +6,8 @@ import { memoModel } from '../models/memo.model.js';
 export const memoController = {
   async getOne(req, res, next) {
     try {
-      const { userId, videoId } = req.params;
+      const { videoId } = req.params;
+      const userId = req.user.id;
       const memo = await memoModel.getByUserAndVideo(userId, videoId);
 
       if (!memo) {
@@ -25,10 +26,9 @@ export const memoController = {
     }
   },
 
-  // ici c'est la qu'on va recup tous les memos de l'utilisateur
   async getAllByUser(req, res, next) {
     try {
-      const { userId } = req.params;
+      const userId = req.user.id;
       const memos = await memoModel.getAllByUser(userId);
 
       res.json({
@@ -40,13 +40,13 @@ export const memoController = {
     }
   },
 
-  // ici c'est la qu'on va enregistrer le memo de l'utilisateur pour la video
   async upsert(req, res, next) {
     try {
-      const { user_id, video_id, statut, playlist, comment } = req.body;
+      const { video_id, statut, playlist, comment } = req.body;
+      const userId = req.user.id;
 
       const memo = await memoModel.upsertMemo({
-        userId: user_id,
+        userId,
         videoId: video_id,
         statut,
         playlist,

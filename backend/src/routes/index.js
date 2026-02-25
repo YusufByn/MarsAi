@@ -15,6 +15,7 @@ import cmsRoutes from './cms/cms.routes.js';
 import adminRoutes from "./admin.routes.js";
 import tagRoutes from './tag.routes.js';
 import sponsorsRoutes from './sponsors.routes.js';
+import eventsPublicRoutes from './eventsPublic.routes.js';
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.use('/cms/content', cmsRoutes);
 router.use('/admin', adminRoutes);
 router.use('/tags', tagRoutes);
 router.use('/sponsors', sponsorsRoutes);
+router.use('/events', eventsPublicRoutes);
 
 // testRoutes garde /test en interne - doit être en dernier pour ne pas intercepter les autres routes
 router.use('/', testRoutes);

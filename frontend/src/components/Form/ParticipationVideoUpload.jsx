@@ -93,7 +93,7 @@ const ImageSlot = ({ label, hint, fieldName, preview, loading, error, fileInputR
         </div>
       ) : preview ? (
         <>
-          <img src={preview} alt={label} className="w-full h-full object-cover" />
+          <img src={preview} alt={label} className="w-full h-full object-contain" />
           <RemoveBtn onClick={onRemove} />
         </>
       ) : (

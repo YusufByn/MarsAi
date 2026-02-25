@@ -3,7 +3,80 @@
     "badge": "Protocole d'immersion 2026",
     "subtitle": "L'apogée du cinéma génératif. Repoussez les limites de la narration numérique.",
     "submitFilm": "SOUMETTRE MON FILM",
-    "discoverJury": "DÉCOUVRIR LE JURY"
+    "discoverJury": "DÉCOUVRIR LE JURY",
+    "films": {
+      "kicker": "Sélection officielle",
+      "title1": "Films en",
+      "title2": "compétition",
+      "viewAll": "Voir les films en compétition",
+      "launchPlayer": "Lancer le player"
+    },
+    "events": {
+      "kicker": "Agenda",
+      "title": "Événements",
+      "empty": "Aucun événement pour le moment.",
+      "viewAll": "Voir tous les événements"
+    },
+    "objectives": {
+      "films": "films en compétition",
+      "countries": "pays représentés",
+      "days": "jours d'immersion",
+      "talks": "conférences",
+      "kicker": "Objectifs",
+      "title": "Chiffres clés"
+    },
+    "desirableFuture": {
+      "ecology": {
+        "title": "Écologie",
+        "desc": "Utiliser l'IA comme outil pour imaginer des futurs écologiques et sensibiliser grâce à la narration générative."
+      },
+      "possibleFuture": {
+        "title": "Futur Possible",
+        "desc": "Explorer comment le cinéma génératif peut ouvrir de nouvelles perspectives et prototyper des mondes désirables."
+      },
+      "democracy": {
+        "title": "Démocratie",
+        "desc": "Examiner le rôle de l'IA et des médias dans la formation des sociétés démocratiques et des récits collectifs."
+      },
+      "kicker": "Vision",
+      "title": "Un Futur Désirable"
+    },
+    "jury": {
+      "title": "Le Jury International",
+      "viewAll": "Voir le jury complet"
+    },
+    "awards": {
+      "items": {
+        "grandJury": { "title": "Grand Prix du Jury" },
+        "bestScript": { "title": "Meilleur Scénario IA" },
+        "techInnovation": { "title": "Innovation Technique" }
+      },
+      "kicker": "Récompenses",
+      "title": "Prix & Récompenses"
+    },
+    "sponsors": {
+      "kicker": "Partenaires",
+      "title": "Nos Sponsors",
+      "viewAll": "VOIR NOS PARTENAIRES",
+      "viewAllLink": "Voir tous les partenaires →"
+    },
+    "location": {
+      "venueName": "Lieu du Festival",
+      "address1": "Marseille, France",
+      "address2": "Adresse complète à préciser",
+      "transport": {
+        "train": "Métro / Train",
+        "trainDesc": "Arrêt le plus proche : à définir (ex : Métro M1).",
+        "bus": "Bus",
+        "busDesc": "Lignes : à définir (ex : 49, 52).",
+        "info": "Conseils",
+        "infoDesc": "Prévoir 10 min à pied depuis l'arrêt."
+      },
+      "kicker": "Localisation",
+      "title": "Lieu du Festival",
+      "accessTitle": "Comment s'y rendre",
+      "openMap": "Ouvrir dans Google Maps"
+    }
   },
   "countdown": {
     "expectedImpact": "Impact prévu",
@@ -13,7 +86,18 @@
     "seconds": "Secondes"
   },
   "navbar": {
-    "langToggle": "FR"
+    "langToggle": "FR",
+    "home": "Accueil",
+    "jury": "Jury",
+    "admin": "Administration",
+    "videoList": "Liste des vidéos",
+    "player": "Player",
+    "selectorProfile": "Mon profil sélecteur",
+    "searchPlaceholder": "Titre, réalisateur, tag...",
+    "searchFilm": "Rechercher un film",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "menuLabel": "Menu de navigation"
   },
   "footer": {
     "description": "La plateforme mondiale de la narration générative. Explorez le futur du cinéma propulsé par l'intelligence artificielle.",
@@ -44,6 +128,7 @@
     "title": "Connexion",
     "subtitle": "Accès à ton espace marsAI",
     "email": "Email",
+    "emailPlaceholder": "ex : user@mail.com",
     "password": "Mot de passe",
     "logging": "Connexion...",
     "submit": "Se connecter",
@@ -62,7 +147,10 @@
     "creating": "Création...",
     "submit": "Créer mon compte",
     "success": "Compte créé, tu peux te connecter",
-    "error": "Erreur lors de la création du compte"
+    "error": "Erreur lors de la création du compte",
+    "validating": "Vérification de l'invitation...",
+    "invalidLink": "Lien invalide",
+    "invalidLinkMessage": "Ce lien d'invitation est invalide ou a expiré. Contactez un administrateur pour recevoir une nouvelle invitation."
   },
   "jury": {
     "loading": "Initialisation du Jury...",
@@ -122,14 +210,32 @@
     "noVideos": "Aucune vidéo disponible",
     "selected": "Sélectionné",
     "toReview": "À revoir",
-    "notSelected": "Non retenu"
+    "notSelected": "Non retenu",
+    "lastVideo": "Dernière vidéo atteinte",
+    "videoRejected": "Vidéo rejetée",
+    "addedToDiscuss": "Ajoutée à discuter",
+    "saveError": "Erreur lors de la sauvegarde",
+    "notConnected": "Erreur : utilisateur non connecté",
+    "ratedSuccess": "Vidéo sélectionnée avec note {{rating}}/10",
+    "ratingError": "Erreur lors de la notation",
+    "emailSent": "Email envoyé au réalisateur",
+    "emailError": "Erreur lors de l'envoi de l'email",
+    "backToProfile": "Retour au profil sélecteur",
+    "profileSelector": "Mon Profil Sélecteur",
+    "fullscreen": "Plein écran",
+    "collapse": "Réduire",
+    "showMore": "Afficher plus",
+    "filmPage": "Page du film",
+    "chooseStatus": "Choisissez un statut pour continuer"
   },
   "actionButtons": {
     "no": "Non",
     "discuss": "À discuter",
-    "yesRate": "Oui - Noter",
-    "quickNote": "Note rapide",
-    "emailDirector": "Email réalisateur"
+    "yesRate": "Oui + Note",
+    "quickNote": "Note",
+    "emailDirector": "Email",
+    "sound": "Son",
+    "details": "Détails"
   },
   "ratingModal": {
     "title": "Noter la vidéo",
@@ -192,5 +298,21 @@
     "notSelected": "Non sélectionné",
     "discuss": "À discuter",
     "yesRate": "Oui - Noter"
+  },
+  "common": {
+    "back": "Retour",
+    "loading": "Chargement..."
+  },
+  "pages": {
+    "events": {
+      "title": "Événements",
+      "subtitle": "Conférences, workshops et rencontres autour du cinéma IA."
+    },
+    "eventDetail": {
+      "duration": "Durée",
+      "minutes": "min",
+      "capacity": "Capacité",
+      "seats": "places"
+    }
   }
 }

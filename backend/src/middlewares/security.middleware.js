@@ -1,7 +1,11 @@
 import pool from '../config/db.js';
 
 const ATTACK_PATTERNS = {
+<<<<<<< HEAD
     SQLi: /(\bUNION\b|\bSELECT\b|\bDROP\b|\bINSERT\b|\bDELETE\b|\bUPDATE\b|\bEXEC\b)/i,
+=======
+    SQLi: /(\%27)|(\-\-)|(\%23)/i,
+>>>>>>> 325729ef8ed0d8855ef1d8f5232a79ea16586fca
     SQLi_Advanced: /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i,
     XSS: /(<script[\s\S]*?>[\s\S]*?<\/script>|javascript:|on\w+\s*=)/i,
     PathTraversal: /(\.\.\/|\.\.\\)/
@@ -21,8 +25,8 @@ export const securityGuard = async (req, res, next) => {
         );
 
         if (banned.length > 0) {
-            return res.status(403).json({ 
-                message: "⛔ Access Denied. Your device or IP has been flagged." 
+            return res.status(403).json({
+                message: "Access Denied. Your device or IP has been flagged."
             });
         }
 
@@ -38,7 +42,7 @@ export const securityGuard = async (req, res, next) => {
         }
 
         if (attackDetected) {
-            console.warn(`🚨 ATTAQUE DÉTECTÉE [${attackDetected}] IP: ${ip}`);
+            console.warn(`[SECURITY] Attaque detectee [${attackDetected}] IP: ${ip}`);
 
             await pool.execute(
                 `INSERT INTO security_log (ip_address, user_agent, fingerprint, request_method, request_url, payload, attack_type, risk_score)

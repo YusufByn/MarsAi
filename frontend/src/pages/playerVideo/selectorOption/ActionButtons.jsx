@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const ActionButtons = ({
     currentStatus = 'no',
@@ -14,6 +15,7 @@ const ActionButtons = ({
     videoId,
 }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
     // Icone son selon l'etat
@@ -66,7 +68,7 @@ const ActionButtons = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white text-[10px] font-medium whitespace-nowrap opacity-70">
-                            Non
+                            {t('actionButtons.no')}
                         </div>
                     </button>
 
@@ -83,7 +85,7 @@ const ActionButtons = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                         </svg>
                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white text-[10px] font-medium whitespace-nowrap opacity-70">
-                            Discuter
+                            {t('actionButtons.discuss')}
                         </div>
                     </button>
 
@@ -105,7 +107,7 @@ const ActionButtons = ({
                             </div>
                         )}
                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white text-[10px] font-medium whitespace-nowrap opacity-70">
-                            Oui + Note
+                            {t('actionButtons.yesRate')}
                         </div>
                     </button>
 
@@ -118,7 +120,7 @@ const ActionButtons = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white text-[10px] font-medium whitespace-nowrap opacity-70">
-                            Note
+                            {t('actionButtons.quickNote')}
                         </div>
                     </button>
 
@@ -131,7 +133,7 @@ const ActionButtons = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white text-[10px] font-medium whitespace-nowrap opacity-70">
-                            Email
+                            {t('actionButtons.emailDirector')}
                         </div>
                     </button>
 
@@ -147,7 +149,7 @@ const ActionButtons = ({
                         >
                             <SoundIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white text-[10px] font-medium whitespace-nowrap opacity-70">
-                                Son
+                                {t('actionButtons.sound')}
                             </div>
                         </button>
 
@@ -189,7 +191,7 @@ const ActionButtons = ({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white text-[10px] font-medium whitespace-nowrap opacity-70">
-                            Details
+                            {t('actionButtons.details')}
                         </div>
                     </button>
                 </div>

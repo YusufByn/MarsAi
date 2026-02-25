@@ -1,4 +1,5 @@
 import { sponsorsModel } from '../models/sponsors.model.js';
+import { uploadFileToS3, buildS3Key } from '../services/s3.service.js';
 
 const handleSponsorError = (res, error, fallbackMessage, logPrefix) => {
   if (error?.status) {
@@ -70,6 +71,13 @@ export const sponsorsController = {
   async create(req, res) {
     try {
       const created = await sponsorsModel.create(req.body, req.file);
+
+      // Upload S3 (non-bloquant)
+      if (req.file) {
+        uploadFileToS3(req.file.path, buildS3Key('covers', req.file.filename), req.file.mimetype)
+          .catch(err => console.error('[S3 ERROR] Upload sponsor cover:', err.message));
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Sponsor créé avec succès',
@@ -89,6 +97,13 @@ export const sponsorsController = {
     try {
       const { id } = req.params;
       const updated = await sponsorsModel.update(id, req.body, req.file);
+
+      // Upload S3 (non-bloquant)
+      if (req.file) {
+        uploadFileToS3(req.file.path, buildS3Key('covers', req.file.filename), req.file.mimetype)
+          .catch(err => console.error('[S3 ERROR] Upload sponsor cover:', err.message));
+      }
+
       return res.json({
         success: true,
         message: 'Sponsor mis à jour avec succès',

@@ -90,14 +90,14 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Festival */}
           <div>
-            <h4 className="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-8">{t('footer.navigation')}</h4>
+            <h4 className="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-8">Festival</h4>
             <ul className="flex flex-col gap-4">
-              <li><Link to="/programme" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.programme')}</Link></li>
-              <li><Link to="/films" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.films')}</Link></li>
-              <li><Link to="/jury" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.jury')}</Link></li>
-              <li><Link to="/billetterie" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.ticketing')}</Link></li>
+              <li><Link to="/" className="text-gray-400 hover:text-white transition-colors text-sm">Accueil</Link></li>
+              <li><Link to="/jury" className="text-gray-400 hover:text-white transition-colors text-sm">Jury</Link></li>
+              <li><Link to="/events" className="text-gray-400 hover:text-white transition-colors text-sm">Evenements</Link></li>
+              <li><Link to="/sponsors" className="text-gray-400 hover:text-white transition-colors text-sm">Partenaires</Link></li>
             </ul>
           </div>
 
@@ -105,21 +105,19 @@ const Footer = () => {
           <div>
             <h4 className="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-8">{t('footer.competition')}</h4>
             <ul className="flex flex-col gap-4">
-              <li><Link to="/reglement" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.rules')}</Link></li>
-              <li><Link to="/soumission" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.submission')}</Link></li>
-              <li><Link to="/prix" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.prizes')}</Link></li>
-              <li><Link to="/faq" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.faq')}</Link></li>
+              <li><Link to="/videos" className="text-gray-400 hover:text-white transition-colors text-sm">Films en competition</Link></li>
+              <li><Link to="/video/player" className="text-gray-400 hover:text-white transition-colors text-sm">Player</Link></li>
+              <li><Link to="/formsubmission" className="text-gray-400 hover:text-white transition-colors text-sm">Soumettre un film</Link></li>
             </ul>
           </div>
 
-          {/* Légal */}
+          {/* Légal & Accès */}
           <div>
             <h4 className="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-8">{t('footer.legal')}</h4>
             <ul className="flex flex-col gap-4">
               <li><Link to="/mentions" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.legalNotice')}</Link></li>
-              <li><Link to="/confidentialite" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.privacy')}</Link></li>
-              <li><Link to="/cookies" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.cookies')}</Link></li>
-              <li><Link to="/presse" className="text-gray-400 hover:text-white transition-colors text-sm">{t('footer.press')}</Link></li>
+              <li><Link to="/mentions" className="text-gray-400 hover:text-white transition-colors text-sm">CGU</Link></li>
+              <li><Link to="/login" className="text-gray-400 hover:text-white transition-colors text-sm">Connexion jury</Link></li>
             </ul>
           </div>
 
