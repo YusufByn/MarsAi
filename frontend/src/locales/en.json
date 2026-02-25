@@ -8,48 +8,13 @@
       "kicker": "Official Selection",
       "title1": "Films in",
       "title2": "competition",
-      "description": "Discover the films selected for this edition of the festival. Artificial intelligence, hybrid creation — a selection that pushes the boundaries of cinema.",
       "viewAll": "View films in competition",
-      "launchPlayer": "Launch player",
-      "inSelection": "Films in selection"
+      "launchPlayer": "Launch player"
     },
     "events": {
-      "days": {
-        "day01": "Day 01",
-        "day02": "Day 02",
-        "day03": "Day 03"
-      },
-      "items": {
-        "day01": {
-          "event1": { "title": "Opening Keynote" },
-          "event2": { "title": "Workshop: AI Storytelling" },
-          "event3": { "title": "Panel: Ethics & Cinema" },
-          "event4": { "title": "Workshop: Prompt to Film" }
-        },
-        "day02": {
-          "event1": { "title": "Conference: Future of AI Cinema" },
-          "event2": { "title": "Workshop: Visual Generation" },
-          "event3": { "title": "Conference: Creative Pipelines" },
-          "event4": { "title": "Workshop: Sound & AI" }
-        },
-        "day03": {
-          "event1": { "title": "Conference: Ecology & Tech" },
-          "event2": { "title": "Workshop: Documentary with AI" },
-          "event3": { "title": "Conference: Democracy & Media" },
-          "event4": { "title": "Closing Talk" }
-        }
-      },
-      "type": {
-        "workshop": "Workshop",
-        "conference": "Conference"
-      },
       "kicker": "Agenda",
       "title": "Events",
-      "dayPicker": {
-        "title": "Choose a day",
-        "subtitle": "Filter events"
-      },
-      "empty": "No events for this day.",
+      "empty": "No events at the moment.",
       "viewAll": "View all events"
     },
     "objectives": {
@@ -77,14 +42,8 @@
       "title": "A Desirable Future"
     },
     "jury": {
-      "items": {
-        "1": { "name": "C. Del Toro", "expertise": "Filmmaker" },
-        "2": { "name": "C. Nolan", "expertise": "Filmmaker" },
-        "3": { "name": "Tarantino", "expertise": "Filmmaker" },
-        "4": { "name": "Spielberg", "expertise": "Filmmaker" }
-      },
-      "kicker": "The International Jury",
-      "title": "The International Jury"
+      "title": "The International Jury",
+      "viewAll": "View the full jury"
     },
     "awards": {
       "items": {
@@ -347,7 +306,7 @@
   "pages": {
     "events": {
       "title": "Events",
-      "subtitle": "Festival programme"
+      "subtitle": "Conferences, workshops and screenings around AI cinema."
     },
     "eventDetail": {
       "duration": "Duration",

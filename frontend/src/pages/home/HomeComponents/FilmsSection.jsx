@@ -1,90 +1,109 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { videoService } from '../../../services/videoService';
+import { API_URL } from '../../../config';
+
+const getCoverUrl = (video) => {
+  const src = video.cover_url || (video.cover ? `/uploads/covers/${video.cover}` : null);
+  if (!src) return null;
+  if (src.startsWith('http')) return src;
+  return `${API_URL}${src}`;
+};
 
 export default function FilmsSection() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
+  const [films, setFilms] = useState([]);
+
+  useEffect(() => {
+    videoService.getAll({ limit: 4 })
+      .then((res) => setFilms(res.data ?? []))
+      .catch((err) => console.error('[FILMS] Erreur chargement:', err));
+  }, []);
 
   return (
-    <section className="relative px-6 py-20 md:py-32 overflow-hidden">
-      {/* Glows de fond */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-mars-primary/8 blur-[160px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-mars-secondary/5 blur-[120px] rounded-full pointer-events-none" />
+    <section className="relative px-6 py-10 md:py-16 overflow-hidden">
+      <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[900px] h-[500px] bg-mars-primary/5 blur-[140px] rounded-full pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-          {/* Texte */}
-          <div className="space-y-6">
-            <p className="text-xs font-bold tracking-[0.3em] uppercase text-mars-primary/70">
-              {t('home.films.kicker')}
-            </p>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none">
-              {t('home.films.title1')}
-              <br />
-              <span className="mars-text-gradient">{t('home.films.title2')}</span>
-            </h2>
-            <p className="text-white/50 text-base md:text-lg leading-relaxed max-w-md">
-              {t('home.films.description')}
-            </p>
-            <div className="flex flex-wrap gap-4 pt-2">
-              <button
-                onClick={() => navigate('/videos')}
-                className="mars-button-primary"
-              >
-                {t('home.films.viewAll')}
-              </button>
-              <button
-                onClick={() => navigate('/video/player')}
-                className="mars-button-outline"
-              >
-                {t('home.films.launchPlayer')}
-              </button>
-            </div>
-          </div>
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <p className="text-xs font-bold tracking-[0.3em] uppercase text-mars-primary/70">
+            {t('home.films.kicker')}
+          </p>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight mt-3">
+            {t('home.films.title1')}{' '}
+            <span className="mars-text-gradient">{t('home.films.title2')}</span>
+          </h2>
+        </div>
 
-          {/* Visual */}
-          <div className="relative hidden lg:block">
-            {/* Grille decorative de "film cards" */}
-            <div className="grid grid-cols-3 gap-3 opacity-60">
-              {[...Array(9)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`rounded-xl bg-white/5 border border-white/10 aspect-[3/4] ${
-                    i === 4 ? 'scale-110 opacity-100 border-mars-primary/30 bg-mars-primary/10' : ''
-                  }`}
-                  style={{
-                    transform: i === 4 ? 'scale(1.1)' : `rotate(${(i % 3 - 1) * 1.5}deg)`,
-                    transition: 'all 0.3s',
-                  }}
+        {/* 4 cards portrait */}
+        {films.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-10">
+            {films.map((video) => {
+              const coverUrl   = getCoverUrl(video);
+              const authorName = video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' ');
+
+              return (
+                <Link
+                  key={video.id}
+                  to={`/videoDetails/${video.id}`}
+                  className="relative rounded-xl overflow-hidden group aspect-[2/3] border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02]"
                 >
-                  {i === 4 && (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-3">
-                      <div className="w-10 h-10 rounded-full bg-mars-primary/30 flex items-center justify-center">
-                        <svg className="w-5 h-5 text-mars-primary" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                      <div className="h-1.5 w-3/4 rounded-full bg-white/10" />
-                      <div className="h-1.5 w-1/2 rounded-full bg-white/10" />
+                  {/* Cover */}
+                  {coverUrl ? (
+                    <img
+                      src={coverUrl}
+                      alt={video.title}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black flex items-center justify-center">
+                      <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
                     </div>
                   )}
-                </div>
-              ))}
-            </div>
 
-            {/* Badge flottant */}
-            <div className="absolute -top-4 -right-4 px-4 py-2 rounded-full bg-mars-primary/20 border border-mars-primary/30 backdrop-blur-sm">
-              <span className="text-xs font-bold text-mars-primary tracking-wider">MARS.AI 2025</span>
-            </div>
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
 
-            {/* Compteur films */}
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm">
-              <span className="text-xs text-white/50 tracking-widest uppercase">{t('home.films.inSelection')}</span>
-            </div>
+                  {/* Badge classification */}
+                  <div className="absolute top-2 left-2">
+                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold backdrop-blur-sm ${
+                      video.classification === 'ia'
+                        ? 'bg-purple-500/30 text-purple-200 border border-purple-400/30'
+                        : 'bg-orange-500/30 text-orange-200 border border-orange-400/30'
+                    }`}>
+                      {video.classification?.toUpperCase() || 'N/A'}
+                    </span>
+                  </div>
+
+                  {/* Infos bas */}
+                  <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3">
+                    <h3 className="font-black text-xs text-white leading-tight line-clamp-2">
+                      {video.title || 'Sans titre'}
+                    </h3>
+                    {authorName && (
+                      <p className="text-white/50 text-[10px] mt-0.5 truncate">{authorName}</p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
+        )}
 
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link to="/videos" className="mars-button-primary">
+            {t('home.films.viewAll')}
+          </Link>
+          <Link to="/video/player" className="mars-button-outline">
+            {t('home.films.launchPlayer')}
+          </Link>
         </div>
       </div>
     </section>

@@ -8,48 +8,13 @@
       "kicker": "Sélection officielle",
       "title1": "Films en",
       "title2": "compétition",
-      "description": "Découvrez les films sélectionnés pour cette édition du festival. Intelligence artificielle, création hybride — une sélection qui repousse les frontières du cinéma.",
       "viewAll": "Voir les films en compétition",
-      "launchPlayer": "Lancer le player",
-      "inSelection": "Films en sélection"
+      "launchPlayer": "Lancer le player"
     },
     "events": {
-      "days": {
-        "day01": "Jour 01",
-        "day02": "Jour 02",
-        "day03": "Jour 03"
-      },
-      "items": {
-        "day01": {
-          "event1": { "title": "Keynote d'ouverture" },
-          "event2": { "title": "Atelier : Narration IA" },
-          "event3": { "title": "Débat : Éthique & Cinéma" },
-          "event4": { "title": "Atelier : Du Prompt au Film" }
-        },
-        "day02": {
-          "event1": { "title": "Conférence : L'avenir du cinéma IA" },
-          "event2": { "title": "Atelier : Génération visuelle" },
-          "event3": { "title": "Conférence : Pipelines créatifs" },
-          "event4": { "title": "Atelier : Son & IA" }
-        },
-        "day03": {
-          "event1": { "title": "Conférence : Écologie & Tech" },
-          "event2": { "title": "Atelier : Documentaire avec l'IA" },
-          "event3": { "title": "Conférence : Démocratie & Médias" },
-          "event4": { "title": "Conférence de clôture" }
-        }
-      },
-      "type": {
-        "workshop": "Atelier",
-        "conference": "Conférence"
-      },
       "kicker": "Agenda",
       "title": "Événements",
-      "dayPicker": {
-        "title": "Choisir un jour",
-        "subtitle": "Filtrer les événements"
-      },
-      "empty": "Aucun événement pour ce jour.",
+      "empty": "Aucun événement pour le moment.",
       "viewAll": "Voir tous les événements"
     },
     "objectives": {
@@ -77,14 +42,8 @@
       "title": "Un Futur Désirable"
     },
     "jury": {
-      "items": {
-        "1": { "name": "C. Del Toro", "expertise": "Réalisateur" },
-        "2": { "name": "C. Nolan", "expertise": "Réalisateur" },
-        "3": { "name": "Tarantino", "expertise": "Réalisateur" },
-        "4": { "name": "Spielberg", "expertise": "Réalisateur" }
-      },
-      "kicker": "Le Jury International",
-      "title": "Le Jury International"
+      "title": "Le Jury International",
+      "viewAll": "Voir le jury complet"
     },
     "awards": {
       "items": {
@@ -347,7 +306,7 @@
   "pages": {
     "events": {
       "title": "Événements",
-      "subtitle": "Programme du festival"
+      "subtitle": "Conférences, workshops et rencontres autour du cinéma IA."
     },
     "eventDetail": {
       "duration": "Durée",

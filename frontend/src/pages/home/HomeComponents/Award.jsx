@@ -26,7 +26,7 @@ export default function Award() {
     ];
 
     return (
-        <section className="relative px-6 py-16 md:py-24 overflow-hidden">
+        <section className="relative px-6 py-10 md:py-16 overflow-hidden">
             {/* Glow léger */}
             <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[900px] h-[500px] bg-mars-primary/5 blur-[140px] rounded-full pointer-events-none" />
 
