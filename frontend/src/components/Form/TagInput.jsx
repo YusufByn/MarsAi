@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Composant TagInput - Système de tags dynamique
@@ -11,6 +12,7 @@ import { useState, useEffect } from 'react';
  * @param {String} error - Message d'erreur à afficher (optionnel)
  */
 const TagInput = ({ value = [], onChange, error }) => {
+  const { t } = useTranslation();
   const [tags, setTags] = useState(value);
   const [inputValue, setInputValue] = useState('');
   const [showError, setShowError] = useState(false);
@@ -172,7 +174,7 @@ const TagInput = ({ value = [], onChange, error }) => {
           value={inputValue}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder={tags.length === 0 ? "Add tags (Enter or comma)" : ""}
+          placeholder={tags.length === 0 ? t('submission.tags.placeholder', { defaultValue: 'Add tags (Enter or comma)' }) : ""}
           className="flex-1 min-w-[120px] bg-transparent outline-none text-white placeholder:text-gray-500 text-sm"
           disabled={tags.length >= 10}
         />
@@ -180,7 +182,7 @@ const TagInput = ({ value = [], onChange, error }) => {
 
       {/* Texte d'aide */}
       <p className="text-gray-400 text-xs mt-1">
-        Press Enter or comma to add tags (max 10, 20 chars each)
+        {t('submission.tags.hint', { defaultValue: 'Press Enter or comma to add tags (max 10, 20 chars each)' })}
       </p>
 
       {/* Message d'erreur */}

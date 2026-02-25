@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import PhoneInput from 'react-phone-number-input';
 import Select from 'react-select';
 import countryList from 'react-select-country-list';
@@ -223,6 +224,7 @@ const Toggle = ({ id, name, checked, onChange }) => (
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDataProp }) => {
+  const { t } = useTranslation();
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -250,8 +252,8 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
 
   const validateAcquisitionSelection = (sourceValue, otherValue) => {
     const { main, social, legacyOther } = parseAcquisitionSource(sourceValue);
-    if (!main) return { acquisitionSource: 'Please tell us how you heard about us', acquisitionSourceOther: null };
-    if (main === 'social_networks' && !social) return { acquisitionSource: 'Please select a social network', acquisitionSourceOther: null };
+    if (!main) return { acquisitionSource: t('submission.personalData.acquisition.requiredError'), acquisitionSourceOther: null };
+    if (main === 'social_networks' && !social) return { acquisitionSource: t('submission.personalData.acquisition.socialRequiredError'), acquisitionSourceOther: null };
     if (main === 'other') {
       const normalized = String(otherValue || legacyOther || '').trim();
       return { acquisitionSource: null, acquisitionSourceOther: validateAcquisitionSource(normalized) };
@@ -268,12 +270,12 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
   const validateAddressPart = (fieldName, value) => {
     const v = String(value || '').trim();
     if (fieldName === 'zipcode') {
-      if (!v) return 'Zip code is required';
-      if (v.length > 20) return 'Zip code is too long';
+      if (!v) return t('submission.personalData.errors.zipcodeRequired');
+      if (v.length > 20) return t('submission.personalData.errors.zipcodeTooLong');
       return null;
     }
     if (!v) return null;
-    if (v.length > 120) return `${fieldName} is too long`;
+    if (v.length > 120) return null;
     return null;
   };
 
@@ -454,7 +456,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
       setFormDataProp({ ...formData, addressParts, address: composedAddress });
       setEtape(2);
     } else {
-      setSubmitError('Please correct the errors before continuing');
+      setSubmitError(t('submission.personalData.errors.pleaseCorrect'));
       setIsSubmitting(false);
     }
   };
@@ -468,21 +470,21 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
 
       {/* Step title */}
       <div className="mb-8">
-        <h2 className="text-xl font-bold tracking-tight">Personal Data</h2>
-        <p className="text-xs text-white/35 mt-1 font-light">Tell us about yourself</p>
+        <h2 className="text-xl font-bold tracking-tight">{t('submission.personalData.title')}</h2>
+        <p className="text-xs text-white/35 mt-1 font-light">{t('submission.personalData.subtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
 
         {/* ── IDENTITY ─────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Identity</SectionHeader>
+          <SectionHeader>{t('submission.personalData.sections.identity')}</SectionHeader>
           <div className="space-y-4">
 
             {/* Gender */}
             <div>
               <label htmlFor="gender" className={labelCls}>
-                Gender <span className="text-mars-primary">*</span>
+                {t('submission.personalData.gender.label')} <span className="text-mars-primary">*</span>
               </label>
               <select
                 name="gender" id="gender"
@@ -490,10 +492,10 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
                 onChange={handleChange}
                 className={`${inputBase} ${inputBorder(errors.gender)} [&>option]:bg-[#08080f]`}
               >
-                <option value="">Select your gender</option>
-                <option value="women">Women</option>
-                <option value="man">Man</option>
-                <option value="other">Other</option>
+                <option value="">{t('submission.personalData.gender.placeholder')}</option>
+                <option value="women">{t('submission.personalData.gender.women')}</option>
+                <option value="man">{t('submission.personalData.gender.man')}</option>
+                <option value="other">{t('submission.personalData.gender.other')}</option>
               </select>
               {errors.gender && <p className={errorCls}>{errors.gender}</p>}
             </div>
@@ -502,25 +504,25 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className={labelCls}>
-                  First Name <span className="text-mars-primary">*</span>
+                  {t('submission.personalData.firstName.label')} <span className="text-mars-primary">*</span>
                 </label>
                 <input
                   className={`${inputBase} ${inputBorder(errors.firstName)}`}
                   type="text" name="firstName" id="firstName"
                   value={formData.firstName} onChange={handleChange}
-                  placeholder="First name"
+                  placeholder={t('submission.personalData.firstName.placeholder')}
                 />
                 {errors.firstName && <p className={errorCls}>{errors.firstName}</p>}
               </div>
               <div>
                 <label htmlFor="lastName" className={labelCls}>
-                  Last Name <span className="text-mars-primary">*</span>
+                  {t('submission.personalData.lastName.label')} <span className="text-mars-primary">*</span>
                 </label>
                 <input
                   className={`${inputBase} ${inputBorder(errors.lastName)}`}
                   type="text" name="lastName" id="lastName"
                   value={formData.lastName} onChange={handleChange}
-                  placeholder="Last name"
+                  placeholder={t('submission.personalData.lastName.placeholder')}
                 />
                 {errors.lastName && <p className={errorCls}>{errors.lastName}</p>}
               </div>
@@ -533,19 +535,19 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
 
         {/* ── CONTACT ──────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Contact</SectionHeader>
+          <SectionHeader>{t('submission.personalData.sections.contact')}</SectionHeader>
           <div className="space-y-4">
 
             {/* Email */}
             <div>
               <label htmlFor="email" className={labelCls}>
-                Email <span className="text-mars-primary">*</span>
+                {t('submission.personalData.email.label')} <span className="text-mars-primary">*</span>
               </label>
               <input
                 className={`${inputBase} ${inputBorder(errors.email)}`}
                 type="email" name="email" id="email"
                 value={formData.email} onChange={handleChange}
-                placeholder="your@email.com"
+                placeholder={t('submission.personalData.email.placeholder')}
               />
               {errors.email && <p className={errorCls}>{errors.email}</p>}
             </div>
@@ -553,7 +555,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
             {/* Country */}
             <div>
               <label htmlFor="country" className={labelCls}>
-                Country <span className="text-mars-primary">*</span>
+                {t('submission.personalData.country.label')} <span className="text-mars-primary">*</span>
               </label>
               <Select
                 inputId="country" name="country"
@@ -563,7 +565,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
                 isSearchable
                 filterOption={customCountryFilter}
                 formatOptionLabel={formatCountryOption}
-                placeholder="Select your country"
+                placeholder={t('submission.personalData.country.placeholder')}
                 className="text-sm"
                 styles={countrySelectStyles(errors.country)}
               />
@@ -573,26 +575,26 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
             {/* Phones */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Mobile Number <span className="text-mars-primary">*</span></label>
+                <label className={labelCls}>{t('submission.personalData.mobileNumber.label')} <span className="text-mars-primary">*</span></label>
                 <PhoneInput
                   international
                   defaultCountry={selectedPhoneCountry}
                   value={formData.mobileNumber}
                   onChange={(value) => handlePhoneChange('mobileNumber', value)}
                   className={`${inputBase} ${inputBorder(errors.mobileNumber)}`}
-                  placeholder="Mobile number"
+                  placeholder={t('submission.personalData.mobileNumber.placeholder')}
                 />
                 {errors.mobileNumber && <p className={errorCls}>{errors.mobileNumber}</p>}
               </div>
               <div>
-                <label className={labelCls}>Phone Number</label>
+                <label className={labelCls}>{t('submission.personalData.phoneNumber.label')}</label>
                 <PhoneInput
                   international
                   defaultCountry={selectedPhoneCountry}
                   value={formData.phoneNumber}
                   onChange={(value) => handlePhoneChange('phoneNumber', value)}
                   className={`${inputBase} ${inputBorder(errors.phoneNumber)}`}
-                  placeholder="Phone number"
+                  placeholder={t('submission.personalData.phoneNumber.placeholder')}
                 />
                 {errors.phoneNumber && <p className={errorCls}>{errors.phoneNumber}</p>}
               </div>
@@ -605,29 +607,29 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
 
         {/* ── ADDRESS ──────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Address</SectionHeader>
+          <SectionHeader>{t('submission.personalData.sections.address')}</SectionHeader>
           <div className="space-y-4">
 
             <div>
-              <label htmlFor="street" className={labelCls}>Street</label>
+              <label htmlFor="street" className={labelCls}>{t('submission.personalData.street.label')}</label>
               <input
                 className={`${inputBase} ${inputBorder(errors['addressParts.street'])}`}
                 type="text" name="street" id="street"
                 value={addressParts.street}
                 onChange={(e) => handleAddressPartChange('street', e.target.value)}
-                placeholder="Street address"
+                placeholder={t('submission.personalData.street.placeholder')}
               />
               {errors['addressParts.street'] && <p className={errorCls}>{errors['addressParts.street']}</p>}
             </div>
 
             <div>
-              <label htmlFor="street2" className={labelCls}>Street 2</label>
+              <label htmlFor="street2" className={labelCls}>{t('submission.personalData.street2.label')}</label>
               <input
                 className={`${inputBase} ${inputBorder(errors['addressParts.street2'])}`}
                 type="text" name="street2" id="street2"
                 value={addressParts.street2}
                 onChange={(e) => handleAddressPartChange('street2', e.target.value)}
-                placeholder="Apt, suite, building…"
+                placeholder={t('submission.personalData.street2.placeholder')}
               />
               {errors['addressParts.street2'] && <p className={errorCls}>{errors['addressParts.street2']}</p>}
             </div>
@@ -635,49 +637,49 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="zipcode" className={labelCls}>
-                  Zip Code <span className="text-mars-primary">*</span>
+                  {t('submission.personalData.zipcode.label')} <span className="text-mars-primary">*</span>
                 </label>
                 <input
                   className={`${inputBase} ${inputBorder(errors['addressParts.zipcode'])}`}
                   type="text" name="zipcode" id="zipcode"
                   value={addressParts.zipcode}
                   onChange={(e) => handleAddressPartChange('zipcode', e.target.value)}
-                  placeholder="75001"
+                  placeholder={t('submission.personalData.zipcode.placeholder')}
                 />
                 {errors['addressParts.zipcode'] && <p className={errorCls}>{errors['addressParts.zipcode']}</p>}
               </div>
               <div>
-                <label htmlFor="city" className={labelCls}>City</label>
+                <label htmlFor="city" className={labelCls}>{t('submission.personalData.city.label')}</label>
                 <input
                   className={`${inputBase} ${inputBorder(errors['addressParts.city'])}`}
                   type="text" name="city" id="city"
                   value={addressParts.city}
                   onChange={(e) => handleAddressPartChange('city', e.target.value)}
-                  placeholder="Paris"
+                  placeholder={t('submission.personalData.city.placeholder')}
                 />
                 {errors['addressParts.city'] && <p className={errorCls}>{errors['addressParts.city']}</p>}
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <label htmlFor="stateRegion" className={labelCls}>State / Region</label>
+                <label htmlFor="stateRegion" className={labelCls}>{t('submission.personalData.stateRegion.label')}</label>
                 <input
                   className={`${inputBase} ${inputBorder(errors['addressParts.stateRegion'])}`}
                   type="text" name="stateRegion" id="stateRegion"
                   value={addressParts.stateRegion}
                   onChange={(e) => handleAddressPartChange('stateRegion', e.target.value)}
-                  placeholder="Île-de-France"
+                  placeholder={t('submission.personalData.stateRegion.placeholder')}
                 />
                 {errors['addressParts.stateRegion'] && <p className={errorCls}>{errors['addressParts.stateRegion']}</p>}
               </div>
             </div>
 
             <div>
-              <label htmlFor="countryAddress" className={labelCls}>Country</label>
+              <label htmlFor="countryAddress" className={labelCls}>{t('submission.personalData.countryAddress.label')}</label>
               <input
                 className={`${inputBase} ${inputBorder(errors['addressParts.country'])}`}
                 type="text" name="countryAddress" id="countryAddress"
                 value={addressParts.country}
                 onChange={(e) => handleAddressPartChange('country', e.target.value)}
-                placeholder={isAddressCountryAutoFilled ? 'Auto-filled from nationality' : 'Country'}
+                placeholder={isAddressCountryAutoFilled ? t('submission.personalData.countryAddress.autoFilled') : t('submission.personalData.countryAddress.placeholder')}
               />
               {errors['addressParts.country'] && <p className={errorCls}>{errors['addressParts.country']}</p>}
             </div>
@@ -689,13 +691,13 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
 
         {/* ── ADDITIONAL ───────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Additional</SectionHeader>
+          <SectionHeader>{t('submission.personalData.sections.additional')}</SectionHeader>
           <div className="space-y-4">
 
             {/* Acquisition source */}
             <div>
               <label htmlFor="acquisitionSource" className={labelCls}>
-                How did you hear about us? <span className="text-mars-primary">*</span>
+                {t('submission.personalData.acquisition.label')} <span className="text-mars-primary">*</span>
               </label>
               <select
                 className={`${inputBase} ${inputBorder(errors.acquisitionSource)} [&>option]:bg-[#08080f]`}
@@ -703,12 +705,12 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
                 value={acquisitionMainValue}
                 onChange={handleAcquisitionMainChange}
               >
-                <option value="">Select an option</option>
-                <option value="social_networks">Social networks</option>
-                <option value="word_of_mouth">Word of mouth</option>
-                <option value="mobile_film_festival">Mobile Film Festival</option>
-                <option value="search_engine">Search engine</option>
-                <option value="other">Other</option>
+                <option value="">{t('submission.personalData.acquisition.placeholder')}</option>
+                <option value="social_networks">{t('submission.personalData.acquisition.socialNetworks')}</option>
+                <option value="word_of_mouth">{t('submission.personalData.acquisition.wordOfMouth')}</option>
+                <option value="mobile_film_festival">{t('submission.personalData.acquisition.mobileFilmFestival')}</option>
+                <option value="search_engine">{t('submission.personalData.acquisition.searchEngine')}</option>
+                <option value="other">{t('submission.personalData.acquisition.other')}</option>
               </select>
               {errors.acquisitionSource && <p className={errorCls}>{errors.acquisitionSource}</p>}
 
@@ -719,7 +721,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
                   value={acquisitionSocialValue}
                   onChange={handleAcquisitionSocialChange}
                 >
-                  <option value="">Select a social network</option>
+                  <option value="">{t('submission.personalData.acquisition.socialPlaceholder')}</option>
                   <option value="instagram">Instagram</option>
                   <option value="tiktok">TikTok</option>
                   <option value="youtube">YouTube</option>
@@ -736,7 +738,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
                     type="text" name="acquisitionSourceOther" id="acquisitionSourceOther"
                     value={acquisitionOtherValue}
                     onChange={handleAcquisitionOtherChange}
-                    placeholder="Please specify"
+                    placeholder={t('submission.personalData.acquisition.otherPlaceholder')}
                   />
                   {errors.acquisitionSourceOther && <p className={errorCls}>{errors.acquisitionSourceOther}</p>}
                 </div>
@@ -768,7 +770,8 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
                 className="hidden"
               />
               <span className="text-sm text-white/70 leading-relaxed">
-                I confirm I am <span className="text-white font-medium">18 years old or older</span>
+                {t('submission.personalData.ageVerificationPre')}{' '}
+                <span className="text-white font-medium">{t('submission.personalData.ageVerificationBold')}</span>
                 <span className="text-mars-primary ml-1">*</span>
               </span>
             </label>
@@ -781,15 +784,15 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
 
         {/* ── OPTIONAL FEATURES ────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Optional</SectionHeader>
+          <SectionHeader>{t('submission.personalData.sections.optional')}</SectionHeader>
           <div className="space-y-4">
 
             {/* Contributors toggle */}
             <div className="flex items-center justify-between p-4 rounded-2xl
               border border-white/[0.07] bg-white/[0.02] hover:border-white/12 transition-colors">
               <div>
-                <p className="text-sm font-medium text-white">Contributors</p>
-                <p className="text-xs text-white/35 mt-0.5">Add crew members or collaborators</p>
+                <p className="text-sm font-medium text-white">{t('submission.personalData.contributors.label')}</p>
+                <p className="text-xs text-white/35 mt-0.5">{t('submission.personalData.contributors.desc')}</p>
               </div>
               <Toggle
                 id="withContributors"
@@ -806,8 +809,8 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
             <div className="flex items-center justify-between p-4 rounded-2xl
               border border-white/[0.07] bg-white/[0.02] hover:border-white/12 transition-colors">
               <div>
-                <p className="text-sm font-medium text-white">Social Networks</p>
-                <p className="text-xs text-white/35 mt-0.5">Link your profiles</p>
+                <p className="text-sm font-medium text-white">{t('submission.personalData.socialNetworksToggle.label')}</p>
+                <p className="text-xs text-white/35 mt-0.5">{t('submission.personalData.socialNetworksToggle.desc')}</p>
               </div>
               <Toggle
                 id="withSocialNetworks"
@@ -842,7 +845,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
             className="mars-button-primary px-8 py-3 text-sm font-bold uppercase
               tracking-[0.12em] disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Loading…' : 'Next Step'}
+            {isSubmitting ? t('submission.personalData.buttons.loading') : t('submission.personalData.buttons.nextStep')}
           </button>
         </div>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   validateGender,
   validateFirstName,
@@ -7,16 +8,6 @@ import {
 } from '../../services/formService';
 
 const ROLE_PATTERN = /^[a-zA-Z0-9À-ÿ\s'(),.-]+$/;
-
-const validateProductionRole = (value) => {
-  const trimmedValue = String(value || '').trim();
-
-  if (!trimmedValue) return 'Role is required';
-  if (trimmedValue.length < 2) return 'Role must be at least 2 characters';
-  if (trimmedValue.length > 80) return 'Role is too long';
-  if (!ROLE_PATTERN.test(trimmedValue)) return 'Role contains invalid characters';
-  return null;
-};
 
 const normalizeContributorInput = (contributor = {}) => ({
   gender: String(contributor.gender || '').trim(),
@@ -27,8 +18,27 @@ const normalizeContributorInput = (contributor = {}) => ({
 });
 
 const ParticipationContributorsData = ({ contributorsData, setContributorsData, onSave }) => {
+  const { t } = useTranslation();
   // contributorsData devrait être un tableau
   const contributors = Array.isArray(contributorsData) ? contributorsData : [];
+
+  const validateProductionRole = (value) => {
+    const trimmedValue = String(value || '').trim();
+    if (!trimmedValue) return t('submission.contributors.roleRequired');
+    if (trimmedValue.length < 2) return t('submission.contributors.roleTooShort');
+    if (trimmedValue.length > 80) return t('submission.contributors.roleTooLong');
+    if (!ROLE_PATTERN.test(trimmedValue)) return t('submission.contributors.roleInvalid');
+    return null;
+  };
+
+  const getGenderLabel = (gender) => {
+    switch(gender) {
+      case 'women': return t('submission.contributors.gender.women');
+      case 'man': return t('submission.contributors.gender.man');
+      case 'other': return t('submission.contributors.gender.other');
+      default: return '';
+    }
+  };
   
   const [showForm, setShowForm] = useState(false);
   const [currentContributor, setCurrentContributor] = useState({
@@ -96,7 +106,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
     );
 
     if (contributorAlreadyExists) {
-      newErrors.email = 'This email is already added';
+      newErrors.email = t('submission.contributors.alreadyAdded');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -161,7 +171,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
     }
 
     if (currentList.length === 0) {
-      setGlobalError('You must add at least one contributor');
+      setGlobalError(t('submission.contributors.atLeastOne'));
       return;
     }
     setGlobalError('');
@@ -169,20 +179,11 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
   };
 
 
-  const getGenderLabel = (gender) => {
-    switch(gender) {
-      case 'women': return 'Woman';
-      case 'man': return 'Man';
-      case 'other': return 'Other';
-      default: return '';
-    }
-  };
-
   return (
     <div className="text-center text-white">
       <div className="mb-5">
-        <h2 className="text-xl font-semibold tracking-tight">Contributors</h2>
-        <p className="text-gray-400 text-xs mt-1">Add all the contributors of the project</p>
+        <h2 className="text-xl font-semibold tracking-tight">{t('submission.contributors.title')}</h2>
+        <p className="text-gray-400 text-xs mt-1">{t('submission.contributors.subtitle')}</p>
       </div>
 
       {globalError && (
@@ -196,7 +197,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
         {contributors.length > 0 && (
           <div className="mb-4">
             <h3 className="text-md font-semibold text-white mb-2">
-              Added contributors ({contributors.length})
+              {t('submission.contributors.added', { count: contributors.length })}
             </h3>
             <div className="grid grid-cols-1 gap-2 justify-items-center">
               {contributors.map((contributor) => (
@@ -250,7 +251,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
             className="w-full max-w-md bg-violet-600/15 hover:bg-violet-600/25 border-2 border-dashed border-violet-400/40 hover:border-violet-400/70 rounded-xl p-3 text-violet-200 hover:text-violet-100 transition-all flex items-center justify-center gap-2 font-medium text-sm"
             >
               <span className="text-xl">+</span>
-              Add
+              {t('submission.contributors.add')}
             </button>
           </div>
         )}
@@ -258,23 +259,23 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
         {/* Formulaire d'ajout */}
         {showForm && (
           <div className="grid grid-cols-1 justify-items-center m-2 gap-3">
-            <h3 className="text-md font-semibold text-white">New contributor</h3>
+            <h3 className="text-md font-semibold text-white">{t('submission.contributors.newContributor')}</h3>
             
               {/* Gender */}
               <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
-                  Gender <span className="text-red-500">*</span>
+                  {t('submission.contributors.gender.label')} <span className="text-red-500">*</span>
                 </label>
-                <select 
+                <select
                   name="gender"
                   value={currentContributor.gender}
                   onChange={handleChange}
                   className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.gender ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                 >
-                  <option value="">Select gender</option>
-                  <option value="women">Woman</option>
-                  <option value="man">Man</option>
-                  <option value="other">Other</option>
+                  <option value="">{t('submission.contributors.gender.placeholder')}</option>
+                  <option value="women">{t('submission.contributors.gender.women')}</option>
+                  <option value="man">{t('submission.contributors.gender.man')}</option>
+                  <option value="other">{t('submission.contributors.gender.other')}</option>
                 </select>
                 {errors.gender && <p className="text-rose-400 text-xs mt-1">{errors.gender}</p>}
               </div>
@@ -282,15 +283,15 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               {/* First Name */}
               <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
-                  First Name <span className="text-red-500">*</span>
+                  {t('submission.contributors.firstName.label')} <span className="text-red-500">*</span>
                 </label>
-                <input 
+                <input
                   className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.firstName ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                   type="text"
                   name="firstName"
                   value={currentContributor.firstName}
                   onChange={handleChange}
-                  placeholder="First Name"
+                  placeholder={t('submission.contributors.firstName.placeholder')}
                 />
                 {errors.firstName && <p className="text-rose-400 text-xs mt-1">{errors.firstName}</p>}
               </div>
@@ -298,15 +299,15 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               {/* Last Name */}
               <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
-                  Last Name <span className="text-red-500">*</span>
+                  {t('submission.contributors.lastName.label')} <span className="text-red-500">*</span>
                 </label>
-                <input 
+                <input
                   className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.lastName ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                   type="text"
                   name="lastName"
                   value={currentContributor.lastName}
                   onChange={handleChange}
-                  placeholder="Last Name"
+                  placeholder={t('submission.contributors.lastName.placeholder')}
                 />
                 {errors.lastName && <p className="text-rose-400 text-xs mt-1">{errors.lastName}</p>}
               </div>
@@ -314,15 +315,15 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               {/* Email */}
               <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
-                  Email <span className="text-red-500">*</span>
+                  {t('submission.contributors.email.label')} <span className="text-red-500">*</span>
                 </label>
-                <input 
+                <input
                   className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.email ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
                   type="email"
                   name="email"
                   value={currentContributor.email}
                   onChange={handleChange}
-                  placeholder="email@example.com"
+                  placeholder={t('submission.contributors.email.placeholder')}
                 />
                 {errors.email && <p className="text-rose-400 text-xs mt-1">{errors.email}</p>}
               </div>
@@ -330,7 +331,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
               {/* Production Role */}
               <div className="w-full max-w-md text-left">
                 <label className="block text-xs text-gray-400 mb-1 ml-1">
-                  Role <span className="text-red-500">*</span>
+                  {t('submission.contributors.role.label')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={`bg-[#0f0f14] border rounded-xl px-3 py-2.5 w-full text-white text-sm ${errors.productionRole ? 'border-rose-500' : 'border-white/15 focus:border-fuchsia-400/70'}`}
@@ -338,7 +339,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   name="productionRole"
                   value={currentContributor.productionRole}
                   onChange={handleChange}
-                  placeholder="Role (e.g. Director)"
+                  placeholder={t('submission.contributors.role.placeholder')}
                 />
                 {errors.productionRole && <p className="text-rose-400 text-xs mt-1">{errors.productionRole}</p>}
               </div>
@@ -350,14 +351,14 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
                   onClick={cancelAdd}
                   className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-xl py-2 text-sm transition-colors"
                 >
-                  Cancel
+                  {t('submission.contributors.cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={addContributor}
                   className="flex-1 bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white border border-white/10 rounded-xl py-2 text-sm transition-all font-medium"
                 >
-                  Add
+                  {t('submission.contributors.add')}
                 </button>
               </div>
           </div>
@@ -370,7 +371,7 @@ const ParticipationContributorsData = ({ contributorsData, setContributorsData, 
             onClick={handleSave}
             className="bg-linear-to-r from-violet-600 to-fuchsia-600 text-white border border-white/10 rounded-xl px-6 py-2.5 hover:from-violet-500 hover:to-fuchsia-500 transition-all font-semibold text-sm shadow-[0_8px_24px_rgba(168,85,247,0.35)]"
           >
-            Save and continue
+            {t('submission.contributors.saveAndContinue')}
           </button>
         </div>
       </section>
