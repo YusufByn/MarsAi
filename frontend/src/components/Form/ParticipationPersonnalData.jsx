@@ -270,7 +270,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
   const validateAddressPart = (fieldName, value) => {
     const v = String(value || '').trim();
     if (fieldName === 'zipcode') {
-      if (!v) return t('submission.personalData.errors.zipcodeRequired');
+      if (!v) return null;
       if (v.length > 20) return t('submission.personalData.errors.zipcodeTooLong');
       return null;
     }
@@ -637,7 +637,7 @@ const ParticipationPersonnalData = ({ setEtape, formData, setFormData: setFormDa
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="zipcode" className={labelCls}>
-                  {t('submission.personalData.zipcode.label')} <span className="text-mars-primary">*</span>
+                  {t('submission.personalData.zipcode.label')}
                 </label>
                 <input
                   className={`${inputBase} ${inputBorder(errors['addressParts.zipcode'])}`}

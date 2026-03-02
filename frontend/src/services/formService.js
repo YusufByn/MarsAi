@@ -27,7 +27,7 @@ import {
 } from '../../../shared/validators/video.rules.js';
 
 // Fonction de validation des numéros de téléphone internationaux
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isPossiblePhoneNumber } from 'react-phone-number-input';
 
 
 // ============================================
@@ -239,22 +239,29 @@ function validateAgeVerification(value) {
  * @param {string} value - Le numéro de téléphone à valider (format international)
  * @returns {string|null} - null si valide ou vide, sinon message d'erreur
  */
-function validatePhoneNumber(value) {
-    // Si le champ est vide, c'est valide (champ optionnel)
+function validateInternationalPhone(value, { required, requiredMessage, invalidMessage }) {
     if (!value || value.trim() === '') {
-        return null;
+        return required ? requiredMessage : null;
     }
-    
+
     try {
-        // Utilise isValidPhoneNumber pour valider le format international
-        if (!isValidPhoneNumber(value)) {
-            return "Invalid phone number format";
+        // Vérifie d'abord la longueur possible selon le plan de numérotation du pays.
+        if (!isPossiblePhoneNumber(value)) {
+            return invalidMessage;
         }
-        return null; // Validation réussie
+
+        return null;
     } catch {
-        // En cas d'erreur de parsing, retourne un message d'erreur
-        return "Invalid phone number format";
+        return invalidMessage;
     }
+}
+
+function validatePhoneNumber(value) {
+    return validateInternationalPhone(value, {
+        required: false,
+        requiredMessage: "Phone number is required",
+        invalidMessage: "Invalid phone number format",
+    });
 };
 
 /**
@@ -267,25 +274,11 @@ function validatePhoneNumber(value) {
  * @returns {string|null} - null si valide, sinon message d'erreur
  */
 function validateMobileNumber(value) {
-    // Vérifie que le champ n'est pas vide
-    if (!value || value.trim() === '') {
-        return "Mobile number is required";
-    }
-
-    if (value.length > 20) {
-        return "Mobile number must not exceed 20 characters";
-    }
-    
-    try {
-        // Utilise isValidPhoneNumber pour valider le format international
-        if (!isValidPhoneNumber(value)) {
-            return "Invalid mobile number format";
-        }
-        return null; // Validation réussie
-    } catch {
-        // En cas d'erreur de parsing, retourne un message d'erreur
-        return "Invalid mobile number format";
-    }
+    return validateInternationalPhone(value, {
+        required: true,
+        requiredMessage: "Mobile number is required",
+        invalidMessage: "Invalid mobile number format",
+    });
 };
 
 // ============================================
