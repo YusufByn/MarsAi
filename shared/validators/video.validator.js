@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import fs from 'fs';
 import {
   CONTRIBUTOR_GENDERS,
   SOCIAL_PLATFORMS,
@@ -134,6 +135,13 @@ const contributorsSchema = z.preprocess((value) => {
   VIDEO_SECURITY_LIMITS.maxContributors,
   `Maximum ${VIDEO_SECURITY_LIMITS.maxContributors} contributeurs autorisés`
 )).optional();
+
+const cleanupUploadedFiles = async (req) => {
+  const files = Object.values(req.files || {}).flat();
+  await Promise.all(
+    files.map((file) => (file?.path ? fs.promises.unlink(file.path).catch(() => null) : Promise.resolve()))
+  );
+};
 
 export const createVideoSchema = z.object({
   // Titre version originale (optionnel)
@@ -445,7 +453,7 @@ export const updateVideoSchema = z.object({
 // MIDDLEWARES DE VALIDATION
 // ========================================
 
-export const validateCreateVideo = (req, res, next) => {
+export const validateCreateVideo = async (req, res, next) => {
   try {
     // console.log('[VALIDATOR] Validation des données reçues');
     // console.log('[VALIDATOR] req.body:', Object.keys(req.body));
@@ -463,6 +471,7 @@ export const validateCreateVideo = (req, res, next) => {
     }
 
     if (!req.files?.video?.[0]) {
+      await cleanupUploadedFiles(req);
       return res.status(400).json({
         success: false,
         message: 'Validation des données échouée',
@@ -471,6 +480,7 @@ export const validateCreateVideo = (req, res, next) => {
     }
 
     if (!req.files?.cover?.[0]) {
+      await cleanupUploadedFiles(req);
       return res.status(400).json({
         success: false,
         message: 'Validation des données échouée',
@@ -487,6 +497,7 @@ export const validateCreateVideo = (req, res, next) => {
     // console.error('[VALIDATOR ERROR] Erreur de validation:', error);
 
     if (error instanceof z.ZodError) {
+      await cleanupUploadedFiles(req);
       const issues = Array.isArray(error.issues)
         ? error.issues
         : (Array.isArray(error.errors) ? error.errors : []);
@@ -505,6 +516,7 @@ export const validateCreateVideo = (req, res, next) => {
     }
 
     // Erreur non-Zod
+    await cleanupUploadedFiles(req);
     return res.status(500).json({
       success: false,
       message: 'Erreur interne lors de la validation',

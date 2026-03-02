@@ -56,6 +56,115 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
+const readHeader = async (filePath, bytes = 64) => {
+    const fd = await fs.promises.open(filePath, 'r');
+    try {
+        const buffer = Buffer.alloc(bytes);
+        const { bytesRead } = await fd.read(buffer, 0, bytes, 0);
+        return buffer.subarray(0, bytesRead);
+    } finally {
+        await fd.close();
+    }
+};
+
+const isJpeg = (buffer) =>
+    buffer.length >= 3 &&
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[2] === 0xff;
+
+const isPng = (buffer) =>
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a;
+
+const isWebp = (buffer) =>
+    buffer.length >= 12 &&
+    buffer.toString('ascii', 0, 4) === 'RIFF' &&
+    buffer.toString('ascii', 8, 12) === 'WEBP';
+
+const isMp4OrMov = (buffer) =>
+    buffer.length >= 12 &&
+    buffer.toString('ascii', 4, 8) === 'ftyp';
+
+const isWebmOrMkv = (buffer) =>
+    buffer.length >= 4 &&
+    buffer[0] === 0x1a &&
+    buffer[1] === 0x45 &&
+    buffer[2] === 0xdf &&
+    buffer[3] === 0xa3;
+
+const isLikelyText = (buffer) => {
+    if (!buffer.length) return false;
+    let printable = 0;
+    for (const byte of buffer) {
+        if (byte === 0x09 || byte === 0x0a || byte === 0x0d || (byte >= 0x20 && byte <= 0x7e)) {
+            printable++;
+        }
+    }
+    return printable / buffer.length > 0.85;
+};
+
+const isValidBySignature = async (file) => {
+    const header = await readHeader(file.path);
+
+    if (file.fieldname === 'cover' || file.fieldname === 'stills') {
+        return isJpeg(header) || isPng(header) || isWebp(header);
+    }
+
+    if (file.fieldname === 'video') {
+        return isMp4OrMov(header) || isWebmOrMkv(header);
+    }
+
+    if (file.fieldname === 'srt') {
+        return isLikelyText(header);
+    }
+
+    return false;
+};
+
+export const cleanupUploadedFiles = async (req) => {
+    const files = Object.values(req.files || {}).flat();
+    await Promise.all(
+        files.map((file) => (file?.path ? fs.promises.unlink(file.path).catch(() => null) : Promise.resolve()))
+    );
+};
+
+export const validateUploadedFilesContent = async (req, res, next) => {
+    try {
+        const files = Object.values(req.files || {}).flat();
+        for (const file of files) {
+            const valid = await isValidBySignature(file);
+            if (!valid) {
+                await cleanupUploadedFiles(req);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Validation des fichiers échouée',
+                    errors: [
+                        {
+                            field: file.fieldname,
+                            message: 'Le contenu du fichier ne correspond pas au format attendu',
+                        },
+                    ],
+                });
+            }
+        }
+        next();
+    } catch (error) {
+        await cleanupUploadedFiles(req);
+        return res.status(500).json({
+            success: false,
+            message: 'Erreur interne lors de la validation des fichiers',
+        });
+    }
+};
+
 
 export const upload = multer({
     storage,

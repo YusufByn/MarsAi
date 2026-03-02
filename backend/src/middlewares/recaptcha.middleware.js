@@ -4,6 +4,7 @@
 // Middleware Express pour vérifier le token reCAPTCHA avant de traiter la requête
 
 import { verifyRecaptchaToken } from '../services/recaptcha.service.js';
+import { cleanupUploadedFiles } from './upload.middleware.js';
 
 /**
  * Middleware pour vérifier le token reCAPTCHA
@@ -23,6 +24,7 @@ async function verifyRecaptcha(req, res, next) {
 
     // Si la vérification échoue, retourner une erreur 400
     if (!result.success) {
+      await cleanupUploadedFiles(req);
       return res.status(400).json({
         success: false,
         message: result.message,
@@ -35,6 +37,7 @@ async function verifyRecaptcha(req, res, next) {
     
   } catch (error) {
     console.error('[RECAPTCHA ERROR] Erreur middleware:', error);
+    await cleanupUploadedFiles(req);
     return res.status(500).json({
       success: false,
       message: 'Internal server error during reCAPTCHA verification'
