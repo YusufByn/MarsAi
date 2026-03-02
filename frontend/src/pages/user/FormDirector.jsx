@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ParticipationPersonnalData from '../../components/Form/ParticipationPersonnalData.jsx';
 import ParticipationVideoData from '../../components/Form/ParticipationVideoData.jsx';
@@ -13,6 +13,7 @@ const CheckIcon = () => (
 const FormDirector = () => {
   const { t } = useTranslation();
   const [etape, setEtape] = useState(1);
+  const topAnchorRef = useRef(null);
 
   const STEPS = [
     { num: 1, label: t('submission.steps.director') },
@@ -74,8 +75,13 @@ const FormDirector = () => {
     }));
   };
 
+  useEffect(() => {
+    topAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [etape]);
+
   return (
     <div className="min-h-screen bg-black text-white selection:bg-black selection:text-white overflow-x-hidden">
+      <div ref={topAnchorRef} id="submission-top" />
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <header className="relative pt-44 pb-14 px-6 flex flex-col items-center text-center bg-black">
