@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { videoService } from '../services/videoService';
 import { API_URL } from '../config';
+import DeadlineCard from './home/HomeComponents/DeadlineCard';
 
 const PAGE_SIZE = 24;
 
@@ -150,12 +151,18 @@ const Videos = () => {
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-5xl md:text-6xl font-black tracking-tighter italic">Films</h1>
-          <p className="text-white/40 text-sm">
-            {meta.total} video{meta.total !== 1 ? 's' : ''}
-            {videos.length < meta.total && ` — ${videos.length} chargées`}
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter italic">Films</h1>
+            <p className="text-white/40 text-sm">
+              {meta.total} video{meta.total !== 1 ? 's' : ''}
+              {videos.length < meta.total && ` — ${videos.length} chargées`}
+            </p>
+          </div>
+
+          <div className="sm:w-[320px]">
+            <DeadlineCard />
+          </div>
         </div>
 
         {/* Barre de filtres */}
