@@ -1,7 +1,7 @@
 {
   "home": {
-    "badge": "Immersion Protocol 2026",
-    "subtitle": "The pinnacle of generative cinema. Push the boundaries of digital storytelling.",
+    "badge": "6 & 7 October 2026",
+    "subtitle": "Marseille, France",
     "submitFilm": "SUBMIT MY FILM",
     "discoverJury": "DISCOVER THE JURY",
     "films": {
@@ -79,7 +79,7 @@
     }
   },
   "countdown": {
-    "expectedImpact": "Expected Impact",
+    "expectedImpact": "Countdown to the start of the film submission phase",
     "days": "Days",
     "hours": "Hours",
     "minutes": "Minutes",

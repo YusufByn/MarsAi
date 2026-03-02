@@ -1,7 +1,7 @@
 {
   "home": {
-    "badge": "Protocole d'immersion 2026",
-    "subtitle": "L'apogée du cinéma génératif. Repoussez les limites de la narration numérique.",
+    "badge": "6 et 7 Octobre 2026",
+    "subtitle": "Marseille, France",
     "submitFilm": "SOUMETTRE MON FILM",
     "discoverJury": "DÉCOUVRIR LE JURY",
     "films": {
@@ -79,7 +79,7 @@
     }
   },
   "countdown": {
-    "expectedImpact": "Impact prévu",
+    "expectedImpact": "Compte à rebours pour le début de la phase de candidature",
     "days": "Jours",
     "hours": "Heures",
     "minutes": "Minutes",
