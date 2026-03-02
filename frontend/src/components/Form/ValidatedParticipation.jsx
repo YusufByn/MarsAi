@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const readStep1FromStorage = () => {
   try {
@@ -12,6 +13,7 @@ const readStep1FromStorage = () => {
 };
 
 function ValidatedParticipation() {
+    const { t } = useTranslation();
     const location = useLocation();
     const [firstname, setFirstname] = useState('');
     const [lastname, setLastname] = useState('');
@@ -39,19 +41,17 @@ function ValidatedParticipation() {
       <div className="w-full max-w-2xl flex flex-col items-center text-center gap-5 p-6 border-2 border-white/10 rounded-2xl text-white">
         <div>
           <h1 className="text-2xl font-semibold">
-            Congratulations! {firstname} {lastname} Your participation has been validated.
+            {t('submission.validated.title', { firstName: firstname, lastName: lastname })}
           </h1>
           <p className="mt-3 text-sm text-gray-300 leading-relaxed">
-            Your participation has been validated. You can now access your
-            participation details. Thank you for your participation. You will
-            receive an email confirmation shortly.
+            {t('submission.validated.message')}
           </p>
         </div>
         <Link
           to="/"
           className="mt-2 inline-flex items-center justify-center bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white border border-white/10 rounded-xl px-6 py-2.5 transition-all font-semibold text-sm shadow-[0_8px_24px_rgba(168,85,247,0.35)]"
         >
-          Retour a l'accueil
+          {t('submission.validated.backHome')}
         </Link>
       </div>
     </section>

@@ -314,5 +314,205 @@
       "capacity": "Capacité",
       "seats": "places"
     }
+  },
+  "submission": {
+    "hero": {
+      "badge": "Soumissions ouvertes — 2026",
+      "title1": "Soumettre",
+      "title2": "Votre Film",
+      "subtitle": "Partagez votre vision créative IA avec notre jury international"
+    },
+    "steps": {
+      "director": "Réalisateur",
+      "filmData": "Données Film",
+      "upload": "Envoi"
+    },
+    "personalData": {
+      "title": "Données personnelles",
+      "subtitle": "Parlez-nous de vous",
+      "sections": {
+        "identity": "Identité",
+        "contact": "Contact",
+        "address": "Adresse",
+        "additional": "Complémentaire",
+        "optional": "Optionnel"
+      },
+      "gender": {
+        "label": "Genre",
+        "placeholder": "Sélectionnez votre genre",
+        "women": "Femme",
+        "man": "Homme",
+        "other": "Autre"
+      },
+      "firstName": { "label": "Prénom", "placeholder": "Prénom" },
+      "lastName": { "label": "Nom", "placeholder": "Nom" },
+      "email": { "label": "Email", "placeholder": "votre@email.com" },
+      "country": { "label": "Pays", "placeholder": "Sélectionnez votre pays" },
+      "mobileNumber": { "label": "Téléphone mobile", "placeholder": "Numéro mobile" },
+      "phoneNumber": { "label": "Téléphone fixe", "placeholder": "Numéro fixe" },
+      "street": { "label": "Rue", "placeholder": "Adresse" },
+      "street2": { "label": "Complément d'adresse", "placeholder": "Appt, bâtiment…" },
+      "zipcode": { "label": "Code postal", "placeholder": "75001" },
+      "city": { "label": "Ville", "placeholder": "Paris" },
+      "stateRegion": { "label": "Région / État", "placeholder": "Île-de-France" },
+      "countryAddress": {
+        "label": "Pays",
+        "placeholder": "Pays",
+        "autoFilled": "Rempli automatiquement depuis la nationalité"
+      },
+      "acquisition": {
+        "label": "Comment avez-vous entendu parler de nous ?",
+        "placeholder": "Sélectionnez une option",
+        "socialNetworks": "Réseaux sociaux",
+        "wordOfMouth": "Bouche-à-oreille",
+        "mobileFilmFestival": "Mobile Film Festival",
+        "searchEngine": "Moteur de recherche",
+        "other": "Autre",
+        "socialPlaceholder": "Sélectionnez un réseau social",
+        "otherPlaceholder": "Précisez",
+        "requiredError": "Veuillez nous dire comment vous avez entendu parler de nous",
+        "socialRequiredError": "Veuillez sélectionner un réseau social"
+      },
+      "ageVerificationPre": "Je confirme avoir",
+      "ageVerificationBold": "18 ans ou plus",
+      "contributors": { "label": "Contributeurs", "desc": "Ajoutez les membres de l'équipe" },
+      "socialNetworksToggle": { "label": "Réseaux sociaux", "desc": "Liez vos profils" },
+      "errors": {
+        "pleaseCorrect": "Veuillez corriger les erreurs avant de continuer",
+        "zipcodeRequired": "Le code postal est requis",
+        "zipcodeTooLong": "Le code postal est trop long"
+      },
+      "buttons": { "loading": "Chargement…", "nextStep": "Étape suivante" }
+    },
+    "videoData": {
+      "title": "Données film",
+      "subtitle": "Décrivez votre projet",
+      "sections": {
+        "titles": "Titres",
+        "language": "Langue",
+        "synopsis": "Synopsis",
+        "creativeNotes": "Notes créatives",
+        "classification": "Classification IA",
+        "tags": "Tags"
+      },
+      "titleEN": { "label": "Titre EN", "placeholder": "Titre anglais" },
+      "titleOriginal": { "label": "Titre (original)", "placeholder": "Titre original" },
+      "filmLanguage": { "label": "Langue du film", "placeholder": "ex. Français, Anglais…" },
+      "synopsisEN": { "label": "Synopsis EN", "placeholder": "Synopsis en anglais…" },
+      "synopsisOriginal": { "label": "Synopsis (original)", "placeholder": "Synopsis en langue originale…" },
+      "techResume": { "label": "Résumé technique", "placeholder": "Outils IA utilisés (Midjourney, Runway, Sora…)" },
+      "creativeResume": { "label": "Résumé créatif", "placeholder": "Votre méthodologie créative…" },
+      "classification": {
+        "hybrid": { "title": "Hybride", "desc": "IA + Créativité humaine" },
+        "fullAI": { "title": "Full IA", "desc": "100% généré par IA" }
+      },
+      "errors": { "pleaseCorrect": "Veuillez corriger les erreurs avant de continuer" },
+      "buttons": { "back": "Retour", "loading": "Chargement…", "nextStep": "Étape suivante" }
+    },
+    "upload": {
+      "title": "Envoi vidéo",
+      "subtitle": "Finalisez et soumettez votre film",
+      "sections": {
+        "videoFile": "Fichier vidéo",
+        "coverImage": "Image de couverture",
+        "stills": "Photos de plateau (optionnel)",
+        "subtitle": "Fichier de sous-titres",
+        "rights": "Droits & Préférences",
+        "verification": "Vérification"
+      },
+      "video": {
+        "clickToUpload": "Cliquez pour uploader la vidéo",
+        "formats": "MOV, MP4, WebM, MKV — max 200Mo, max 2:30",
+        "duration": "Durée :",
+        "calculating": "Calcul de la durée…",
+        "previewLimited": "Aperçu limité à {{seconds}} secondes."
+      },
+      "image": {
+        "changeFile": "Changer le fichier",
+        "chooseFile": "Choisir un fichier",
+        "clickToUpload": "Cliquez pour uploader",
+        "cover": "Couverture",
+        "coverHint": "JPG ou PNG — max 15Mo",
+        "stillHint": "max 7Mo"
+      },
+      "subtitleFile": {
+        "label": "Si voix ou texte nécessite une traduction — .srt (max 1Mo)",
+        "placeholder": "Fichier .srt"
+      },
+      "rights": {
+        "label": "Droits acceptés",
+        "text": "En soumettant cette vidéo, vous confirmez détenir tous les droits nécessaires sur le contenu fourni et autorisez MarsAI à diffuser, reproduire et utiliser cette vidéo, en tout ou partie, dans ses supports de communication, sans limitation de durée ni de territoire."
+      },
+      "newsletter": {
+        "label": "S'abonner à notre newsletter",
+        "desc": "Restez informé des actualités MarsAI — désabonnement à tout moment"
+      },
+      "spinner": "Chargement…",
+      "errors": {
+        "uploadVideo": "Veuillez uploader une vidéo",
+        "uploadCover": "Veuillez uploader une image de couverture",
+        "acceptRights": "Veuillez accepter les droits",
+        "videoTooLong": "Vidéo trop longue. Durée maximale : 2:30",
+        "videoTooLongFormatted": "Vidéo trop longue ({{duration}}). Durée maximale : 2:30",
+        "imageType": "Veuillez sélectionner une image JPG ou PNG uniquement",
+        "imageTooLargeCover": "Fichier trop volumineux. Max : 15Mo",
+        "imageTooLargeStill": "Fichier trop volumineux. Max : 7Mo",
+        "videoType": "Veuillez sélectionner un fichier vidéo valide (MOV, MPEG4, MP4, WebM, MKV)",
+        "videoMimeType": "Type de fichier vidéo non autorisé",
+        "videoSize": "Fichier vidéo trop volumineux. Maximum : 200Mo",
+        "subtitleType": "Veuillez sélectionner un fichier .srt uniquement",
+        "subtitleMimeType": "Type de fichier sous-titres non autorisé",
+        "subtitleSize": "Fichier sous-titres trop volumineux. Maximum : 1Mo",
+        "videoMetadata": "Impossible de lire les métadonnées du fichier vidéo",
+        "videoDurationUnreadable": "Impossible de lire la durée",
+        "submitError": "Une erreur est survenue lors de la soumission. Veuillez réessayer."
+      },
+      "success": {
+        "submitted": "Votre vidéo a été soumise avec succès !",
+        "redirecting": "Redirection…"
+      },
+      "buttons": { "back": "Retour", "submitting": "Envoi…", "submit": "Soumettre le film" }
+    },
+    "contributors": {
+      "title": "Contributeurs",
+      "subtitle": "Ajoutez tous les contributeurs du projet",
+      "added": "Contributeurs ajoutés ({{count}})",
+      "newContributor": "Nouveau contributeur",
+      "add": "Ajouter",
+      "cancel": "Annuler",
+      "saveAndContinue": "Enregistrer et continuer",
+      "atLeastOne": "Vous devez ajouter au moins un contributeur",
+      "alreadyAdded": "Cet email est déjà ajouté",
+      "roleRequired": "Le rôle est requis",
+      "roleTooShort": "Le rôle doit comporter au moins 2 caractères",
+      "roleTooLong": "Le rôle est trop long",
+      "roleInvalid": "Le rôle contient des caractères invalides",
+      "gender": {
+        "label": "Genre",
+        "placeholder": "Sélectionnez le genre",
+        "women": "Femme",
+        "man": "Homme",
+        "other": "Autre"
+      },
+      "firstName": { "label": "Prénom", "placeholder": "Prénom" },
+      "lastName": { "label": "Nom", "placeholder": "Nom" },
+      "email": { "label": "Email", "placeholder": "email@exemple.com" },
+      "role": { "label": "Rôle", "placeholder": "Rôle (ex. Réalisateur)" }
+    },
+    "socialNetworks": {
+      "title": "Réseaux sociaux",
+      "subtitle": "Veuillez entrer l'URL de vos profils sur les réseaux sociaux",
+      "invalidUrl": "URL invalide",
+      "saveAndContinue": "Enregistrer et continuer"
+    },
+    "tags": {
+      "placeholder": "Ajouter des tags (Entrée ou virgule)",
+      "hint": "Appuyez sur Entrée ou virgule pour ajouter des tags (max 10, 20 chars chacun)"
+    },
+    "validated": {
+      "title": "Félicitations ! {{firstName}} {{lastName}} Votre participation a été validée.",
+      "message": "Votre participation a été validée. Vous pouvez maintenant accéder aux détails de votre participation. Merci pour votre participation. Vous recevrez une confirmation par email prochainement.",
+      "backHome": "Retour à l'accueil"
+    }
   }
 }

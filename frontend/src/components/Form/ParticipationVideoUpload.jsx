@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ReCAPTCHA from "react-google-recaptcha";
 import validateRecaptcha from '../../../../shared/validators/recaptcha.validator.js';
 import { submitCompleteForm } from '../../services/api.service.js';
@@ -40,11 +41,11 @@ const FilmIcon = () => (
   </svg>
 );
 
-// Spinner
-const Spinner = () => (
+// Spinner — text handled inside component via t()
+const Spinner = ({ label }) => (
   <div className="flex flex-col items-center gap-2">
     <div className="animate-spin rounded-full h-7 w-7 border-2 border-mars-primary/30 border-t-mars-primary" />
-    <span className="text-white/30 text-xs">Loading…</span>
+    <span className="text-white/30 text-xs">{label}</span>
   </div>
 );
 
@@ -64,7 +65,7 @@ const RemoveBtn = ({ onClick }) => (
 );
 
 // Image preview slot (cover or stills)
-const ImageSlot = ({ label, hint, fieldName, preview, loading, error, fileInputRef, onChange, onRemove, required }) => (
+const ImageSlot = ({ label, hint, fieldName, preview, loading, error, fileInputRef, onChange, onRemove, required, spinnerLabel, changeFileLabel, chooseFileLabel }) => (
   <div className="flex flex-col gap-2">
     <div className={labelCls}>
       {label} {required && <span className="text-mars-primary">*</span>}
@@ -82,7 +83,7 @@ const ImageSlot = ({ label, hint, fieldName, preview, loading, error, fileInputR
       onClick={() => !preview && fileInputRef?.current && fileInputRef.current.click()}
     >
       {loading ? (
-        <Spinner />
+        <Spinner label={spinnerLabel} />
       ) : error ? (
         <div className="flex flex-col items-center gap-2 px-4 text-center">
           <svg className="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +100,7 @@ const ImageSlot = ({ label, hint, fieldName, preview, loading, error, fileInputR
       ) : (
         <div className="flex flex-col items-center gap-2 group-hover:scale-105 transition-transform">
           <UploadIcon />
-          <p className="text-xs text-white/30">{hint || 'Click to upload'}</p>
+          <p className="text-xs text-white/30">{hint}</p>
         </div>
       )}
     </div>
@@ -111,7 +112,7 @@ const ImageSlot = ({ label, hint, fieldName, preview, loading, error, fileInputR
         hover:bg-white/[0.06] hover:border-white/15 text-xs text-white/40 cursor-pointer transition-all"
     >
       <UploadIcon />
-      <span>{preview ? 'Change file' : 'Choose file'}</span>
+      <span>{preview ? changeFileLabel : chooseFileLabel}</span>
     </label>
     <input
       id={`file-${fieldName}`}
@@ -129,6 +130,7 @@ const ImageSlot = ({ label, hint, fieldName, preview, loading, error, fileInputR
 
 const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormDataProp, allFormData }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const maxVideoPreviewSeconds = 6;
 
   const [previews, setPreviews] = useState({ videoFile: null, coverImage: null, still1: null, still2: null, still3: null });
@@ -144,27 +146,29 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
 
   const validateImage = (file, fieldName) => {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.type.toLowerCase())) return 'Please select a JPG or PNG image only';
+    if (!allowedTypes.includes(file.type.toLowerCase())) return t('submission.upload.errors.imageType');
     const maxSize = fieldName === 'coverImage' ? 15 * 1024 * 1024 : 7 * 1024 * 1024;
-    if (file.size > maxSize) return `File too large. Max: ${fieldName === 'coverImage' ? 15 : 7}MB`;
+    if (file.size > maxSize) return fieldName === 'coverImage'
+      ? t('submission.upload.errors.imageTooLargeCover')
+      : t('submission.upload.errors.imageTooLargeStill');
     return null;
   };
 
   const validateVideo = (file) => {
     const allowedExtensions = ['.mov', '.mpeg4', '.mp4', '.webm', '.mkv'];
     const fileName = file.name.toLowerCase();
-    if (!allowedExtensions.some(ext => fileName.endsWith(ext))) return 'Please select a valid video file (MOV, MPEG4, MP4, WebM, MKV)';
+    if (!allowedExtensions.some(ext => fileName.endsWith(ext))) return t('submission.upload.errors.videoType');
     const allowedMimeTypes = ['video/quicktime', 'video/mp4', 'video/x-matroska', 'video/webm', 'video/mov', 'application/octet-stream'];
-    if (file.type && !allowedMimeTypes.includes(file.type)) return 'Video file type not allowed';
-    if (file.size > 200 * 1024 * 1024) return 'Video file too large. Maximum: 200MB';
+    if (file.type && !allowedMimeTypes.includes(file.type)) return t('submission.upload.errors.videoMimeType');
+    if (file.size > 200 * 1024 * 1024) return t('submission.upload.errors.videoSize');
     return null;
   };
 
   const validateSubtitle = (file) => {
-    if (!file.name.toLowerCase().endsWith('.srt')) return 'Please select a .srt file only';
+    if (!file.name.toLowerCase().endsWith('.srt')) return t('submission.upload.errors.subtitleType');
     const allowedMimeTypes = ['text/plain', 'application/srt', 'application/x-subrip', 'application/octet-stream'];
-    if (file.type && !allowedMimeTypes.includes(file.type)) return 'Subtitle file type not allowed';
-    if (file.size > 1 * 1024 * 1024) return 'Subtitle file too large. Maximum: 1MB';
+    if (file.type && !allowedMimeTypes.includes(file.type)) return t('submission.upload.errors.subtitleMimeType');
+    if (file.size > 1 * 1024 * 1024) return t('submission.upload.errors.subtitleSize');
     return null;
   };
 
@@ -259,7 +263,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
         if (duration > maxDuration) {
           if (previewUrl) URL.revokeObjectURL(previewUrl);
           setPreviews(prev => ({ ...prev, videoFile: null }));
-          setErrors(prev => ({ ...prev, videoFile: `Video too long (${formatted}). Maximum duration: 2:30` }));
+          setErrors(prev => ({ ...prev, videoFile: t('submission.upload.errors.videoTooLongFormatted', { duration: formatted }) }));
           setFormDataProp({ ...formData, videoFile: null, duration: null });
           setVideoDuration(null);
           e.target.value = '';
@@ -272,9 +276,9 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
         window.URL.revokeObjectURL(metaUrl);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviews(prev => ({ ...prev, videoFile: null }));
-        setErrors(prev => ({ ...prev, videoFile: 'Unable to read video file metadata' }));
+        setErrors(prev => ({ ...prev, videoFile: t('submission.upload.errors.videoMetadata') }));
         setFormDataProp({ ...formData, videoFile: null, duration: null });
-        setVideoDuration('Unable to read duration');
+        setVideoDuration(t('submission.upload.errors.videoDurationUnreadable'));
       };
       video.src = metaUrl;
       return;
@@ -304,10 +308,10 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
     const recaptchaError = validateRecaptcha(token);
     if (recaptchaError) { setErrors(prev => ({ ...prev, recaptcha: recaptchaError })); return; }
     setErrors(prev => ({ ...prev, recaptcha: null }));
-    if (!formData.videoFile) { setSubmitError("Please upload a video"); return; }
-    if (!formData.coverImage) { setSubmitError("Please upload a cover image"); return; }
-    if (!formData.rightsAccepted) { setSubmitError("Please accept the rights"); return; }
-    if (typeof formData.duration === 'number' && formData.duration > 150) { setSubmitError("Video too long. Maximum duration: 2:30"); return; }
+    if (!formData.videoFile) { setSubmitError(t('submission.upload.errors.uploadVideo')); return; }
+    if (!formData.coverImage) { setSubmitError(t('submission.upload.errors.uploadCover')); return; }
+    if (!formData.rightsAccepted) { setSubmitError(t('submission.upload.errors.acceptRights')); return; }
+    if (typeof formData.duration === 'number' && formData.duration > 150) { setSubmitError(t('submission.upload.errors.videoTooLong')); return; }
     setIsSubmitting(true);
     try {
       const result = await submitCompleteForm(allFormData, token);
@@ -325,7 +329,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
       }, 2000);
     } catch (error) {
       console.error("[SUBMIT ERROR] Erreur lors de la soumission:", error);
-      setSubmitError(error.message || "An error occurred while submitting the form. Please try again.");
+      setSubmitError(error.message || t('submission.upload.errors.submitError'));
       captchaRef.current?.reset();
       setRecaptchaToken(null);
     } finally {
@@ -340,8 +344,8 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
 
       {/* Step title */}
       <div className="mb-8">
-        <h2 className="text-xl font-bold tracking-tight">Video Upload</h2>
-        <p className="text-xs text-white/35 mt-1 font-light">Finalize and submit your film</p>
+        <h2 className="text-xl font-bold tracking-tight">{t('submission.upload.title')}</h2>
+        <p className="text-xs text-white/35 mt-1 font-light">{t('submission.upload.subtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -349,7 +353,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
         {/* ── VIDEO FILE ───────────────────────────────────────────────────── */}
         <section>
           <SectionHeader>
-            Video File <span className="text-mars-primary ml-1">*</span>
+            {t('submission.upload.sections.videoFile')} <span className="text-mars-primary ml-1">*</span>
           </SectionHeader>
 
           {/* Drop zone */}
@@ -373,16 +377,16 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                 <>
                   <p className="text-sm font-medium text-mars-primary">{formData.videoFile?.name}</p>
                   {videoDuration && (
-                    <p className="text-xs text-emerald-400 mt-1">Duration: {videoDuration}</p>
+                    <p className="text-xs text-emerald-400 mt-1">{t('submission.upload.video.duration')} {videoDuration}</p>
                   )}
                   {!videoDuration && formData.videoFile && (
-                    <p className="text-xs text-white/35 mt-1">Calculating duration…</p>
+                    <p className="text-xs text-white/35 mt-1">{t('submission.upload.video.calculating')}</p>
                   )}
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-white/50 font-medium">Click to upload video</p>
-                  <p className="text-xs text-white/25 mt-0.5">MOV, MP4, WebM, MKV — max 200MB, max 2:30</p>
+                  <p className="text-sm text-white/50 font-medium">{t('submission.upload.video.clickToUpload')}</p>
+                  <p className="text-xs text-white/25 mt-0.5">{t('submission.upload.video.formats')}</p>
                 </>
               )}
             </div>
@@ -405,7 +409,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                 onTimeUpdate={handleVideoPreviewTimeUpdate}
               />
               <p className="text-[10px] text-white/25 px-3 py-2">
-                Preview limited to {maxVideoPreviewSeconds} seconds.
+                {t('submission.upload.video.previewLimited', { seconds: maxVideoPreviewSeconds })}
               </p>
             </div>
           )}
@@ -415,11 +419,11 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
 
         {/* ── COVER IMAGE ──────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Cover Image <span className="text-mars-primary ml-1">*</span></SectionHeader>
+          <SectionHeader>{t('submission.upload.sections.coverImage')} <span className="text-mars-primary ml-1">*</span></SectionHeader>
           <div className="max-w-xs">
             <ImageSlot
-              label="Cover"
-              hint="JPG or PNG — max 15MB"
+              label={t('submission.upload.image.cover')}
+              hint={t('submission.upload.image.coverHint')}
               fieldName="coverImage"
               preview={previews.coverImage}
               loading={loading.coverImage}
@@ -428,6 +432,9 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
               onChange={(e) => handleImageChange(e, 'coverImage')}
               onRemove={() => handleRemoveImage('coverImage')}
               required
+              spinnerLabel={t('submission.upload.spinner')}
+              changeFileLabel={t('submission.upload.image.changeFile')}
+              chooseFileLabel={t('submission.upload.image.chooseFile')}
             />
             <input
               id="file-coverImage" type="file"
@@ -444,13 +451,13 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
 
         {/* ── STILLS ───────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Film Stills (optional)</SectionHeader>
+          <SectionHeader>{t('submission.upload.sections.stills')}</SectionHeader>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {['still1', 'still2', 'still3'].map((field, i) => (
               <div key={field}>
                 <ImageSlot
                   label={`Still ${i + 1}`}
-                  hint="max 7MB"
+                  hint={t('submission.upload.image.stillHint')}
                   fieldName={field}
                   preview={previews[field]}
                   loading={loading[field]}
@@ -458,6 +465,9 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                   fileInputRef={{ current: fileInputRefs.current[field] }}
                   onChange={(e) => handleImageChange(e, field)}
                   onRemove={() => handleRemoveImage(field)}
+                  spinnerLabel={t('submission.upload.spinner')}
+                  changeFileLabel={t('submission.upload.image.changeFile')}
+                  chooseFileLabel={t('submission.upload.image.chooseFile')}
                 />
                 <input
                   id={`file-${field}`} type="file"
@@ -476,10 +486,10 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
 
         {/* ── SUBTITLE ─────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Subtitle File</SectionHeader>
+          <SectionHeader>{t('submission.upload.sections.subtitle')}</SectionHeader>
           <div className="max-w-xs">
             <label className={labelCls}>
-              If voice or text needs translation — .srt (max 1MB)
+              {t('submission.upload.subtitleFile.label')}
             </label>
             <label
               htmlFor="subtitle"
@@ -488,7 +498,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                 cursor-pointer transition-all text-sm text-white/40 group"
             >
               <UploadIcon />
-              <span>{formData.subtitle ? formData.subtitle.name : '.srt file'}</span>
+              <span>{formData.subtitle ? formData.subtitle.name : t('submission.upload.subtitleFile.placeholder')}</span>
             </label>
             <input
               id="subtitle" type="file" accept=".srt"
@@ -503,7 +513,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
 
         {/* ── RIGHTS & NEWSLETTER ──────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Rights & Preferences</SectionHeader>
+          <SectionHeader>{t('submission.upload.sections.rights')}</SectionHeader>
           <div className="space-y-4">
 
             {/* Rights accepted */}
@@ -530,12 +540,10 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
               />
               <div>
                 <p className="text-sm font-medium text-white mb-1">
-                  Rights accepted <span className="text-mars-primary">*</span>
+                  {t('submission.upload.rights.label')} <span className="text-mars-primary">*</span>
                 </p>
                 <p className="text-xs text-white/40 leading-relaxed">
-                  By submitting this video, you confirm that you hold all necessary rights to the content
-                  provided and authorize MarsAI to broadcast, reproduce, and use this video, in whole or
-                  in part, in its communications media, without limitation in terms of duration or territory.
+                  {t('submission.upload.rights.text')}
                 </p>
               </div>
             </label>
@@ -563,8 +571,8 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                 className="hidden"
               />
               <div>
-                <p className="text-sm font-medium text-white">Subscribe to our newsletter</p>
-                <p className="text-xs text-white/35 mt-0.5">Stay updated on MarsAI news — unsubscribe anytime</p>
+                <p className="text-sm font-medium text-white">{t('submission.upload.newsletter.label')}</p>
+                <p className="text-xs text-white/35 mt-0.5">{t('submission.upload.newsletter.desc')}</p>
               </div>
             </label>
 
@@ -575,7 +583,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
 
         {/* ── reCAPTCHA ────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Verification</SectionHeader>
+          <SectionHeader>{t('submission.upload.sections.verification')}</SectionHeader>
           <div className="flex flex-col items-start gap-2">
             <div className="rounded-xl overflow-hidden shadow-lg">
               <ReCAPTCHA
@@ -599,8 +607,8 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <p className="font-medium">Your video has been successfully submitted!</p>
-              <p className="text-xs text-green-400/70 mt-0.5">Redirecting…</p>
+              <p className="font-medium">{t('submission.upload.success.submitted')}</p>
+              <p className="text-xs text-green-400/70 mt-0.5">{t('submission.upload.success.redirecting')}</p>
             </div>
           </div>
         )}
@@ -625,7 +633,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
             className="mars-button-outline px-6 py-3 text-sm font-bold uppercase
               tracking-[0.12em] disabled:opacity-20 disabled:cursor-not-allowed"
           >
-            Back
+            {t('submission.upload.buttons.back')}
           </button>
 
           <button
@@ -644,7 +652,7 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             )}
-            {isSubmitting ? 'Submitting…' : 'Submit Film'}
+            {isSubmitting ? t('submission.upload.buttons.submitting') : t('submission.upload.buttons.submit')}
           </button>
         </div>
 

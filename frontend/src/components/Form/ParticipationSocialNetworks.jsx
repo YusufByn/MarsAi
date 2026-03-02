@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { SocialIcon } from 'react-social-icons';
+import { useTranslation } from 'react-i18next';
 
 const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSocialNetworks, onSave }) => {
+  const { t } = useTranslation();
   // S'assurer que realisatorSocialNetworks est un objet
   const socialNetworks = realisatorSocialNetworks || {
     facebook: '',
@@ -47,7 +49,7 @@ const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSo
     // Validation des URLs
     Object.keys(socialNetworks).forEach(platform => {
       if (socialNetworks[platform] && !validateUrl(socialNetworks[platform])) {
-        newErrors[platform] = 'Invalid URL';
+        newErrors[platform] = t('submission.socialNetworks.invalidUrl');
       }
     });
 
@@ -73,8 +75,8 @@ const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSo
   return (
     <div className="text-center text-white">
       <div className="mb-5">
-        <h2 className="text-xl font-semibold tracking-tight">Social Networks</h2>
-        <p className="text-gray-400 text-xs mt-1">Please enter the URL of your social media profiles</p>
+        <h2 className="text-xl font-semibold tracking-tight">{t('submission.socialNetworks.title')}</h2>
+        <p className="text-gray-400 text-xs mt-1">{t('submission.socialNetworks.subtitle')}</p>
       </div>
 
       <section className="FormSocialNetworks">
@@ -115,7 +117,7 @@ const ParticipationSocialNetworks = ({ realisatorSocialNetworks, setRealisatorSo
               onClick={handleSaveSocialNetworks}
               className="bg-linear-to-r from-violet-600 to-fuchsia-600 text-white border border-white/10 rounded-xl px-6 py-2.5 hover:from-violet-500 hover:to-fuchsia-500 transition-all font-semibold text-sm shadow-[0_8px_24px_rgba(168,85,247,0.35)]"
             >
-              Save and continue
+              {t('submission.socialNetworks.saveAndContinue')}
             </button>
           </div>
         </div>

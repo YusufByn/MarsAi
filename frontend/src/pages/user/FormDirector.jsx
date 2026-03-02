@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ParticipationPersonnalData from '../../components/Form/ParticipationPersonnalData.jsx';
 import ParticipationVideoData from '../../components/Form/ParticipationVideoData.jsx';
 import ParticipationVideoUpload from '../../components/Form/ParticipationVideoUpload.jsx';
-
-const STEPS = [
-  { num: 1, label: 'Director' },
-  { num: 2, label: 'Film Data' },
-  { num: 3, label: 'Upload' },
-];
 
 const CheckIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,7 +11,14 @@ const CheckIcon = () => (
 );
 
 const FormDirector = () => {
+  const { t } = useTranslation();
   const [etape, setEtape] = useState(1);
+
+  const STEPS = [
+    { num: 1, label: t('submission.steps.director') },
+    { num: 2, label: t('submission.steps.filmData') },
+    { num: 3, label: t('submission.steps.upload') },
+  ];
 
   const [formData, setFormData] = useState({
     step1: {
@@ -82,17 +84,17 @@ const FormDirector = () => {
             border border-white/10 bg-white/5 mb-8 backdrop-blur-sm">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-[10px] tracking-[0.3em] uppercase text-white/60 font-bold">
-              Open Submissions — 2026
+              {t('submission.hero.badge')}
             </span>
           </div>
 
           <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter
             italic uppercase leading-[0.85] mb-5">
-            Submit <span className="mars-text-gradient">Your Film</span>
+            {t('submission.hero.title1')} <span className="mars-text-gradient">{t('submission.hero.title2')}</span>
           </h1>
 
           <p className="text-base md:text-xl text-white/35 font-light max-w-lg">
-            Share your AI-powered creative vision with our international jury
+            {t('submission.hero.subtitle')}
           </p>
         </div>
       </header>

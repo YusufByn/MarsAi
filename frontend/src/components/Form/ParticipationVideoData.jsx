@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { validateTitle, validateTitleEN, validateLanguage, validateSynopsis, validateSynopsisEN, validateTechResume, validateCreativeResume, validateClassification, validateTags } from '../../services/formService';
 import { normalizeText } from '../../../../shared/validators/video.rules.js';
 import TagInput from './TagInput';
@@ -35,6 +36,7 @@ const Divider = () => <div className="h-px bg-white/[0.05]" />;
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataProp }) => {
+  const { t } = useTranslation();
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -115,7 +117,7 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
       setFormDataProp(normalizedData);
       setEtape(3);
     } else {
-      setSubmitError('Please correct the errors before continuing');
+      setSubmitError(t('submission.videoData.errors.pleaseCorrect'));
       setIsSubmitting(false);
     }
   };
@@ -127,35 +129,35 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
 
       {/* Step title */}
       <div className="mb-8">
-        <h2 className="text-xl font-bold tracking-tight">Film Data</h2>
-        <p className="text-xs text-white/35 mt-1 font-light">Describe your project</p>
+        <h2 className="text-xl font-bold tracking-tight">{t('submission.videoData.title')}</h2>
+        <p className="text-xs text-white/35 mt-1 font-light">{t('submission.videoData.subtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
 
         {/* ── TITLES ───────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Titles</SectionHeader>
+          <SectionHeader>{t('submission.videoData.sections.titles')}</SectionHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="titleEN" className={labelCls}>
-                Title EN <span className="text-mars-primary">*</span>
+                {t('submission.videoData.titleEN.label')} <span className="text-mars-primary">*</span>
               </label>
               <input
                 className={inputBase(formData.titleEN, errors.titleEN)}
                 type="text" name="titleEN" id="titleEN"
                 value={formData.titleEN} onChange={handleChange} onBlur={handleBlur}
-                placeholder="English title"
+                placeholder={t('submission.videoData.titleEN.placeholder')}
               />
               {errors.titleEN && <p className={errorCls}>{errors.titleEN}</p>}
             </div>
             <div>
-              <label htmlFor="title" className={labelCls}>Title (original)</label>
+              <label htmlFor="title" className={labelCls}>{t('submission.videoData.titleOriginal.label')}</label>
               <input
                 className={inputBase(formData.title, errors.title)}
                 type="text" name="title" id="title"
                 value={formData.title} onChange={handleChange} onBlur={handleBlur}
-                placeholder="Original title"
+                placeholder={t('submission.videoData.titleOriginal.placeholder')}
               />
               {errors.title && <p className={errorCls}>{errors.title}</p>}
             </div>
@@ -166,16 +168,16 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
 
         {/* ── LANGUAGE ─────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Language</SectionHeader>
+          <SectionHeader>{t('submission.videoData.sections.language')}</SectionHeader>
           <div className="max-w-xs">
             <label htmlFor="language" className={labelCls}>
-              Film Language <span className="text-mars-primary">*</span>
+              {t('submission.videoData.filmLanguage.label')} <span className="text-mars-primary">*</span>
             </label>
             <input
               className={inputBase(formData.language, errors.language)}
               type="text" name="language" id="language"
               value={formData.language} onChange={handleChange} onBlur={handleBlur}
-              placeholder="e.g. French, English…"
+              placeholder={t('submission.videoData.filmLanguage.placeholder')}
             />
             {errors.language && <p className={errorCls}>{errors.language}</p>}
           </div>
@@ -185,27 +187,27 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
 
         {/* ── SYNOPSES ─────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Synopsis</SectionHeader>
+          <SectionHeader>{t('submission.videoData.sections.synopsis')}</SectionHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="synopsisEN" className={labelCls}>
-                Synopsis EN <span className="text-mars-primary">*</span>
+                {t('submission.videoData.synopsisEN.label')} <span className="text-mars-primary">*</span>
               </label>
               <textarea
                 className={inputBase(formData.synopsisEN, errors.synopsisEN, true)}
                 name="synopsisEN" id="synopsisEN"
                 value={formData.synopsisEN} onChange={handleChange} onBlur={handleBlur}
-                placeholder="English synopsis…" rows={4}
+                placeholder={t('submission.videoData.synopsisEN.placeholder')} rows={4}
               />
               {errors.synopsisEN && <p className={errorCls}>{errors.synopsisEN}</p>}
             </div>
             <div>
-              <label htmlFor="synopsis" className={labelCls}>Synopsis (original)</label>
+              <label htmlFor="synopsis" className={labelCls}>{t('submission.videoData.synopsisOriginal.label')}</label>
               <textarea
                 className={inputBase(formData.synopsis, errors.synopsis, true)}
                 name="synopsis" id="synopsis"
                 value={formData.synopsis} onChange={handleChange} onBlur={handleBlur}
-                placeholder="Original language synopsis…" rows={4}
+                placeholder={t('submission.videoData.synopsisOriginal.placeholder')} rows={4}
               />
               {errors.synopsis && <p className={errorCls}>{errors.synopsis}</p>}
             </div>
@@ -216,29 +218,29 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
 
         {/* ── CREATIVE NOTES ────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Creative Notes</SectionHeader>
+          <SectionHeader>{t('submission.videoData.sections.creativeNotes')}</SectionHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="techResume" className={labelCls}>
-                Technical Resume <span className="text-mars-primary">*</span>
+                {t('submission.videoData.techResume.label')} <span className="text-mars-primary">*</span>
               </label>
               <textarea
                 className={inputBase(formData.techResume, errors.techResume, true)}
                 name="techResume" id="techResume"
                 value={formData.techResume} onChange={handleChange} onBlur={handleBlur}
-                placeholder="AI tools used (Midjourney, Runway, Sora…)" rows={4}
+                placeholder={t('submission.videoData.techResume.placeholder')} rows={4}
               />
               {errors.techResume && <p className={errorCls}>{errors.techResume}</p>}
             </div>
             <div>
               <label htmlFor="creativeResume" className={labelCls}>
-                Creative Resume <span className="text-mars-primary">*</span>
+                {t('submission.videoData.creativeResume.label')} <span className="text-mars-primary">*</span>
               </label>
               <textarea
                 className={inputBase(formData.creativeResume, errors.creativeResume, true)}
                 name="creativeResume" id="creativeResume"
                 value={formData.creativeResume} onChange={handleChange} onBlur={handleBlur}
-                placeholder="Your creative methodology…" rows={4}
+                placeholder={t('submission.videoData.creativeResume.placeholder')} rows={4}
               />
               {errors.creativeResume && <p className={errorCls}>{errors.creativeResume}</p>}
             </div>
@@ -249,11 +251,11 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
 
         {/* ── CLASSIFICATION ───────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>AI Classification <span className="text-mars-primary ml-1">*</span></SectionHeader>
+          <SectionHeader>{t('submission.videoData.sections.classification')} <span className="text-mars-primary ml-1">*</span></SectionHeader>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { value: 'hybrid', title: 'Hybrid', desc: 'AI + Human creativity' },
-              { value: 'ia', title: 'Full AI', desc: '100% AI-generated' },
+              { value: 'hybrid', title: t('submission.videoData.classification.hybrid.title'), desc: t('submission.videoData.classification.hybrid.desc') },
+              { value: 'ia', title: t('submission.videoData.classification.fullAI.title'), desc: t('submission.videoData.classification.fullAI.desc') },
             ].map((opt) => (
               <label
                 key={opt.value}
@@ -294,7 +296,7 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
 
         {/* ── TAGS ─────────────────────────────────────────────────────────── */}
         <section>
-          <SectionHeader>Tags</SectionHeader>
+          <SectionHeader>{t('submission.videoData.sections.tags')}</SectionHeader>
           <TagInput
             value={formData.tags}
             onChange={handleTagsChange}
@@ -321,7 +323,7 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
             onClick={() => setEtape(1)}
             className="mars-button-outline px-6 py-3 text-sm font-bold uppercase tracking-[0.12em]"
           >
-            Back
+            {t('submission.videoData.buttons.back')}
           </button>
           <button
             type="submit"
@@ -329,7 +331,7 @@ const ParticipationVideoData = ({ setEtape, formData, setFormData: setFormDataPr
             className="mars-button-primary px-8 py-3 text-sm font-bold uppercase
               tracking-[0.12em] disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Loading…' : 'Next Step'}
+            {isSubmitting ? t('submission.videoData.buttons.loading') : t('submission.videoData.buttons.nextStep')}
           </button>
         </div>
 
