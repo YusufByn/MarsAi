@@ -471,6 +471,12 @@
         "submitted": "Votre vidéo a été soumise avec succès !",
         "redirecting": "Redirection…"
       },
+      "confirmation": {
+        "title": "Prêt à soumettre votre film ?",
+        "message": "Veuillez confirmer que toutes les informations et tous les fichiers sont définitifs. Une fois la soumission envoyée, vous ne pourrez plus la modifier.",
+        "cancel": "Relire ma soumission",
+        "confirm": "Soumettre maintenant"
+      },
       "buttons": { "back": "Retour", "submitting": "Envoi…", "submit": "Soumettre le film" }
     },
     "contributors": {

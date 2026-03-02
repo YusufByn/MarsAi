@@ -143,6 +143,9 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [pendingSubmitToken, setPendingSubmitToken] = useState(null);
+  const confirmModalRef = useRef(null);
 
   const validateImage = (file, fieldName) => {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -300,21 +303,16 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
     };
   }, [previews]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitError(null);
-    setSubmitSuccess(false);
-    const token = captchaRef.current?.getValue();
-    const recaptchaError = validateRecaptcha(token);
-    if (recaptchaError) { setErrors(prev => ({ ...prev, recaptcha: recaptchaError })); return; }
-    setErrors(prev => ({ ...prev, recaptcha: null }));
-    if (!formData.videoFile) { setSubmitError(t('submission.upload.errors.uploadVideo')); return; }
-    if (!formData.coverImage) { setSubmitError(t('submission.upload.errors.uploadCover')); return; }
-    if (!formData.rightsAccepted) { setSubmitError(t('submission.upload.errors.acceptRights')); return; }
-    if (typeof formData.duration === 'number' && formData.duration > 150) { setSubmitError(t('submission.upload.errors.videoTooLong')); return; }
+  useEffect(() => {
+    if (!isConfirmModalOpen) return;
+    confirmModalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    confirmModalRef.current?.focus();
+  }, [isConfirmModalOpen]);
+
+  const performSubmit = async (token) => {
     setIsSubmitting(true);
     try {
-      const result = await submitCompleteForm(allFormData, token);
+      await submitCompleteForm(allFormData, token);
       if (formData.newsletterSubscription && allFormData?.step1?.email) {
         try { await newsletterService.subscribe(allFormData.step1.email); }
         catch (newsletterError) { console.warn("Newsletter subscription warning:", newsletterError?.message || newsletterError); }
@@ -327,14 +325,47 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
           state: { firstName: allFormData?.step1?.firstName || '', lastName: allFormData?.step1?.lastName || '' },
         });
       }, 2000);
+      return true;
     } catch (error) {
       console.error("[SUBMIT ERROR] Erreur lors de la soumission:", error);
       setSubmitError(error.message || t('submission.upload.errors.submitError'));
       captchaRef.current?.reset();
       setRecaptchaToken(null);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitError(null);
+    setSubmitSuccess(false);
+    const token = captchaRef.current?.getValue();
+    const recaptchaError = validateRecaptcha(token);
+    if (recaptchaError) { setErrors(prev => ({ ...prev, recaptcha: recaptchaError })); return; }
+    setErrors(prev => ({ ...prev, recaptcha: null }));
+    if (!formData.videoFile) { setSubmitError(t('submission.upload.errors.uploadVideo')); return; }
+    if (!formData.coverImage) { setSubmitError(t('submission.upload.errors.uploadCover')); return; }
+    if (!formData.rightsAccepted) { setSubmitError(t('submission.upload.errors.acceptRights')); return; }
+    if (typeof formData.duration === 'number' && formData.duration > 150) { setSubmitError(t('submission.upload.errors.videoTooLong')); return; }
+    setPendingSubmitToken(token);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!pendingSubmitToken || isSubmitting) return;
+    const waitMinimumLoader = new Promise((resolve) => setTimeout(resolve, 2200));
+    const [isSuccess] = await Promise.all([performSubmit(pendingSubmitToken), waitMinimumLoader]);
+    if (!isSuccess) {
+      setIsConfirmModalOpen(false);
+      setPendingSubmitToken(null);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setIsConfirmModalOpen(false);
+    setPendingSubmitToken(null);
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -621,6 +652,55 @@ const ParticipationVideoUpload = ({ setEtape, formData, setFormData: setFormData
                 d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             {submitError}
+          </div>
+        )}
+
+        {/* ── CONFIRM SUBMIT MODAL ─────────────────────────────────────────── */}
+        {isConfirmModalOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div
+              id="submission-confirmation-modal"
+              ref={confirmModalRef}
+              role="dialog"
+              aria-modal="true"
+              tabIndex={-1}
+              className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0A0A12] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
+            >
+              <h3 className="text-lg font-semibold text-white tracking-tight">
+                {t('submission.upload.confirmation.title')}
+              </h3>
+              <p className="text-sm text-white/60 mt-2 leading-relaxed">
+                {t('submission.upload.confirmation.message')}
+              </p>
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancelSubmit}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-full border border-white/15 bg-white/[0.02] text-white/80 text-xs font-semibold uppercase tracking-[0.12em] hover:bg-white/[0.06] transition-all"
+                >
+                  {t('submission.upload.confirmation.cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold uppercase tracking-[0.12em] hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  <span className="flex items-center gap-2">
+                    {isSubmitting && (
+                      <svg className="animate-spin w-3.5 h-3.5 text-black"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    )}
+                    {isSubmitting ? t('submission.upload.buttons.submitting') : t('submission.upload.confirmation.confirm')}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

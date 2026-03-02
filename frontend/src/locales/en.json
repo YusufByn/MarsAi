@@ -471,6 +471,12 @@
         "submitted": "Your video has been successfully submitted!",
         "redirecting": "Redirecting…"
       },
+      "confirmation": {
+        "title": "Ready to submit your film?",
+        "message": "Please confirm that all information and files are final. Once your submission is sent, you won’t be able to edit it.",
+        "cancel": "Review my submission",
+        "confirm": "Submit now"
+      },
       "buttons": { "back": "Back", "submitting": "Submitting…", "submit": "Submit Film" }
     },
     "contributors": {
