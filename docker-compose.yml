@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8
+    container_name: marsai-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: demo_db
+      MYSQL_USER: demo_user
+      MYSQL_PASSWORD: demo_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: marsai-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_USER: demo_user
+      PMA_PASSWORD: demo_pass
+    ports:
+      - "8086:80"
+    depends_on:
+      - db
+
+  backend:
+    build: ./backend
+    container_name: marsai-backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: marsai-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8085:80"
+
+volumes:
+  db_data:
