@@ -7,8 +7,8 @@ export const userController = {
    */
   async getById(req, res, next) {
     try {
+      
       const { id } = req.params;
-
       const isOwner = Number(req.user?.id) === Number(id);
       const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
 

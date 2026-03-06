@@ -1,5 +1,6 @@
 backend/src/upload/*.mp4
 backend/src/upload/*.mo
+.env.docker
 *.md
 *.mp4
 *.mov
