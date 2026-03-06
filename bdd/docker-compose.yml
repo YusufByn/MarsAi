@@ -1,0 +1,36 @@
+services:
+  db:
+    image: mysql:8
+    container_name: demo-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: marsai
+      MYSQL_USER: demo_user
+      MYSQL_PASSWORD: demo_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: demo-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_USER: demo_user
+      PMA_PASSWORD: demo_pass
+    ports:
+      - "8086:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
