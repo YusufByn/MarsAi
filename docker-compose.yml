@@ -1,41 +1,42 @@
+version: "3.9"
+
 services:
-  mysql:
-    image: mysql:8.0
+  db:
+    image: mysql:8
     container_name: marsai-mysql
-    restart: unless-stopped
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: marsai
+      MYSQL_USER: demo_user
+      MYSQL_PASSWORD: demo_pass
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
 
   phpmyadmin:
-    image: phpmyadmin:5.2
+    image: phpmyadmin/phpmyadmin
     container_name: marsai-phpmyadmin
-    restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
+    restart: always
     environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_USER: ${MYSQL_USER}
-      PMA_PASSWORD: ${MYSQL_PASSWORD}
+      PMA_HOST: db
+      PMA_USER: demo_user
+      PMA_PASSWORD: demo_pass
     ports:
-      - "${PHPMYADMIN_PORT:-8080}:80"
+      - "8086:80"
+    depends_on:
+      - db
 
   backend:
     build:
       context: .
+<<<<<<< HEAD
       dockerfile: ./backend/Dockerfile
     container_name: marsai-backend
     restart: unless-stopped
@@ -50,10 +51,31 @@ services:
       - ./backend:/app
       - /app/node_modules
     command: npm run dev
+=======
+      dockerfile: backend/Dockerfile
+    container_name: marsai-backend
+    restart: always
+    env_file:
+      - backend/.env
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: demo_user
+      DB_PASS: demo_pass
+      DB_PASSWORD: demo_pass
+      DB_NAME: marsai
+      WEBSITE_URL: http://localhost:8090
+    ports:
+      - "4001:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+>>>>>>> 8251be59eaea7d39f6da38d1a280f042c87ad39d
 
   frontend:
     build:
       context: .
+<<<<<<< HEAD
       dockerfile: ./frontend/Dockerfile
     container_name: marsai-frontend
     restart: unless-stopped
@@ -70,3 +92,17 @@ services:
 
 volumes:
   mysql_data:
+=======
+      dockerfile: frontend/Dockerfile
+    container_name: marsai-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8090:80"
+
+volumes:
+  db_data:
+
+
+>>>>>>> 8251be59eaea7d39f6da38d1a280f042c87ad39d

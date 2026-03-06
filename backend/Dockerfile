@@ -1,11 +1,12 @@
-FROM node:22-alpine
+FROM node:20-alpine
 
-WORKDIR /app
+COPY backend /app/backend
+COPY shared /app/shared
 
-COPY package*.json ./
-RUN npm ci
+WORKDIR /app/backend
 
-COPY . .
+RUN npm install
 
 EXPOSE 4000
-CMD ["npm", "run", "dev"]
+
+CMD ["npm", "start"]
