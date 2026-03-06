@@ -59,6 +59,8 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:4001
     container_name: marsai-frontend
     restart: always
     depends_on:
