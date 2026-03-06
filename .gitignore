@@ -28,4 +28,5 @@ backend/src/upload/*.mo
 *.doc
 *.docx
 scripts_test_s3/
-Atelier2.code-workspace
+Atelier2.code-workspace".env.docker" 
+"**/.env.docker" 
