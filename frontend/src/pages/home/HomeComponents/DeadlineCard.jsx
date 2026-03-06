@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { API_URL } from "../../../config";
 
-// Constants pour le calcul de la date et l'affichage relatif
+// Constants utilisée pour les calculs de délai en jours
 const MS_DAY = 1000 * 60 * 60 * 24;
 
-// Formatage de la date en français
+// Formate une date en français
 function formatFR(date) {
     return new Intl.DateTimeFormat("fr-FR", {
         timeZone: "Europe/Paris",
@@ -14,7 +14,7 @@ function formatFR(date) {
     }).format(date);
 }
 
-// Génération d'un label relatif en fonction de la date limite
+// Retourne un libellé relatif selon la date limite
 function relativeLabel(deadline) {
     const diff = deadline.getTime() - Date.now();
     if (diff <= 0) return "Soumissions clôturées";
@@ -23,11 +23,11 @@ function relativeLabel(deadline) {
     return `dans ${days} jour${days > 1 ? "s" : ""}`;
 }
 
-// Composant principal de la carte de deadline
+// Carte affichant la date limite des soumissions
 export default function DeadlineCard() {
     const [deadline, setDeadline] = useState(null);
 
-    // Récupération de la date limite depuis l'API au chargement du composant
+    // Récupère la date limite depuis l'API au chargement du composant
     useEffect(() => {
         (async () => {
             try {
@@ -41,13 +41,13 @@ export default function DeadlineCard() {
         })();
     }, []);
 
-    // Mémorisation du formatage de la date et du label relatif pour éviter les calculs inutiles lors des re-renders
+    // Valeurs dérivées de la date limite
     const dateStr = useMemo(() => (deadline ? formatFR(deadline) : ""), [deadline]);
     const rel = useMemo(() => (deadline ? relativeLabel(deadline) : ""), [deadline]);
 
     if (!deadline) return null;
 
-    // Calcul de l'expiration pour ajuster le style en conséquence
+    // Indique si la date limite est dépasée
     const expired = deadline.getTime() <= Date.now();
 
     return (
