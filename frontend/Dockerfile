@@ -1,14 +1,19 @@
 FROM node:20-alpine AS build
-WORKDIR /app
-COPY package.json vite.config.mts index.html ./
-COPY src ./src
+
+COPY frontend /app/frontend
+COPY shared /app/shared
+
+WORKDIR /app/frontend
+
 RUN npm install && npm run build
 
 FROM nginx:alpine AS runtime
 
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
-COPY --from=build /app/dist ./
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/frontend/dist ./
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

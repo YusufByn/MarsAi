@@ -1,12 +1,12 @@
 FROM node:20-alpine
 
-WORKDIR /app
+COPY backend /app/backend
+COPY shared /app/shared
 
-COPY package.json ./
+WORKDIR /app/backend
+
 RUN npm install
 
-COPY server.js ./
-
-EXPOSE 3000
+EXPOSE 4000
 
 CMD ["npm", "start"]
