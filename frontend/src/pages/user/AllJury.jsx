@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { juryService } from '../../services/juryService';
+import DeadlineCard from '../home/HomeComponents/DeadlineCard';
 
 const AllJury = () => {
   const navigate = useNavigate();
@@ -59,17 +60,30 @@ const AllJury = () => {
 
         {/* Header Section */}
         <header className="mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 mb-6 backdrop-blur-md">
-            <div className="w-1.5 h-1.5 rounded-full bg-mars-primary animate-pulse"></div>
-            <span className="text-[10px] tracking-[0.3em] uppercase text-white/60 font-bold">{t('jury.badge')}</span>
-          </div>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            {/* Colonne gauche : badge + titre + description */}
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 mb-6 backdrop-blur-md">
+                <div className="w-1.5 h-1.5 rounded-full bg-mars-primary animate-pulse"></div>
+                <span className="text-[10px] tracking-[0.3em] uppercase text-white/60 font-bold">
+                  {t('jury.badge')}
+                </span>
+              </div>
 
-          <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-4 italic uppercase leading-[0.8]">
-            THE <span className="mars-text-gradient">JURY</span>
-          </h1>
-          <p className="text-xl text-white/40 font-light max-w-2xl leading-relaxed">
-            {t('jury.description')}
-          </p>
+              <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-4 italic uppercase leading-[0.8]">
+                THE <span className="mars-text-gradient">JURY</span>
+              </h1>
+
+              <p className="text-xl text-white/40 font-light max-w-2xl leading-relaxed">
+                {t('jury.description')}
+              </p>
+            </div>
+
+            {/* Colonne droite : mini card deadline */}
+            <div className="lg:w-[340px]">
+              <DeadlineCard />
+            </div>
+          </div>
         </header>
 
         {/* Grid des Jurys Style Music Player */}
