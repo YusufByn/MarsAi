@@ -24,7 +24,7 @@ export default function Hero() {
 
                 {/* Titre Principal */}
                 <h1 className="text-8xl md:text-[12rem] font-black tracking-tighter mb-4 leading-[0.8] italic uppercase">
-                mars<span className="mars-text-gradient">AI</span>
+                Festival mars<span className="mars-text-gradient">AI</span>
                 </h1>
 
                 {/* Compte à rebours */}
