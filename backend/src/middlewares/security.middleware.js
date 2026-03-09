@@ -14,9 +14,9 @@ export const securityGuard = async (req, res, next) => {
 
     try {
         const [banned] = await pool.execute(
-            `SELECT * FROM blacklist 
-             WHERE (ip_address = ? OR fingerprint = ?) 
-             AND (banned_until IS NULL OR banned_until > NOW())`, 
+            `SELECT * FROM blacklist
+             WHERE (ip = ? OR fingerprint = ?)
+             AND (banned_until IS NULL OR banned_until > NOW())`,
             [ip, fingerprint]
         );
 
@@ -41,13 +41,13 @@ export const securityGuard = async (req, res, next) => {
             console.warn(`[SECURITY] Attaque detectee [${attackDetected}] IP: ${ip}`);
 
             await pool.execute(
-                `INSERT INTO security_log (ip_address, user_agent, fingerprint, request_method, request_url, payload, attack_type, risk_score)
+                `INSERT INTO security_log (ip, user_agent, fingerprint, request_method, request_url, payload, attack_type, risk_score)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [ip, userAgent, fingerprint, req.method, req.originalUrl, dataToScan.substring(0, 500), attackDetected, 100]
             );
 
             await pool.execute(
-                `INSERT INTO blacklist (ip_address, fingerprint, reason, banned_until)
+                `INSERT INTO blacklist (ip, fingerprint, reason, banned_until)
                  VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
                 [ip, fingerprint, `Auto-ban: ${attackDetected}`]
             );

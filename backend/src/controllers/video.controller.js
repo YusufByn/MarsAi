@@ -128,25 +128,25 @@ export const uploadVideo = async (req, res) => {
 
     // upload de la video sur youtube
     // on passe le chemin du fichier video, et les metadata
-    // const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
-    //   title,
-    //   description: description || "",
-    //   tags: cleanTags,
-    //   thumbnailPath: coverFile?.path,
-    //   srt_file_name: srtFile?.filename,
-    //   srtLanguage: req.body.srtLanguage || 'fr',
-    //   srtPath: srtFile?.path,
-    //   categoryId: categoryId || "22",
-    //   privacyStatus: privacyStatus || "unlisted"
-    // });
+    const youtubeUpload = await uploadVideoToYoutube(videoFiles.path, {
+      title,
+      description: description || "",
+      tags: cleanTags,
+      thumbnailPath: coverFile?.path,
+      srt_file_name: srtFile?.filename,
+      srtLanguage: req.body.srtLanguage || 'fr',
+      srtPath: srtFile?.path,
+      categoryId: categoryId || "22",
+      privacyStatus: privacyStatus || "unlisted"
+    });
 
     // dans youtube upload qui utilise le service youtube, on recup l'url youtube de la video
-    // const youtube_url = youtubeUpload.youtubeUrl;
+    const youtube_url = youtubeUpload.youtubeUrl;
 
 
     // on crée la video dans la bdd
     const video = await createVideo({
-      // youtube_url,
+      youtube_url,
       video_file_name,
       srt_file_name,
       cover,
@@ -166,7 +166,8 @@ export const uploadVideo = async (req, res) => {
       realisator_lastname: req.body.realisator_lastname ?? null,
       realisator_gender: req.body.realisator_gender ?? null,
       email: req.body.email ?? null,
-      birthday: req.body.birthday ?? null,
+      // birthday: req.body.birthday ?? null,
+      birthday: req.body.birthday === '1' || req.body.birthday === 1 ? 1 : 0,
       mobile_number: req.body.mobile_number ?? null,
       fixe_number: req.body.fixe_number ?? null,
       address: req.body.address ?? null,

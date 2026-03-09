@@ -23,23 +23,40 @@ export const videoModel = {
   },
 
   async findAll({ limit = 24, offset = 0, search = '', classification = '' } = {}) {
+    // Sécurise la pagination  => limit entre 1 et 100, offset minimum à 0
     const safeLimit  = Math.min(Math.max(Number(limit)  || 24, 1), 100);
     const safeOffset = Math.max(Number(offset) || 0, 0);
 
+    // Prépare les morceaux de la clause WHERE et leurs paramètres
     const conditions = [];
     const params     = [];
 
+    // Ajoute la recherche texte si un terme est fourni
     if (search) {
-      const like = `%${search}%`;
+      const term = String(search).trim();
+      const like = `%${term}%`;
+
+      // Recherche sur =>
+      // - titre
+      // - prénom/nom du réalisateur
+      // - nom complet dans les deux ordres
+      // - les tags associés à la vidéo)
       conditions.push(
-        `(v.title LIKE ? OR v.realisator_name LIKE ? OR v.realisator_lastname LIKE ?
+        `(v.title LIKE ?
+          OR v.realisator_name LIKE ?
+          OR v.realisator_lastname LIKE ?
+          OR CONCAT_WS(' ', v.realisator_name, v.realisator_lastname) LIKE ?
+          OR CONCAT_WS(' ', v.realisator_lastname, v.realisator_name) LIKE ?
           OR EXISTS (
-            SELECT 1 FROM video_tag vt2
+            SELECT 1
+            FROM video_tag vt2
             JOIN tag t2 ON t2.id = vt2.tag_id
             WHERE vt2.video_id = v.id AND t2.name LIKE ?
           ))`
       );
-      params.push(like, like, like, like);
+
+      // Un paramètres par placeholder "?"
+      params.push(like, like, like, like, like, like);
     }
 
     if (classification && classification !== 'all') {

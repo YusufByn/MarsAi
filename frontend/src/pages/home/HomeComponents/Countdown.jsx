@@ -2,34 +2,37 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../../config';
 
+const formatDDMMYYYY = (date) =>
+  new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+
 const Countdown = () => {
   const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState(null);
   const [loading, setLoading] = useState(true);
   const [phaseDate, setPhaseDate] = useState(null);
   const hasFetched = useRef(false);
-  
-  // Debug : vérifier les re-renders 
-  // console.log('[Countdown] render'); 
 
   // Fetch unique au chargement : récupère la date de phase une seule fois
   useEffect(() => {
-    // Protection contre les appels multiples
     if (hasFetched.current) return;
     hasFetched.current = true;
-    
+
     const fetchHomepage = async () => {
       try {
         const response = await fetch(`${API_URL}/api/cms/homepage`);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
 
-        console.log('[COUNTDOWN] homepage data:', data); // Debug : vérifier la structure de la réponse
-        
+        console.log('[COUNTDOWN] homepage data:', data);
 
         if (data.success && data.countdown?.phaseDate) {
           setPhaseDate(new Date(data.countdown.phaseDate));
@@ -71,15 +74,12 @@ const Countdown = () => {
       };
     };
 
-    // Calcul initial
     setTimeLeft(calculateTimeLeft());
 
-    // Mise à jour automatique toutes les secondes (sans nouvelle requête API)
     const interval = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
 
-    // Nettoyage de l'intervalle au démontage du composant
     return () => clearInterval(interval);
   }, [phaseDate]);
 
@@ -100,7 +100,9 @@ const Countdown = () => {
           <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
             {String(timeLeft.days || 0).padStart(2, '0')}
           </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">{t('countdown.days')}</span>
+          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
+            {t('countdown.days')}
+          </span>
         </div>
 
         <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
@@ -109,7 +111,9 @@ const Countdown = () => {
           <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
             {String(timeLeft.hours || 0).padStart(2, '0')}
           </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">{t('countdown.hours')}</span>
+          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
+            {t('countdown.hours')}
+          </span>
         </div>
 
         <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
@@ -118,7 +122,9 @@ const Countdown = () => {
           <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
             {String(timeLeft.minutes || 0).padStart(2, '0')}
           </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">{t('countdown.minutes')}</span>
+          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
+            {t('countdown.minutes')}
+          </span>
         </div>
 
         <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
@@ -127,9 +133,21 @@ const Countdown = () => {
           <span className="text-5xl md:text-8xl font-black tracking-tighter mars-text-gradient leading-none">
             {String(timeLeft.seconds || 0).padStart(2, '0')}
           </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">{t('countdown.seconds')}</span>
+          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
+            {t('countdown.seconds')}
+          </span>
         </div>
       </div>
+
+      {/* ✅ Date affichée sous le countdown */}
+      {phaseDate && (
+        <div className="text-center text-white/60 text-sm md:text-base">
+          <span className="font-semibold text-white/70">
+            {t('countdown.deadlineLabel', { defaultValue: 'Fin des soumissions :' })}
+          </span>{' '}
+          {formatDDMMYYYY(phaseDate)}
+        </div>
+      )}
     </div>
   );
 };
