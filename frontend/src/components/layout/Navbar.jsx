@@ -3,6 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageToggle from '../LanguageToggle';
 import { useAuth } from '../../hooks/useAuth';
+import NavbarSearch from './NavbarSearch';
+import MobileSearchOverlay from './MobileSearchOverlay';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -10,7 +12,8 @@ const Navbar = () => {
   const { t } = useTranslation();
   const { user, isSelector, isAdmin, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  // const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
   void location;
@@ -21,7 +24,7 @@ const Navbar = () => {
     if (!trimmed) return;
     navigate(`/videos?q=${encodeURIComponent(trimmed)}`);
     setSearchValue('');
-    setSearchOpen(false);
+    // setSearchOpen(false);
     setMenuOpen(false);
   };
 
@@ -84,6 +87,9 @@ const Navbar = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </Link>
+            {/* Recherche autocomplete */}
+            <NavbarSearch onAfterNavigate={() => setMenuOpen(false)} />
+
 
             {/* Liens jury/selector */}
             {isSelector && (
@@ -123,7 +129,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* Recherche */}
-                <div className="relative flex items-center">
+                {/* <div className="relative flex items-center">
                   {searchOpen ? (
                     <form onSubmit={handleSearch} className="flex items-center px-1">
                       <input
@@ -148,7 +154,7 @@ const Navbar = () => {
                       </svg>
                     </button>
                   )}
-                </div>
+                </div> */}
               </>
             )}
 
@@ -208,6 +214,21 @@ const Navbar = () => {
             </Link>
           )}
 
+          {/* Loupe mobile */}
+          <button
+            onClick={() => {
+              setMenuOpen(false);
+              setMobileSearchOpen(true);
+            }}
+            className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label={t('navbar.searchFilm')}
+            title={t('navbar.searchFilm')}
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+
           {/* Hamburger mobile */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -253,23 +274,24 @@ const Navbar = () => {
             <span className="text-sm">{t('navbar.jury')}</span>
           </Link>
 
+          {/* recherche mobile pour tout le monde */}
+          <form onSubmit={handleSearch} className="px-4 py-2">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder={t('navbar.searchPlaceholder')}
+                className="w-full bg-white/10 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-mars-primary/50"
+              />
+            </div>
+          </form>
+
           {isSelector && (
             <>
-              <form onSubmit={handleSearch} className="px-4 py-2">
-                <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder={t('navbar.searchPlaceholder')}
-                    className="w-full bg-white/10 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-mars-primary/50"
-                  />
-                </div>
-              </form>
-
               <Link to="/videos" onClick={closeMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -330,6 +352,10 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+      <MobileSearchOverlay
+        open={mobileSearchOpen}
+        onClose={() => setMobileSearchOpen(false)}
+      />
     </nav>
   );
 };
