@@ -36,22 +36,6 @@ services:
   backend:
     build:
       context: .
-<<<<<<< HEAD
-      dockerfile: ./backend/Dockerfile
-    container_name: marsai-backend
-    restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
-    env_file:
-      - ./backend/.env
-    ports:
-      - "${BACKEND_PORT:-4000}:4000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: npm run dev
-=======
       dockerfile: backend/Dockerfile
     container_name: marsai-backend
     restart: always
@@ -70,29 +54,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
->>>>>>> 8251be59eaea7d39f6da38d1a280f042c87ad39d
 
   frontend:
     build:
       context: .
-<<<<<<< HEAD
-      dockerfile: ./frontend/Dockerfile
-    container_name: marsai-frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
-    env_file:
-      - ./frontend/.env
-    ports:
-      - "${FRONTEND_PORT:-5173}:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
-
-volumes:
-  mysql_data:
-=======
       dockerfile: frontend/Dockerfile
     container_name: marsai-frontend
     restart: always
@@ -105,4 +70,3 @@ volumes:
   db_data:
 
 
->>>>>>> 8251be59eaea7d39f6da38d1a280f042c87ad39d
