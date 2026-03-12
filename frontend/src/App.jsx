@@ -51,7 +51,7 @@ function AppContent() {
     <div className="min-h-screen bg-black flex flex-col">
       <ScrollToTop />
       {!isPlayerPage && !isAdminPage && <Navbar />}
-      <main className="flex-grow">
+      <main className={`flex-grow ${!isPlayerPage && !isAdminPage ? 'pt-20' : ''}`}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public */}

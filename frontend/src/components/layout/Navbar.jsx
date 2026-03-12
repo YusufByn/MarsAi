@@ -38,7 +38,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] glass-navbar">
-      <div className="max-w-[1440px] mx-auto px-6 h-20 relative flex items-center">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-20 relative flex items-center">
 
         {/* Logo - mobile uniquement */}
         <Link to="/" onClick={closeMenu} className="md:hidden flex items-center">
@@ -249,8 +249,7 @@ const Navbar = () => {
       </div>
 
       {/* ===== Menu mobile déroulant ===== */}
-      <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-        menuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+      <div className={`md:hidden absolute top-full left-0 right-0 overflow-hidden transition-all duration-300 ease-in-out ${menuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
       }`}>
         <div className="px-6 pb-6 pt-2 space-y-1 border-t border-white/10 bg-black/95 backdrop-blur-xl">
           {user && (

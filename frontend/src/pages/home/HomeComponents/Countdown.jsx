@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { API_URL } from '../../../config';
+import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { API_URL } from "../../../config";
 
+/* Formate une date au format jj/mm/aaaa*/
 const formatDDMMYYYY = (date) =>
-  new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+  new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   }).format(date);
 
 const Countdown = () => {
@@ -17,7 +18,7 @@ const Countdown = () => {
   const [phaseDate, setPhaseDate] = useState(null);
   const hasFetched = useRef(false);
 
-  // Fetch unique au chargement : récupère la date de phase une seule fois
+  /* Fetch uniquement au chargement, récupère la date de phase une seule fois*/
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
@@ -32,7 +33,7 @@ const Countdown = () => {
 
         const data = await response.json();
 
-        console.log('[COUNTDOWN] homepage data:', data);
+        console.log("[COUNTDOWN] homepage data:", data);
 
         if (data.success && data.countdown?.phaseDate) {
           setPhaseDate(new Date(data.countdown.phaseDate));
@@ -40,7 +41,7 @@ const Countdown = () => {
           setPhaseDate(null);
         }
       } catch (error) {
-        console.error('[COUNTDOWN] Error fetching homepage:', error);
+        console.error("[COUNTDOWN] Error fetching homepage:", error);
         setPhaseDate(null);
       } finally {
         setLoading(false);
@@ -50,7 +51,7 @@ const Countdown = () => {
     fetchHomepage();
   }, []);
 
-  // Calcul automatique du countdown côté client : mise à jour toutes les secondes sans requête API
+  /* Calcul automatique coté client, Mise à jour toutes les secondes sans refaire d'appel API */
   useEffect(() => {
     if (!phaseDate) {
       setTimeLeft(null);
@@ -70,7 +71,7 @@ const Countdown = () => {
         hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
         minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
         seconds: Math.floor((diff % (1000 * 60)) / 1000),
-        expired: false
+        expired: false,
       };
     };
 
@@ -83,68 +84,120 @@ const Countdown = () => {
     return () => clearInterval(interval);
   }, [phaseDate]);
 
+  /* Si le fetch n'est pas terminé ou si aucune date n'est disponible, on n'affiche rien */
   if (loading || !timeLeft) {
     return null;
   }
 
+  /* Données du countdown regroupées dans un tableau pour simplifier l'affichage responsive*/
+  const items = [
+    {
+      key: "days",
+      value: String(timeLeft.days || 0).padStart(2, "0"),
+      label: t("countdown.days"),
+      gradient: false,
+    },
+    {
+      key: "hours",
+      value: String(timeLeft.hours || 0).padStart(2, "0"),
+      label: t("countdown.hours"),
+      gradient: false,
+    },
+    {
+      key: "minutes",
+      value: String(timeLeft.minutes || 0).padStart(2, "0"),
+      label: t("countdown.minutes"),
+      gradient: false,
+    },
+    {
+      key: "seconds",
+      value: String(timeLeft.seconds || 0).padStart(2, "0"),
+      label: t("countdown.seconds"),
+      gradient: true,
+    },
+  ];
+
+  /* Séparation des blocs =>
+    - days seul
+    - hours / minutes / seconds ensemble
+    our le layout mobile */
+  const daysItem = items.find((item) => item.key === "days");
+  const timeItems = items.filter((item) => item.key !== "days");
+
   return (
-    <div className="flex flex-col items-center gap-6 mb-16">
-      <div className="flex items-center gap-3 text-xs md:text-sm font-black tracking-[0.5em] text-mars-primary uppercase">
-        <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-mars-primary"></div>
-        <span className="animate-pulse">{t('countdown.expectedImpact')}</span>
-        <div className="w-12 h-[1px] bg-gradient-to-l from-transparent to-mars-primary"></div>
+    <div className="flex flex-col items-center gap-4 sm:gap-6 mb-10 md:mb-16 w-full px-4">
+      {/* Ligne texte au-dessus du countdown*/}
+      <div className="text-center max-w-[320px] sm:max-w-full">
+        <span className="text-[11px] sm:text-xs md:text-sm font-black tracking-[0.08em] sm:tracking-[0.25em] text-mars-primary uppercase leading-snug">
+          {t("countdown.expectedImpact")}
+        </span>
       </div>
 
-      <div className="flex gap-4 md:gap-8 items-center">
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
-            {String(timeLeft.days || 0).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
-            {t('countdown.days')}
-          </span>
+      {/* Mobile =>
+          - heures / minutes / secondes sur une ligne
+          - jours en dessous */}
+      <div className="sm:hidden flex flex-col items-center gap-4 w-full">
+        <div className="grid grid-cols-3 gap-3 w-full max-w-[320px]">
+          {timeItems.map((item) => (
+            <div
+              key={item.key}
+              className="flex flex-col items-center text-center"
+            >
+              <span
+                className={`text-4xl font-black tracking-tight leading-none ${
+                  item.gradient ? "mars-text-gradient" : "text-white"
+                }`}
+              >
+                {item.value}
+              </span>
+
+              <span className="text-[10px] font-bold tracking-[0.12em] text-white/30 uppercase mt-2">
+                {item.label}
+              </span>
+            </div>
+          ))}
         </div>
 
-        <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
+        {daysItem && (
+          <div className="flex flex-col items-center text-center">
+            <span className="text-5xl font-black tracking-tight leading-none text-white">
+              {daysItem.value}
+            </span>
 
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
-            {String(timeLeft.hours || 0).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
-            {t('countdown.hours')}
-          </span>
-        </div>
-
-        <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
-
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-none">
-            {String(timeLeft.minutes || 0).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
-            {t('countdown.minutes')}
-          </span>
-        </div>
-
-        <span className="text-4xl md:text-6xl font-thin text-white/10 mb-6">:</span>
-
-        <div className="flex flex-col items-center">
-          <span className="text-5xl md:text-8xl font-black tracking-tighter mars-text-gradient leading-none">
-            {String(timeLeft.seconds || 0).padStart(2, '0')}
-          </span>
-          <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/20 uppercase mt-2">
-            {t('countdown.seconds')}
-          </span>
-        </div>
+            <span className="text-[10px] font-bold tracking-[0.12em] text-white/30 uppercase mt-2">
+              {daysItem.label}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* ✅ Date affichée sous le countdown */}
+      {/*Tablette / desktop => les 4 blocs sur une seule ligne */}
+      <div className="hidden sm:grid grid-cols-4 gap-x-6 md:gap-x-8 w-full max-w-3xl">
+        {items.map((item) => (
+          <div key={item.key} className="flex flex-col items-center text-center">
+            <span
+              className={`text-6xl md:text-8xl font-black tracking-tight leading-none ${
+                item.gradient ? "mars-text-gradient" : "text-white"
+              }`}
+            >
+              {item.value}
+            </span>
+
+            <span className="text-xs font-bold tracking-[0.2em] text-white/20 uppercase mt-2">
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Date affiché pour le countdown */}
       {phaseDate && (
-        <div className="text-center text-white/60 text-sm md:text-base">
+        <div className="mt-1 text-center text-white/60 text-sm md:text-base px-2">
           <span className="font-semibold text-white/70">
-            {t('countdown.deadlineLabel', { defaultValue: 'Fin des soumissions :' })}
-          </span>{' '}
+            {t("countdown.deadlineLabel", {
+              defaultValue: "Fin des soumissions :",
+            })}
+          </span>{" "}
           {formatDDMMYYYY(phaseDate)}
         </div>
       )}
