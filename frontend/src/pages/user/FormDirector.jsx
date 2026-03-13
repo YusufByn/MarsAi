@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ParticipationPersonnalData from '../../components/Form/ParticipationPersonnalData.jsx';
 import ParticipationVideoData from '../../components/Form/ParticipationVideoData.jsx';
 import ParticipationVideoUpload from '../../components/Form/ParticipationVideoUpload.jsx';
+import useScrollToTopOnChange from '../../hooks/useScrollToTopOnChange.js';
 
 const CheckIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13,6 +14,7 @@ const CheckIcon = () => (
 const FormDirector = () => {
   const { t } = useTranslation();
   const [etape, setEtape] = useState(1);
+  useScrollToTopOnChange(etape, { smooth: true });
 
   const STEPS = [
     { num: 1, label: t('submission.steps.director') },
@@ -75,7 +77,7 @@ const FormDirector = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-black selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white selection:bg-blue-500 selection:text-white overflow-x-hidden">
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <header className="relative pt-44 pb-14 px-6 flex flex-col items-center text-center bg-black">

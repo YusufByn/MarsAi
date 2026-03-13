@@ -19,6 +19,10 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Derriere le reverse proxy (YunoHost/Nginx), Express doit faire confiance
+// aux en-tetes X-Forwarded-* pour que express-rate-limit fonctionne correctement.
+app.set('trust proxy', 1);
+
 // middleware pour sécuriser l'application
 app.use(
   helmet({

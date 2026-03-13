@@ -43,3 +43,4 @@ BucketS3/*
 *.doc
 *.docx
 Atelier2.code-workspace
+.env.prod
