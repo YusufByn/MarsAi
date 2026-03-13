@@ -66,7 +66,7 @@ function AssignationModal({ onClose }) {
         setList(list.includes(id) ? list.filter(i => i !== id) : [...list, id]);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
 
                 {/* Header */}
@@ -460,7 +460,7 @@ export default function AdminFilms() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="relative min-h-full space-y-6">
 
       {/* Header — titre + bouton assignation */}
       <div className="flex items-center justify-between">
