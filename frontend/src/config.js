@@ -1,6 +1,6 @@
 import { getFingerprint } from './services/fingerprint.service';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export function authHeaders() {
   const token = localStorage.getItem('auth_token');
