@@ -9,4 +9,7 @@ router.use(apiLimiter);
 // Route publique pour récupérer les données de la homepage
 router.get('/homepage', getHomepage);
 
+// Route publique pour récupérer les données de la page de countdown
+router.get('/countdown', getHomepage);
+
 export default router;

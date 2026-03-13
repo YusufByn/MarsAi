@@ -1,109 +1,66 @@
-// ici il y aura tout le code concernant le rating de la video par les jurys
-
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const RatingSelector = ({
-    initialRating = 0,
     initialStatus = 'no',
-    onRatingChange,
     onStatusChange,
+    onYesClick,
 }) => {
-    const [rating, setRating] = useState(initialRating);
-    const [hoverRating, setHoverRating] = useState(0);
+    const { t } = useTranslation();
     const [statut, setStatut] = useState(initialStatus);
-
-    const stars = useMemo(() => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], []);
-    const activeRating = hoverRating || rating;
-
-    const handleRatingChange = (newRating) => {
-        setRating(newRating);
-        if (onRatingChange) {
-            onRatingChange(newRating);
-        }
-    };
-
-    const handleHoverRating = (newHoverRating) => {
-        setHoverRating(newHoverRating);
-    };
 
     const handleStatusChange = (nextStatus) => {
         setStatut(nextStatus);
-        if (nextStatus === 'no') {
-            setRating(0);
-            if (onRatingChange) {
-                onRatingChange(0);
-            }
-        }
         if (onStatusChange) {
             onStatusChange(nextStatus);
+        }
+        
+        // Si "Oui" est cliqué, ouvrir le modal de notation
+        if (nextStatus === 'yes' && onYesClick) {
+            onYesClick();
         }
     };
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-400">Decision du selector</span>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => handleStatusChange('yes')}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-                            statut === 'yes'
-                                ? 'bg-green-500/20 text-green-300 border-green-500/40'
-                                : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
-                        }`}
-                    >
-                        Oui
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleStatusChange('discuss')}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-                            statut === 'discuss'
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                                : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
-                        }`}
-                    >
-                        A discuter
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleStatusChange('no')}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-                            statut === 'no'
-                                ? 'bg-red-500/20 text-red-300 border-red-500/40'
-                                : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
-                        }`}
-                    >
-                        Non
-                    </button>
-                </div>
-            </div>
-
-            <div
-                className={`flex items-center gap-2 ${
-                    statut === 'no' ? 'opacity-40 pointer-events-none' : ''
+        <div className="flex flex-col gap-3 w-full">
+            {/* Bouton NON */}
+            <button
+                type="button"
+                onClick={() => handleStatusChange('no')}
+                className={`w-full py-3 px-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    statut === 'no'
+                        ? 'bg-red-500/30 text-red-200 border-red-500/60 shadow-lg shadow-red-500/20'
+                        : 'bg-white/5 text-gray-300 border-white/10 hover:border-red-500/40 hover:bg-red-500/10'
                 }`}
             >
-                {stars.map((star) => (
-                    <button
-                        key={star}
-                        type="button"
-                        onClick={() => handleRatingChange(star)}
-                        onMouseEnter={() => handleHoverRating(star)}
-                        onMouseLeave={() => handleHoverRating(0)}
-                        className={`text-2xl transition-colors ${
-                            activeRating >= star ? 'text-amber-400' : 'text-gray-600'
-                        }`}
-                        aria-label={`Noter ${star} sur 10`}
-                    >
-                        ★
-                    </button>
-                ))}
-                <span className="text-sm text-gray-400 ml-2">
-                    {rating > 0 ? `${rating}/10` : 'Pas de note'}
-                </span>
-            </div>
+                {t('ratingSelector.notSelected')}
+            </button>
+
+            {/* Bouton À DISCUTER */}
+            <button
+                type="button"
+                onClick={() => handleStatusChange('discuss')}
+                className={`w-full py-3 px-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    statut === 'discuss'
+                        ? 'bg-amber-500/30 text-amber-200 border-amber-500/60 shadow-lg shadow-amber-500/20'
+                        : 'bg-white/5 text-gray-300 border-white/10 hover:border-amber-500/40 hover:bg-amber-500/10'
+                }`}
+            >
+                {t('ratingSelector.discuss')}
+            </button>
+
+            {/* Bouton OUI */}
+            <button
+                type="button"
+                onClick={() => handleStatusChange('yes')}
+                className={`w-full py-3 px-4 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    statut === 'yes'
+                        ? 'bg-green-500/30 text-green-200 border-green-500/60 shadow-lg shadow-green-500/20'
+                        : 'bg-white/5 text-gray-300 border-white/10 hover:border-green-500/40 hover:bg-green-500/10'
+                }`}
+            >
+                {t('ratingSelector.yesRate')}
+            </button>
         </div>
     );
 };

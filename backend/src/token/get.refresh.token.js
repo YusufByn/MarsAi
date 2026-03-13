@@ -14,7 +14,10 @@ const oauth2Client = new google.auth.OAuth2(
 const authUrl = oauth2Client.generateAuthUrl({
   access_type: 'offline',
   prompt: 'consent',
-  scope: ['https://www.googleapis.com/auth/youtube.upload']
+  scope: [
+    'https://www.googleapis.com/auth/youtube.upload',
+    'https://www.googleapis.com/auth/youtube.force-ssl'
+  ]
 });
 
 console.log('Open this URL in your browser:');

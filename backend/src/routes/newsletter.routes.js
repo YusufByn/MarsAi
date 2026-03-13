@@ -5,7 +5,7 @@ import {
   validateUnsubscribe, 
   validateSendCampaign, 
   validatePreviewRecipients 
-} from '../middlewares/validator/newsletter.validator.js';
+} from '../../../shared/validators/newsletter.validator.js';
 import { checkAuth, restrictTo } from '../middlewares/auth.middleware.js';
 import { apiLimiter, authLimiter } from '../middlewares/rateLimiter.middleware.js';
 
@@ -14,13 +14,16 @@ const router = Router();
 router.use(authLimiter);
 
 router.post('/subscribe', validateSubscribe, newsletterController.subscribe);
+// route pour se désabonner
 router.post('/unsubscribe', validateUnsubscribe, newsletterController.unsubscribe);
+// route pour compter kes inscrit
 router.get('/count', newsletterController.getCount);
 
 
 router.use(apiLimiter);
 
 router.use(checkAuth);
+
 
 router.use(restrictTo('admin', 'superadmin'));
 

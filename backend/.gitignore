@@ -3,11 +3,44 @@
 node_modules/
 
 .env
+.env.docker
 # quand tu ecris .env.* ca dit d'ignorer tous les fichiers qui commencent par .env
-.env.*
+.env.local
+
+*.md
 
 logs/
 uploads/
 uploads/videos/
 uploads/covers/
 uploads/*
+BucketS3/*
+
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+*.flv
+*.wmv
+*.mpg
+*.mpeg
+*.m4v
+*.m4a
+*.m4b
+*.m4p
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.ico
+*.webp
+*.svg
+*.eps
+*.pdf
+*.doc
+*.docx
+Atelier2.code-workspace
+.env.prod

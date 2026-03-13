@@ -1,6 +1,5 @@
 import newsletterModel from '../models/newsletter.model.js';
-import { sendWelcomeEmail } from '../services/email.service.js';
-import { pool } from '../db/index.js';
+import emailService from '../services/email.service.js';
 
 const newsletterController = {
   /**
@@ -9,6 +8,8 @@ const newsletterController = {
   async subscribe(req, res, next) {
     try {
       const { email } = req.body;
+
+      // gestion des erreurs
 
       // Vérifier si l'email existe déjà
       const existingSubscription = await newsletterModel.findByEmail(email);
@@ -27,7 +28,7 @@ const newsletterController = {
         
         // Envoyer l'email de bienvenue
         try {
-          await sendWelcomeEmail(email);
+          await emailService.sendWelcomeEmail(email);
         } catch (emailError) {
           console.error('Error sending email:', emailError);
           // On continue même si l'email échoue
@@ -45,7 +46,7 @@ const newsletterController = {
 
       // Envoyer l'email de bienvenue
       try {
-        await sendWelcomeEmail(email);
+        await emailService.sendWelcomeEmail(email);
       } catch (emailError) {
         console.error('Error sending email:', emailError);
         // On continue même si l'email échoue
@@ -132,6 +133,9 @@ const newsletterController = {
   /**
    * Compter les abonnés actifs (public)
    */
+
+  // calcule du nombre de newsletter abonnés
+
   async getCount(req, res, next) {
     try {
       const count = await newsletterModel.countActive();
@@ -145,6 +149,9 @@ const newsletterController = {
       next(error);
     }
   },
+
+
+  //Selection des différent destinataires pour l'envoi de la newsletter
 
   /**
    * Aperçu du nombre de destinataires par type (admin only)
@@ -180,14 +187,12 @@ const newsletterController = {
    * Envoyer une campagne newsletter (admin only)
    */
   async sendCampaign(req, res, next) {
-    const connection = await pool.getConnection();
-    
     try {
       const { subject, message, recipients } = req.body;
 
       // Vérifier la limite d'envoi (2 par jour)
       const campaignsToday = await newsletterModel.countCampaignsToday();
-      if (campaignsToday >= 500) {
+      if (campaignsToday >= 2) {
         return res.status(429).json({
           success: false,
           message: 'Sending limit reached: maximum 2 newsletters per day'
@@ -204,15 +209,8 @@ const newsletterController = {
         });
       }
 
-      // Commencer la transaction
-      await connection.beginTransaction();
-
       // Envoyer les emails en masse
-      const { sendBulkEmail } = await import('../services/email.service.js');
-      const results = await sendBulkEmail(emails, subject, message);
-
-      // Valider la transaction
-      await connection.commit();
+      const results = await emailService.sendBulkEmail(emails, subject, message);
 
       res.status(200).json({
         success: true,
@@ -225,12 +223,8 @@ const newsletterController = {
         }
       });
     } catch (error) {
-      // Annuler la transaction en cas d'erreur
-      await connection.rollback();
       console.error('Error during campaign sending:', error);
       next(error);
-    } finally {
-      connection.release();
     }
   }
 };

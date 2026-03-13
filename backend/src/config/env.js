@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // lister et verifier les infos necessaire
-const required = ['DB_HOST', 'DB_USER', 'DB_NAME', 'JWT_SECRET', 'EMAIL_HOST', 'EMAIL_USER', 'EMAIL_PASSWORD'];
+const required = ['DB_HOST', 'DB_USER', 'DB_NAME' , 'JWT_SECRET', 'EMAIL_HOST', 'EMAIL_USER', 'EMAIL_PASSWORD'];
 for (const key of required) {
     if(!process.env[key]){
         throw new Error(`${key}: manquant dans le fichier d'environnement`)
@@ -15,6 +15,7 @@ for (const key of required) {
 // exportation 
 export const env = {
     port: Number(process.env.PORT ?? 4000),
+    nodeEnv: process.env.NODE_ENV ?? 'development',
     db: {
         host: process.env.DB_HOST,
         port: Number(process.env.DB_PORT ?? 3306),

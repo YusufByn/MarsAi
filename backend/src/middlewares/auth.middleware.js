@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
 
 export const checkAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader?.startsWith('Bearer ')) {
         return res.status(401).json({ message: "Accès refusé. Token manquant." });
     }
@@ -10,10 +11,13 @@ export const checkAuth = (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, env.jwtSecret);
         req.user = decoded;
         next();
     } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: "Session expirée. Veuillez vous reconnecter." });
+        }
         return res.status(401).json({ message: "Token invalide ou expiré." });
     }
 };

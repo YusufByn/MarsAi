@@ -1,13 +1,16 @@
 import express from 'express';
 import { ratingController } from '../controllers/rating.controller.js';
-import { validateRatingUpsert } from '../middlewares/validator/rating.validator.js';
+import { validateRatingUpsert } from '../../../shared/validators/rating.validator.js';
 import { apiLimiter } from '../middlewares/rateLimiter.middleware.js';
+import { checkAuth } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 router.use(apiLimiter);
+router.use(checkAuth);
 
-router.get('/:videoId/:userId', ratingController.getOne);
+router.get('/:videoId', ratingController.getOne);
 router.post('/', validateRatingUpsert, ratingController.upsert);
+router.delete('/:videoId', ratingController.deleteRating);
 
 export default router;

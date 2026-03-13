@@ -1,73 +1,58 @@
 import { pool } from '../db/index.js';
 
 const newsletterModel = {
-  /**
-   * Chercher un email dans la newsletter
-   */
+  // on cherche par email
   async findByEmail(email) {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       'SELECT * FROM newsletter WHERE email = ?',
       [email]
     );
     return rows[0];
   },
 
-  /**
-   * Créer une nouvelle inscription
-   */
+  // la on s'inscrit
   async create(email) {
-    const [result] = await pool.query(
+    const [result] = await pool.execute(
       'INSERT INTO newsletter (email) VALUES (?)',
       [email]
     );
     return { id: result.insertId, email };
   },
 
-  /**
-   * Réabonner un email (remettre unsubscribed_at à NULL)
-   */
+  // pour ceux qui se sont désabonnés et veulent se réabonner
   async resubscribe(email) {
-    const [result] = await pool.query(
+    const [result] = await pool.execute(
       'UPDATE newsletter SET unsubscribed_at = NULL WHERE email = ?',
       [email]
     );
     return result.affectedRows > 0;
   },
 
-  /**
-   * Désabonner un email
-   */
+  //unsubscribe
   async unsubscribe(email) {
-    const [result] = await pool.query(
+    const [result] = await pool.execute(
       'UPDATE newsletter SET unsubscribed_at = CURRENT_TIMESTAMP WHERE email = ?',
       [email]
     );
     return result.affectedRows > 0;
   },
 
-  /**
-   * Récupérer tous les abonnés actifs (non désabonnés)
-   */
+  //findall de base 
   async findAllActive() {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       'SELECT * FROM newsletter WHERE unsubscribed_at IS NULL ORDER BY subscribed_at DESC'
     );
     return rows;
   },
 
-  /**
-   * Compter les abonnés actifs
-   */
   async countActive() {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       'SELECT COUNT(*) as count FROM newsletter WHERE unsubscribed_at IS NULL'
     );
     return rows[0].count;
   },
 
-  /**
-   * Récupérer les emails par type de destinataire
-   */
+ // test de recup les email en fonction du role
   async getEmailsByType(type) {
     let query = '';
     
@@ -88,13 +73,11 @@ const newsletterModel = {
         return [];
     }
 
-    const [rows] = await pool.query(query);
+    const [rows] = await pool.execute(query);
     return rows.map(row => row.email);
   },
 
-  /**
-   * Compter les destinataires par type
-   */
+  // compte les email par role
   async countRecipientsByType(types) {
     const counts = {};
     
@@ -106,9 +89,7 @@ const newsletterModel = {
     return counts;
   },
 
-  /**
-   * Récupérer tous les emails uniques pour les types sélectionnés
-   */
+  //on chope les emails unique par role
   async getUniqueEmailsForTypes(types) {
     const allEmails = [];
     

@@ -7,9 +7,8 @@ import { assignationController } from '../controllers/assignation.controller.js'
 
 const router = express.Router();
 
-router.use(apiLimiter);
 router.use(checkAuth); 
-router.use(restrictTo('admin'));
+router.use(restrictTo('admin', 'superadmin'));
 
 router.get('/stats', adminController.getDashboardStats);
 
@@ -23,8 +22,10 @@ router.post('/assignations/random', assignationController.randomAssign);
 
 router.use(restrictTo('superadmin'));
 
+router.get('/events/:id', adminController.getEventById);
 router.get('/events', adminController.listEvents);
 router.post('/events', adminController.createEvent);
+router.put('/events/:id', adminController.updateEvent);
 router.delete('/events/:id', adminController.deleteEvent);
 
 router.get('/cms', adminController.getCms);

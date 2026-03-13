@@ -1,7 +1,7 @@
 // Vérification des vidéos gràace à l'outil ffmpeg
 import ffmpeg from 'fluent-ffmpeg';
-import { path as ffmpegPath } from 'ffmpeg-installer/ffmpeg';
-import { path as ffprobePath } from 'ffprobe-installer/ffprobe';
+import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg';
+import { path as ffprobePath } from '@ffprobe-installer/ffprobe';
 import fs from 'fs';
 
 // path vers les executables ffmpeg et ffprobe
@@ -77,3 +77,5 @@ export async function validateVideoDuration(videoPath, options) {
         });
     });
 }
+
+

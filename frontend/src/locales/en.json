@@ -1,0 +1,518 @@
+{
+  "home": {
+    "badge": "6 & 7 October 2026",
+    "subtitle": "Marseille, France",
+    "submitFilm": "SUBMIT MY FILM",
+    "discoverJury": "DISCOVER THE JURY",
+    "films": {
+      "kicker": "Official Selection",
+      "title1": "Films in",
+      "title2": "competition",
+      "viewAll": "View films in competition",
+      "launchPlayer": "Launch player"
+    },
+    "events": {
+      "kicker": "Agenda",
+      "title": "Events",
+      "empty": "No events at the moment.",
+      "viewAll": "View all events"
+    },
+    "objectives": {
+      "films": "films in competition",
+      "countries": "countries represented",
+      "days": "days of immersion",
+      "talks": "conferences",
+      "kicker": "Objectives",
+      "title": "Key Figures"
+    },
+    "desirableFuture": {
+      "ecology": {
+        "title": "Ecology",
+        "desc": "Using AI as a tool to imagine ecological futures and raise awareness through generative storytelling."
+      },
+      "possibleFuture": {
+        "title": "Possible Future",
+        "desc": "Exploring how generative cinema can open new perspectives and prototype worlds worth living in."
+      },
+      "democracy": {
+        "title": "Democracy",
+        "desc": "Examining the role of AI and media in shaping democratic societies and collective narratives."
+      },
+      "kicker": "Vision",
+      "title": "A Desirable Future"
+    },
+    "jury": {
+      "title": "The International Jury",
+      "viewAll": "View the full jury"
+    },
+    "awards": {
+      "items": {
+        "grandJury": { "title": "Grand Jury Prize" },
+        "bestScript": { "title": "Best AI Screenplay" },
+        "techInnovation": { "title": "Technical Innovation" }
+      },
+      "kicker": "Awards",
+      "title": "Prizes & Awards"
+    },
+    "sponsors": {
+      "kicker": "Partners",
+      "title": "Our Sponsors",
+      "viewAll": "SEE OUR PARTNERS",
+      "viewAllLink": "View all partners →"
+    },
+    "location": {
+      "venueName": "Festival Venue",
+      "address1": "Marseille, France",
+      "address2": "Full address to be confirmed",
+      "transport": {
+        "train": "Metro / Train",
+        "trainDesc": "Nearest stop: to be confirmed (e.g. Metro M1).",
+        "bus": "Bus",
+        "busDesc": "Lines: to be confirmed (e.g. 49, 52).",
+        "info": "Tips",
+        "infoDesc": "Allow 10 min walk from the stop."
+      },
+      "kicker": "Location",
+      "title": "Festival Location",
+      "accessTitle": "How to get there",
+      "openMap": "Open in Google Maps"
+    }
+  },
+  "countdown": {
+    "expectedImpact": "Countdown to the start of the film submission phase",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds"
+  },
+  "navbar": {
+    "langToggle": "EN",
+    "home": "Home",
+    "jury": "Jury",
+    "admin": "Administration",
+    "videoList": "Video list",
+    "player": "Player",
+    "selectorProfile": "My selector profile",
+    "searchPlaceholder": "Title, director, tag...",
+    "searchFilm": "Search for a film",
+    "logout": "Log out",
+    "login": "Log in",
+    "menuLabel": "Navigation menu"
+  },
+  "footer": {
+    "description": "The global platform for generative storytelling. Explore the future of cinema powered by artificial intelligence.",
+    "newsletter": "Newsletter",
+    "emailPlaceholder": "your@email.com",
+    "sending": "Sending...",
+    "subscribe": "Subscribe",
+    "enterEmail": "Please enter your email",
+    "errorOccurred": "An error occurred",
+    "navigation": "Navigation",
+    "programme": "Programme",
+    "films": "Films",
+    "jury": "Jury",
+    "ticketing": "Ticketing",
+    "competition": "Competition",
+    "rules": "Rules",
+    "submission": "Submission",
+    "prizes": "Prizes",
+    "faq": "FAQ",
+    "legal": "Legal",
+    "legalNotice": "Legal Notice",
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "press": "Press",
+    "copyright": "© 2026 marsAI PROTOCOL — ALL RIGHTS RESERVED"
+  },
+  "login": {
+    "title": "Login",
+    "subtitle": "Access your marsAI space",
+    "email": "Email",
+    "emailPlaceholder": "e.g. user@mail.com",
+    "password": "Password",
+    "logging": "Logging in...",
+    "submit": "Log in",
+    "success": "Login successful",
+    "error": "Login error"
+  },
+  "register": {
+    "title": "Register",
+    "subtitle": "Create your marsAI account",
+    "firstName": "First name",
+    "firstNamePlaceholder": "First name",
+    "lastName": "Last name",
+    "lastNamePlaceholder": "Last name",
+    "email": "Email",
+    "password": "Password",
+    "creating": "Creating...",
+    "submit": "Create my account",
+    "success": "Account created, you can now log in",
+    "error": "Error creating account",
+    "validating": "Verifying invitation...",
+    "invalidLink": "Invalid link",
+    "invalidLinkMessage": "This invitation link is invalid or has expired. Contact an administrator to receive a new invitation."
+  },
+  "jury": {
+    "loading": "Initializing Jury...",
+    "error": "ERROR",
+    "backHome": "BACK TO HOME",
+    "badge": "Festival Edition 2026",
+    "title": "THE JURY",
+    "description": "Meet the visionaries of the seventh art who will select the masterpieces of this year's generative storytelling.",
+    "empty": "No jury member has joined the adventure yet.",
+    "ceremony": "Ceremony 2026",
+    "international": "International Jury"
+  },
+  "juryDetails": {
+    "loading": "Immersion in progress...",
+    "profileLost": "Profile Lost",
+    "backToJury": "BACK TO JURY",
+    "manifesto": "JURY MANIFESTO",
+    "ceremony": "CEREMONY 2026",
+    "grandJury": "Grand International Jury — marsAI Protocol"
+  },
+  "newsletter": {
+    "inbox": "Inbox",
+    "noSubject": "No subject",
+    "toMe": "to me",
+    "startWriting": "Start writing your message...",
+    "discover": "DISCOVER",
+    "broadcastSystem": "Broadcast System",
+    "subscribersCount": "Newsletter Subscribers",
+    "dailyQuota": "Daily Quota",
+    "subjectPlaceholder": "Campaign subject...",
+    "messagePlaceholder": "Write your message here...",
+    "sendSettings": "Send Settings",
+    "immediate": "Immediate",
+    "scheduled": "Scheduled",
+    "audienceTarget": "Audience Target",
+    "newsletterLabel": "Newsletter",
+    "activePublic": "Active Public",
+    "recipients": "Recipients",
+    "sendInfo": "The message will be sent to the entire active newsletter database.",
+    "transmitting": "Transmitting...",
+    "schedule": "Schedule",
+    "sendCampaign": "Send Campaign",
+    "schedulingTitle": "Scheduling",
+    "confirmationTitle": "Confirmation",
+    "scheduledFor": "Sending scheduled for {{date}} at {{time}}",
+    "willReach": "You will reach {{count}} newsletter subscribers.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "livePreview": "Live Preview",
+    "fillAllFields": "Please fill in all fields",
+    "selectDateTime": "Please select a date and time for scheduled sending",
+    "scheduledSuccess": "Successfully scheduled for {{date}} at {{time}}",
+    "sendError": "An error occurred while sending",
+    "enterEmail": "Please enter your email"
+  },
+  "player": {
+    "noVideos": "No videos available",
+    "selected": "Selected",
+    "toReview": "To review",
+    "notSelected": "Not selected",
+    "lastVideo": "Last video reached",
+    "videoRejected": "Video rejected",
+    "addedToDiscuss": "Added to discuss",
+    "saveError": "Error while saving",
+    "notConnected": "Error: user not connected",
+    "ratedSuccess": "Video selected with rating {{rating}}/10",
+    "ratingError": "Error while rating",
+    "emailSent": "Email sent to director",
+    "emailError": "Error while sending email",
+    "backToProfile": "Back to selector profile",
+    "profileSelector": "My Selector Profile",
+    "fullscreen": "Fullscreen",
+    "collapse": "Collapse",
+    "showMore": "Show more",
+    "filmPage": "Film page",
+    "chooseStatus": "Choose a status to continue"
+  },
+  "actionButtons": {
+    "no": "No",
+    "discuss": "To discuss",
+    "yesRate": "Yes + Rate",
+    "quickNote": "Note",
+    "emailDirector": "Email",
+    "sound": "Sound",
+    "details": "Details"
+  },
+  "ratingModal": {
+    "title": "Rate the video",
+    "noTitle": "Untitled",
+    "by": "By {{author}}",
+    "assignRating": "Assign a rating",
+    "selectRating": "Select a rating from 1 to 10",
+    "ratingInfo": "This rating will be used to rank videos for the final selection. Use the other buttons to add a quick note or send an email.",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "validate": "Validate",
+    "alertNoRating": "Please assign a rating before validating"
+  },
+  "quickNote": {
+    "title": "Quick note",
+    "visibleOnly": "Visible only to you",
+    "noTitle": "Untitled",
+    "by": "By {{author}}",
+    "placeholder": "Your observations about this video...",
+    "characters": "characters",
+    "autoSave": "Auto-save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save"
+  },
+  "emailPanel": {
+    "title": "Message to director",
+    "sentDirectly": "Email sent directly",
+    "noTitle": "Untitled",
+    "by": "By {{author}}",
+    "recipient": "Recipient",
+    "noEmail": "Email not provided",
+    "yourMessage": "Your message",
+    "placeholder": "Hello,\n\nWe have watched your video and would like to congratulate you...\n\nBest regards",
+    "characters": "characters",
+    "warning": "This email will be sent immediately and cannot be undone.",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "send": "Send",
+    "alertNoMessage": "Please write a message",
+    "alertSendError": "Error sending email"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "yesRate": "Yes - Rate",
+    "no": "No",
+    "discuss": "To discuss",
+    "quickNote": "Quick note",
+    "email": "Email",
+    "delete": "Del",
+    "disabledInModals": "Shortcuts are disabled in modals"
+  },
+  "selectorMemo": {
+    "title": "Quick note",
+    "visibleOnly": "Visible only to you",
+    "placeholder": "Observations about this video...",
+    "characters": "characters"
+  },
+  "ratingSelector": {
+    "notSelected": "Not selected",
+    "discuss": "To discuss",
+    "yesRate": "Yes - Rate"
+  },
+  "common": {
+    "back": "Back",
+    "loading": "Loading..."
+  },
+  "pages": {
+    "events": {
+      "title": "Events",
+      "subtitle": "Conferences, workshops and screenings around AI cinema."
+    },
+    "eventDetail": {
+      "duration": "Duration",
+      "minutes": "min",
+      "capacity": "Capacity",
+      "seats": "seats"
+    }
+  },
+  "submission": {
+    "hero": {
+      "badge": "Open Submissions — 2026",
+      "title1": "Submit",
+      "title2": "Your Film",
+      "subtitle": "Share your AI-powered creative vision with our international jury"
+    },
+    "steps": {
+      "director": "Director",
+      "filmData": "Film Data",
+      "upload": "Upload"
+    },
+    "personalData": {
+      "title": "Personal Data",
+      "subtitle": "Tell us about yourself",
+      "sections": {
+        "identity": "Identity",
+        "contact": "Contact",
+        "address": "Address",
+        "additional": "Additional",
+        "optional": "Optional"
+      },
+      "gender": {
+        "label": "Gender",
+        "placeholder": "Select your gender",
+        "women": "Women",
+        "man": "Man",
+        "other": "Other"
+      },
+      "firstName": { "label": "First Name", "placeholder": "First name" },
+      "lastName": { "label": "Last Name", "placeholder": "Last name" },
+      "email": { "label": "Email", "placeholder": "your@email.com" },
+      "country": { "label": "Country", "placeholder": "Select your country" },
+      "mobileNumber": { "label": "Mobile Number", "placeholder": "Mobile number" },
+      "phoneNumber": { "label": "Phone Number", "placeholder": "Phone number" },
+      "street": { "label": "Street", "placeholder": "Street address" },
+      "street2": { "label": "Street 2", "placeholder": "Apt, suite, building…" },
+      "zipcode": { "label": "Zip Code", "placeholder": "75001" },
+      "city": { "label": "City", "placeholder": "Paris" },
+      "stateRegion": { "label": "State / Region", "placeholder": "Île-de-France" },
+      "countryAddress": {
+        "label": "Country",
+        "placeholder": "Country",
+        "autoFilled": "Auto-filled from nationality"
+      },
+      "acquisition": {
+        "label": "How did you hear about us?",
+        "placeholder": "Select an option",
+        "socialNetworks": "Social networks",
+        "wordOfMouth": "Word of mouth",
+        "mobileFilmFestival": "Mobile Film Festival",
+        "searchEngine": "Search engine",
+        "other": "Other",
+        "socialPlaceholder": "Select a social network",
+        "otherPlaceholder": "Please specify",
+        "requiredError": "Please tell us how you heard about us",
+        "socialRequiredError": "Please select a social network"
+      },
+      "ageVerificationPre": "I confirm I am",
+      "ageVerificationBold": "18 years old or older",
+      "contributors": { "label": "Contributors", "desc": "Add crew members or collaborators" },
+      "socialNetworksToggle": { "label": "Social Networks", "desc": "Link your profiles" },
+      "errors": {
+        "pleaseCorrect": "Please correct the errors before continuing",
+        "zipcodeRequired": "Zip code is required",
+        "zipcodeTooLong": "Zip code is too long"
+      },
+      "buttons": { "loading": "Loading…", "nextStep": "Next Step" }
+    },
+    "videoData": {
+      "title": "Film Data",
+      "subtitle": "Describe your project",
+      "sections": {
+        "titles": "Titles",
+        "language": "Language",
+        "synopsis": "Synopsis",
+        "creativeNotes": "Creative Notes",
+        "classification": "AI Classification",
+        "tags": "Tags"
+      },
+      "titleEN": { "label": "Title EN", "placeholder": "English title" },
+      "titleOriginal": { "label": "Title (original)", "placeholder": "Original title" },
+      "filmLanguage": { "label": "Film Language", "placeholder": "e.g. French, English…" },
+      "synopsisEN": { "label": "Synopsis EN", "placeholder": "English synopsis…" },
+      "synopsisOriginal": { "label": "Synopsis (original)", "placeholder": "Original language synopsis…" },
+      "techResume": { "label": "Technical Resume", "placeholder": "AI tools used (Midjourney, Runway, Sora…)" },
+      "creativeResume": { "label": "Creative Resume", "placeholder": "Your creative methodology…" },
+      "classification": {
+        "hybrid": { "title": "Hybrid", "desc": "AI + Human creativity" },
+        "fullAI": { "title": "Full AI", "desc": "100% AI-generated" }
+      },
+      "errors": { "pleaseCorrect": "Please correct the errors before continuing" },
+      "buttons": { "back": "Back", "loading": "Loading…", "nextStep": "Next Step" }
+    },
+    "upload": {
+      "title": "Video Upload",
+      "subtitle": "Finalize and submit your film",
+      "sections": {
+        "videoFile": "Video File",
+        "coverImage": "Cover Image",
+        "stills": "Film Stills (optional)",
+        "subtitle": "Subtitle File",
+        "rights": "Rights & Preferences",
+        "verification": "Verification"
+      },
+      "video": {
+        "clickToUpload": "Click to upload video",
+        "formats": "MOV, MP4, WebM, MKV — max 200MB, max 2:30",
+        "duration": "Duration:",
+        "calculating": "Calculating duration…",
+        "previewLimited": "Preview limited to {{seconds}} seconds."
+      },
+      "image": {
+        "changeFile": "Change file",
+        "chooseFile": "Choose file",
+        "clickToUpload": "Click to upload",
+        "cover": "Cover",
+        "coverHint": "JPG or PNG — max 15MB",
+        "stillHint": "max 7MB"
+      },
+      "subtitleFile": {
+        "label": "If voice or text needs translation — .srt (max 1MB)",
+        "placeholder": ".srt file"
+      },
+      "rights": {
+        "label": "Rights accepted",
+        "text": "By submitting this video, you confirm that you hold all necessary rights to the content provided and authorize MarsAI to broadcast, reproduce, and use this video, in whole or in part, in its communications media, without limitation in terms of duration or territory."
+      },
+      "newsletter": {
+        "label": "Subscribe to our newsletter",
+        "desc": "Stay updated on MarsAI news — unsubscribe anytime"
+      },
+      "spinner": "Loading…",
+      "errors": {
+        "uploadVideo": "Please upload a video",
+        "uploadCover": "Please upload a cover image",
+        "acceptRights": "Please accept the rights",
+        "videoTooLong": "Video too long. Maximum duration: 2:30",
+        "videoTooLongFormatted": "Video too long ({{duration}}). Maximum duration: 2:30",
+        "imageType": "Please select a JPG or PNG image only",
+        "imageTooLargeCover": "File too large. Max: 15MB",
+        "imageTooLargeStill": "File too large. Max: 7MB",
+        "videoType": "Please select a valid video file (MOV, MPEG4, MP4, WebM, MKV)",
+        "videoMimeType": "Video file type not allowed",
+        "videoSize": "Video file too large. Maximum: 200MB",
+        "subtitleType": "Please select a .srt file only",
+        "subtitleMimeType": "Subtitle file type not allowed",
+        "subtitleSize": "Subtitle file too large. Maximum: 1MB",
+        "videoMetadata": "Unable to read video file metadata",
+        "videoDurationUnreadable": "Unable to read duration",
+        "submitError": "An error occurred while submitting the form. Please try again."
+      },
+      "success": {
+        "submitted": "Your video has been successfully submitted!",
+        "redirecting": "Redirecting…"
+      },
+      "buttons": { "back": "Back", "submitting": "Submitting…", "submit": "Submit Film" }
+    },
+    "contributors": {
+      "title": "Contributors",
+      "subtitle": "Add all the contributors of the project",
+      "added": "Added contributors ({{count}})",
+      "newContributor": "New contributor",
+      "add": "Add",
+      "cancel": "Cancel",
+      "saveAndContinue": "Save and continue",
+      "atLeastOne": "You must add at least one contributor",
+      "alreadyAdded": "This email is already added",
+      "roleRequired": "Role is required",
+      "roleTooShort": "Role must be at least 2 characters",
+      "roleTooLong": "Role is too long",
+      "roleInvalid": "Role contains invalid characters",
+      "gender": {
+        "label": "Gender",
+        "placeholder": "Select gender",
+        "women": "Woman",
+        "man": "Man",
+        "other": "Other"
+      },
+      "firstName": { "label": "First Name", "placeholder": "First Name" },
+      "lastName": { "label": "Last Name", "placeholder": "Last Name" },
+      "email": { "label": "Email", "placeholder": "email@example.com" },
+      "role": { "label": "Role", "placeholder": "Role (e.g. Director)" }
+    },
+    "socialNetworks": {
+      "title": "Social Networks",
+      "subtitle": "Please enter the URL of your social media profiles",
+      "invalidUrl": "Invalid URL",
+      "saveAndContinue": "Save and continue"
+    },
+    "tags": {
+      "placeholder": "Add tags (Enter or comma)",
+      "hint": "Press Enter or comma to add tags (max 10, 20 chars each)"
+    },
+    "validated": {
+      "title": "Congratulations! {{firstName}} {{lastName}} Your participation has been validated.",
+      "message": "Your participation has been validated. You can now access your participation details. Thank you for your participation. You will receive an email confirmation shortly.",
+      "backHome": "Back to home"
+    }
+  }
+}

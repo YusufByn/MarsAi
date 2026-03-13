@@ -33,7 +33,7 @@ export const securityGuard = async (req, res, next) => {
         }
 
         if (attackDetected) {
-            console.warn(`🚨 ATTAQUE DÉTECTÉE [${attackDetected}] IP: ${ip}`);
+            console.warn(`[SECURITY] Attaque detectee [${attackDetected}] IP: ${ip}`);
 
             await securityModel.logAttack({
                 ip, 

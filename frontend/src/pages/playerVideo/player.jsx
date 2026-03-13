@@ -1,207 +1,1028 @@
-// ici il y aura tout le code concernant le player de la vidéo
-// c'est à dire le player de la vidéo, le player de la vidéo, le player de la vidéo, etc.
-
-
-import React, { useEffect, useMemo, useState } from 'react';
-import RatingSelector from './selectorOption/ratingSelector';
-import SelectorMemo from './selectorOption/selectorMemo';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import ActionButtons from './selectorOption/ActionButtons';
+import RatingModal from './selectorOption/RatingModal';
+import QuickNotePanel from './selectorOption/QuickNotePanel';
+import EmailPanel from './selectorOption/EmailPanel';
 import { playerService } from '../../services/playerService';
+import { API_URL } from '../../config';
 
 const Player = () => {
-    const [rating, setRating] = useState(0);
-    const [ratingStatus, setRatingStatus] = useState('no');
-    const [memo, setMemo] = useState('');
-    const [video, setVideo] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-    const [statusMessage, setStatusMessage] = useState('');
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const targetVideoId = searchParams.get('videoId');
+  const [videos, setVideos] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
 
-    const userId = useMemo(() => {
-        if (typeof window === 'undefined') return 1;
-        const param = new URLSearchParams(window.location.search).get('userId');
-        return Number(param) || 1;
-    }, []);
+  // États pour le son (global, persiste entre les vidéos)
+  const [isMuted, setIsMuted] = useState(true);
+  const [volume, setVolume] = useState(0.5);
 
-    const embedUrl = useMemo(() => {
-        if (!video?.youtube_url) return null;
+  // États pour les modals/panels
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showNotePanel, setShowNotePanel] = useState(false);
+  const [showEmailPanel, setShowEmailPanel] = useState(false);
+
+  // États pour rating et memo
+  const [ratings, setRatings] = useState({});
+  const [memos, setMemos] = useState({});
+  const [statuses, setStatuses] = useState({});
+  const [_saving, setSaving] = useState(false);
+
+  // État pour le panneau "afficher plus"
+  const [expandedVideoId, setExpandedVideoId] = useState(null);
+
+  // États pour les notifications et feedback visuel
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+  const [actionFeedback, setActionFeedback] = useState({ show: false, type: '' });
+
+  const containerRef = useRef(null);
+  const videosRef = useRef({});
+  const touchStartY = useRef(0);
+  const observerRef = useRef(null);
+  const tabCountRef = useRef(0);
+  const tabTimerRef = useRef(null);
+  const currentIndexRef = useRef(0);
+
+  // Récupérer l'ID utilisateur réel depuis localStorage
+  const [userId, setUserId] = useState(null);
+
+  // URL du backend (importée depuis config.js)
+
+  // Charger l'utilisateur connecté
+  useEffect(() => {
+    const storedUser = localStorage.getItem('auth_user');
+    if (storedUser) {
+      const authUser = JSON.parse(storedUser);
+      setUserId(authUser.id);
+      console.log('[PLAYER] User ID:', authUser.id);
+    } else {
+      console.log('[PLAYER] No user found in localStorage');
+    }
+  }, []);
+
+  // Charger les ratings et memos existants (fonction déclarée AVANT useEffect)
+  const loadRatingsAndMemos = async (videoList, userIdToUse) => {
+    if (!userIdToUse) {
+      console.log('[PLAYER] Cannot load ratings/memos: userId not available yet');
+      return;
+    }
+
+    console.log('[PLAYER] Loading ratings/memos for user:', userIdToUse);
+
+    try {
+      const ratingsData = {};
+      const memosData = {};
+      const statusesData = {};
+
+      for (const video of videoList) {
         try {
-            const url = new URL(video.youtube_url);
-            const videoId = url.searchParams.get('v') || url.pathname.split('/').pop();
-            return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-        } catch {
-            return null;
+          // Charger le memo
+          const memoResponse = await playerService.getMemo(video.id, userIdToUse);
+          if (memoResponse?.data) {
+            memosData[video.id] = memoResponse.data.comment || '';
+            statusesData[video.id] = memoResponse.data.statut || null;
+          } else {
+            statusesData[video.id] = null;
+          }
+
+          // Charger le rating
+          const ratingResponse = await playerService.getRating(video.id, userIdToUse);
+          if (ratingResponse?.data?.rating) {
+            ratingsData[video.id] = Number(ratingResponse.data.rating);
+          }
+        } catch (err) {
+          console.log('[PLAYER] Error loading data for video', video.id, err.message);
+          statusesData[video.id] = null;
         }
-    }, [video]);
+      }
 
-    useEffect(() => {
-        let isMounted = true;
+      setRatings(ratingsData);
+      setMemos(memosData);
+      setStatuses(statusesData);
+      console.log('[PLAYER] Loaded ratings/memos:', { ratingsData, statusesData });
+    } catch (error) {
+      console.error('[PLAYER ERROR] Loading ratings/memos:', error);
+    }
+  };
 
-        const fetchData = async () => {
+  // Construire l'URL complete pour une video
+  const buildVideoData = (video) => ({
+    ...video,
+    video_url: video.video_url
+      ? `${API_URL}${video.video_url}`
+      : video.video_file_name
+        ? `${API_URL}/uploads/videos/${video.video_file_name}`
+        : null,
+    author: video.author || [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' '),
+    description: video.description || video.synopsis || '',
+  });
+
+  // Récupérer les vidéos depuis le backend
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const url = userId
+          ? `${API_URL}/api/player/videos?userId=${userId}`
+          : `${API_URL}/api/player/videos`;
+        console.log('[PLAYER] Fetching videos, userId:', userId || 'anonymous');
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[PLAYER ERROR] HTTP:', response.status, errorText);
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const result = await response.json();
+        const videoList = result.data || result;
+
+        console.log('[PLAYER] Videos loaded:', videoList.length);
+
+        let videosWithFullUrl = Array.isArray(videoList) ? videoList.map(buildVideoData) : [];
+
+        // Si on arrive avec un videoId cible (depuis le selector), charger cette vidéo si absente
+        if (targetVideoId) {
+          const alreadyInList = videosWithFullUrl.some(v => v.id === parseInt(targetVideoId));
+          if (!alreadyInList) {
             try {
-                setLoading(true);
-                const feed = await playerService.getVideoFeed(1);
-                const firstVideo = feed?.data?.[0] || null;
-                if (!isMounted) return;
-                setVideo(firstVideo);
-
-                if (firstVideo) {
-                    const [memoData, ratingData] = await Promise.all([
-                        playerService.getMemo(firstVideo.id, userId),
-                        playerService.getRating(firstVideo.id, userId),
-                    ]);
-
-                    if (!isMounted) return;
-                    if (memoData?.data) {
-                        setMemo(memoData.data.comment || '');
-                        setRatingStatus(memoData.data.statut || 'no');
-                    }
-                    if (ratingData?.data?.rating) {
-                        setRating(Number(ratingData.data.rating));
-                    }
-                }
+              const targetResponse = await fetch(`${API_URL}/api/player/videos/${targetVideoId}`);
+              if (targetResponse.ok) {
+                const targetResult = await targetResponse.json();
+                const targetVideo = buildVideoData(targetResult.data || targetResult);
+                videosWithFullUrl = [targetVideo, ...videosWithFullUrl];
+              }
             } catch (err) {
-                if (!isMounted) return;
-                setError(err.message || 'Erreur lors du chargement');
-            } finally {
-                if (isMounted) setLoading(false);
+              console.log('[PLAYER] Could not load target video:', err.message);
             }
-        };
-
-        fetchData();
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-    const handleSaveMemo = async (nextMemo = memo, nextStatus = ratingStatus) => {
-        if (!video) return;
-        try {
-            setSaving(true);
-            setStatusMessage('');
-            await playerService.saveMemo({
-                user_id: userId,
-                video_id: video.id,
-                statut: nextStatus,
-                comment: nextMemo,
-            });
-            setStatusMessage('Memo sauvegarde');
-        } catch (err) {
-            setStatusMessage(err.message || 'Erreur de sauvegarde');
-        } finally {
-            setSaving(false);
+          }
         }
-    };
 
-    const handleRatingChange = async (nextRating) => {
-        if (!video) return;
-        setRating(nextRating);
-        try {
-            await playerService.saveRating({
-                user_id: userId,
-                video_id: video.id,
-                rating: nextRating,
-            });
-        } catch (err) {
-            setStatusMessage(err.message || 'Erreur lors de la sauvegarde de la note');
+        setVideos(videosWithFullUrl);
+
+        // Scroller vers la vidéo cible si présente
+        if (targetVideoId) {
+          const targetIndex = videosWithFullUrl.findIndex(v => v.id === parseInt(targetVideoId));
+          if (targetIndex >= 0) {
+            setCurrentIndex(targetIndex);
+            setTimeout(() => {
+              containerRef.current?.scrollTo({
+                top: targetIndex * window.innerHeight,
+                behavior: 'instant',
+              });
+            }, 200);
+          }
         }
+
+        // Charger les ratings et memos pour chaque vidéo (si userId disponible)
+        if (videosWithFullUrl.length > 0 && userId) {
+          await loadRatingsAndMemos(videosWithFullUrl, userId);
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('[PLAYER ERROR] Loading videos:', error);
+        setIsLoading(false);
+        setVideos([]);
+      }
     };
 
-    const handleStatusChange = (nextStatus) => {
-        setRatingStatus(nextStatus);
-        handleSaveMemo(memo, nextStatus);
+    fetchVideos();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, targetVideoId]);
+
+  // Gestion des raccourcis clavier
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignorer si un modal/panel est ouvert ou si on tape dans un input/textarea
+      if (
+        showRatingModal ||
+        showNotePanel ||
+        showEmailPanel ||
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      switch(e.key.toLowerCase()) {
+        case 'y': // Y = Oui
+        case 'o': // O = Oui (pour clavier FR)
+          e.preventDefault();
+          handleStatusClick('yes');
+          break;
+
+        case 'delete':
+        case 'backspace': // Suppr/Effacer = Non
+          e.preventDefault();
+          handleStatusClick('no');
+          break;
+
+        case 'arrowright': // Flèche droite = À discuter
+          e.preventDefault();
+          handleStatusClick('discuss');
+          break;
+
+        case 'tab': // Compteur de Tab
+          e.preventDefault();
+          tabCountRef.current += 1;
+
+          // Reset après 1 seconde
+          if (tabTimerRef.current) {
+            clearTimeout(tabTimerRef.current);
+          }
+          tabTimerRef.current = setTimeout(() => {
+            tabCountRef.current = 0;
+          }, 1000);
+          break;
+
+        case 'enter':
+          e.preventDefault();
+          // 1 Tab + Enter = Note rapide
+          if (tabCountRef.current === 1) {
+            setShowNotePanel(true);
+            tabCountRef.current = 0;
+          }
+          // 2 Tabs + Enter = Email
+          else if (tabCountRef.current === 2) {
+            setShowEmailPanel(true);
+            tabCountRef.current = 0;
+          }
+          break;
+
+        default:
+          break;
+      }
     };
 
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (tabTimerRef.current) {
+        clearTimeout(tabTimerRef.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showRatingModal, showNotePanel, showEmailPanel, videos, currentIndex]);
+
+  // Synchroniser le volume sur toutes les vidéos
+  useEffect(() => {
+    Object.values(videosRef.current).forEach((videoEl) => {
+      if (videoEl) {
+        videoEl.volume = volume;
+      }
+    });
+  }, [volume]);
+
+  // Synchroniser le ref avec le state
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+    tabCountRef.current = 0;
+    if (videos[currentIndex]) {
+      console.log('[PLAYER] CurrentIndex changed to:', currentIndex, 'Video ID:', videos[currentIndex].id);
+    }
+  }, [currentIndex, videos]);
+
+  // Intersection Observer pour détecter quelle vidéo est visible
+  useEffect(() => {
+    if (videos.length === 0) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const videoElement = entry.target.querySelector('video');
+          if (!videoElement) return;
+
+          const index = parseInt(entry.target.dataset.index);
+          const videoId = videos[index]?.id;
+
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+            console.log('[PLAYER] Video visible - Index:', index, 'ID:', videoId);
+            setCurrentIndex(index);
+            const playPromise = videoElement.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => setIsPaused(false))
+                .catch(() => setIsPaused(true));
+            }
+          } else {
+            videoElement.pause();
+            videoElement.currentTime = 0;
+          }
+        });
+      },
+      { threshold: 0.7 }
+    );
+
+    setTimeout(() => {
+      const slides = document.querySelectorAll('.video-slide');
+      slides.forEach((slide) => {
+        if (observerRef.current) {
+          observerRef.current.observe(slide);
+        }
+      });
+    }, 100);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [videos]);
+
+  // Verifie si la video courante a un statut avant de permettre la navigation
+  const canNavigate = () => {
+    const currentVideoId = videos[currentIndex]?.id;
+    if (!currentVideoId) return true;
+    const status = statuses[currentVideoId];
+    // null = pas encore évalué, on autorise la navigation
+    if (status === null || status === undefined) return true;
+    return true;
+  };
+
+  // Etat pour l'indicateur "choisissez un statut"
+  const [showStatusWarning, setShowStatusWarning] = useState(false);
+
+  const showStatusRequired = () => {
+    setShowStatusWarning(true);
+    setTimeout(() => setShowStatusWarning(false), 2000);
+  };
+
+  // Gestion du swipe tactile
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const diff = touchStartY.current - touchEndY;
+
+    if (Math.abs(diff) > 50) {
+      // Bloquer le swipe vers la video suivante si pas de statut
+      if (diff > 0 && currentIndex < videos.length - 1) {
+        if (!canNavigate()) {
+          showStatusRequired();
+          return;
+        }
+        goToVideo(currentIndex + 1);
+      } else if (diff < 0 && currentIndex > 0) {
+        goToVideo(currentIndex - 1);
+      }
+    }
+  };
+
+  const goToVideo = (index) => {
+    // Bloquer la navigation vers l'avant si pas de statut sur la video courante
+    if (index > currentIndex && !canNavigate()) {
+      showStatusRequired();
+      return;
+    }
+    const container = containerRef.current;
+    container.scrollTo({
+      top: index * window.innerHeight,
+      behavior: 'smooth',
+    });
+  };
+
+  // Afficher une notification avec feedback visuel
+  const showNotification = (message, type = 'success') => {
+    console.log('[NOTIFICATION]', message, type);
+
+    // Afficher le feedback visuel immédiat (grande icône au centre)
+    setActionFeedback({ show: true, type });
+
+    // Afficher la notification toast
+    setNotification({ show: true, message, type });
+
+    // Masquer le feedback visuel après 800ms
+    setTimeout(() => {
+      setActionFeedback({ show: false, type: '' });
+    }, 800);
+
+    // Masquer la notification après 2500ms
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: 'success' });
+    }, 2500);
+  };
+
+  // Passer à la vidéo suivante
+  const goToNextVideo = () => {
+    const idx = currentIndexRef.current;
+    if (idx < videos.length - 1) {
+      setTimeout(() => {
+        goToVideo(idx + 1);
+      }, 1000);
+    } else {
+      showNotification(t('player.lastVideo'), 'success');
+    }
+  };
+
+  // Toggle play/pause
+  const handleVideoTap = (e, index) => {
+    if (e.target.closest('.action-btn') || e.target.closest('.controls-panel')) return;
+
+    const videoElement = videosRef.current[index];
+    if (!videoElement) return;
+
+    if (videoElement.paused) {
+      videoElement.play();
+      setIsPaused(false);
+    } else {
+      videoElement.pause();
+      setIsPaused(true);
+    }
+  };
+
+  // Plein ecran mobile
+  const handleFullscreen = (index) => {
+    const videoEl = videosRef.current[index];
+    if (!videoEl) return;
+    if (videoEl.requestFullscreen) {
+      videoEl.requestFullscreen();
+    } else if (videoEl.webkitEnterFullscreen) {
+      videoEl.webkitEnterFullscreen();
+    }
+  };
+
+  // Gestion du son
+  const handleToggleMute = () => {
+    setIsMuted(prev => !prev);
+  };
+
+  const handleVolumeChange = (newVolume) => {
+    setVolume(newVolume);
+    if (newVolume > 0 && isMuted) {
+      setIsMuted(false);
+    } else if (newVolume === 0) {
+      setIsMuted(true);
+    }
+  };
+
+  const handleVideoEnded = (index) => {
+    if (index < videos.length - 1) {
+      if (!canNavigate()) {
+        showStatusRequired();
+        return;
+      }
+      goToVideo(index + 1);
+    }
+  };
+
+  const handleVideoError = (e, video) => {
+    const videoElement = e.target;
+    console.error('[PLAYER ERROR] Erreur de lecture video:', {
+      video: video.video_file_name || video.filename || video.id,
+      src: videoElement.src,
+      error: videoElement.error,
+      code: videoElement.error?.code,
+      message: videoElement.error?.message
+    });
+  };
+
+  // Gestion du clic sur les boutons de statut
+  const handleStatusClick = async (newStatus) => {
+    const idx = currentIndexRef.current;
+    const videoId = videos[idx]?.id;
+    console.log('[PLAYER] handleStatusClick - currentIndex:', idx, 'videoId:', videoId, 'status:', newStatus);
+
+    if (!videoId || !userId) {
+      console.error('[PLAYER ERROR] Missing videoId or userId', { videoId, userId, currentIndex });
+      showNotification(t('player.notConnected'), 'error');
+      return;
+    }
+
+    // Si "Oui" est cliqué, ouvrir le modal de notation
+    if (newStatus === 'yes') {
+      setShowRatingModal(true);
+      return;
+    }
+
+    // Mettre à jour l'état immédiatement pour feedback visuel
+    const oldStatus = statuses[videoId];
+    setStatuses(prev => ({ ...prev, [videoId]: newStatus }));
+
+    try {
+      // Sauvegarder le memo avec playlist si "À discuter"
+      await playerService.saveMemo({
+        user_id: userId,
+        video_id: videoId,
+        statut: newStatus,
+        playlist: newStatus === 'discuss' ? 1 : 0,
+        comment: memos[videoId] || '',
+      });
+
+      // Si "Non", supprimer le rating existant
+      if (newStatus === 'no' && ratings[videoId]) {
+        await playerService.deleteRating(videoId, userId);
+        setRatings(prev => {
+          const next = { ...prev };
+          delete next[videoId];
+          return next;
+        });
+        console.log('[PLAYER] Rating cleared for video:', videoId);
+      }
+
+      console.log('[PLAYER] Status saved:', newStatus);
+
+      // Afficher message de succès selon le statut
+      if (newStatus === 'no') {
+        showNotification(t('player.videoRejected'), 'error');
+      } else if (newStatus === 'discuss') {
+        showNotification(t('player.addedToDiscuss'), 'success');
+      }
+
+      // Passer à la vidéo suivante
+      goToNextVideo();
+    } catch (error) {
+      console.error('[PLAYER ERROR] Saving status:', error);
+      showNotification(t('player.saveError'), 'error');
+      // Remettre l'ancien statut en cas d'erreur
+      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || null }));
+    }
+  };
+
+  // Sauvegarder la notation depuis le modal
+  const handleSaveRating = async (rating, note) => {
+    const idx = currentIndexRef.current;
+    const videoId = videos[idx]?.id;
+    if (!videoId || !userId) {
+      console.error('[PLAYER ERROR] Missing videoId or userId');
+      showNotification(t('player.notConnected'), 'error');
+      return;
+    }
+
+    setSaving(true);
+
+    // Sauvegarder les anciens états
+    const oldRating = ratings[videoId];
+    const oldStatus = statuses[videoId];
+    const oldMemo = memos[videoId];
+
+    // Mettre à jour les états immédiatement pour feedback visuel
+    setRatings(prev => ({ ...prev, [videoId]: rating }));
+    setStatuses(prev => ({ ...prev, [videoId]: 'yes' }));
+    if (note !== undefined) {
+      setMemos(prev => ({ ...prev, [videoId]: note }));
+    }
+
+    try {
+      // Sauvegarder le rating
+      await playerService.saveRating({
+        user_id: userId,
+        video_id: videoId,
+        rating: rating,
+      });
+
+      // Sauvegarder le statut "yes" + commentaire
+      await playerService.saveMemo({
+        user_id: userId,
+        video_id: videoId,
+        statut: 'yes',
+        playlist: 0,
+        comment: note !== undefined ? note : (memos[videoId] || ''),
+      });
+
+      console.log('[PLAYER] Rating saved:', rating);
+
+      // Afficher message de succès
+      showNotification(t('player.ratedSuccess', { rating }), 'success');
+
+      // Passer à la vidéo suivante
+      goToNextVideo();
+    } catch (error) {
+      console.error('[PLAYER ERROR] Saving rating:', error);
+      showNotification(t('player.ratingError'), 'error');
+      // Remettre les anciens états en cas d'erreur
+      setRatings(prev => ({ ...prev, [videoId]: oldRating || 0 }));
+      setStatuses(prev => ({ ...prev, [videoId]: oldStatus || null }));
+      setMemos(prev => ({ ...prev, [videoId]: oldMemo || '' }));
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Sauvegarder la note rapide
+  const handleSaveQuickNote = async (note) => {
+    const videoId = videos[currentIndexRef.current]?.id;
+    if (!videoId) return;
+
+    try {
+      await playerService.saveMemo({
+        user_id: userId,
+        video_id: videoId,
+        statut: statuses[videoId] || null,
+        comment: note,
+      });
+
+      setMemos(prev => ({ ...prev, [videoId]: note }));
+    } catch (error) {
+      console.error('[PLAYER ERROR] Erreur sauvegarde note:', error);
+      throw error;
+    }
+  };
+
+  // Envoyer un email au réalisateur
+  const handleSendEmail = async (message) => {
+    const videoId = videos[currentIndexRef.current]?.id;
+    if (!videoId || !userId) {
+      console.error('[PLAYER ERROR] Missing videoId or userId');
+      showNotification(t('player.notConnected'), 'error');
+      return;
+    }
+
+    try {
+      await playerService.sendEmailToCreator({
+        video_id: videoId,
+        user_id: userId,
+        message: message,
+      });
+
+      console.log('[PLAYER] Email sent');
+
+      // Afficher message de succès
+      showNotification(t('player.emailSent'), 'success');
+
+      // Passer à la vidéo suivante
+      goToNextVideo();
+    } catch (error) {
+      console.error('[PLAYER ERROR] Sending email:', error);
+      showNotification(t('player.emailError'), 'error');
+      throw error;
+    }
+  };
+
+
+  if (isLoading) {
     return (
-        <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
-            <div className="max-w-5xl mx-auto space-y-6">
-                {loading && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-gray-400">
-                        Chargement de la video...
-                    </div>
+      <div className="fixed inset-0 flex items-center justify-center bg-black">
+        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (videos.length === 0) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black">
+        <p className="text-white text-lg">{t('player.noVideos')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className={`fixed inset-0 snap-y snap-mandatory bg-black scrollbar-hide ${
+        canNavigate() ? 'overflow-y-scroll' : 'overflow-hidden'
+      }`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      {/* Bouton retour a la page selector */}
+      <button
+        onClick={() => navigate('/selector')}
+        className="fixed top-3 left-3 md:top-6 md:left-1/2 md:-translate-x-1/2 z-[60] flex items-center gap-1.5 px-3 py-1.5 md:px-6 md:py-3 rounded-full bg-black/50 backdrop-blur-md hover:bg-black/70 transition-all shadow-2xl border border-white/10 active:scale-95"
+        title={t('player.backToProfile')}
+      >
+        <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span className="hidden md:inline text-white text-sm font-semibold">{t('player.profileSelector')}</span>
+      </button>
+
+      {videos.map((video, index) => (
+        <div
+          key={video.id}
+          data-index={index}
+          className="video-slide relative w-screen h-screen snap-start snap-always flex items-center justify-center"
+          onClick={(e) => handleVideoTap(e, index)}
+        >
+          {/* Vidéo */}
+          <video
+            ref={(el) => {
+              if (el) {
+                videosRef.current[index] = el;
+                el.volume = volume;
+              }
+            }}
+            className="absolute inset-0 w-full h-full object-contain bg-black"
+            src={video.video_url || ''}
+            playsInline
+            loop
+            muted={isMuted}
+            preload={index <= currentIndex + 1 ? 'auto' : 'metadata'}
+            crossOrigin="anonymous"
+            onEnded={() => handleVideoEnded(index)}
+            onError={(e) => handleVideoError(e, video)}
+          />
+
+          {/* Indicateur pause */}
+          {isPaused && currentIndex === index && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+              <div className="w-14 h-14 md:w-20 md:h-20 bg-black/50 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <svg className="w-7 h-7 md:w-10 md:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {/* Bouton plein ecran mobile - en haut a droite */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFullscreen(index);
+            }}
+            className="action-btn md:hidden absolute top-3 right-3 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 active:scale-95 transition-all"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+            <span className="text-white text-[10px] font-semibold">{t('player.fullscreen')}</span>
+          </button>
+
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+
+          {/* Informations video + afficher plus */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 pb-safe z-10">
+            <div className="pr-14 md:pr-16">
+              <h3 className="text-white text-sm md:text-base font-semibold leading-tight mb-1 md:mb-2 line-clamp-2">
+                {video.title}
+              </h3>
+              {video.author && (
+                <p className="text-white/90 text-xs md:text-sm flex items-center gap-1.5 md:gap-2">
+                  <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] md:text-xs font-bold flex-shrink-0">
+                    {video.author.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="truncate">{video.author}</span>
+                </p>
+              )}
+
+              {/* Description visible en desktop */}
+              {video.description && (
+                <p className="hidden md:block text-white/80 text-xs mt-2 line-clamp-2">
+                  {video.description}
+                </p>
+              )}
+
+              {/* Bouton Afficher plus / Reduire (mobile uniquement) */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedVideoId(expandedVideoId === video.id ? null : video.id);
+                }}
+                className="action-btn md:hidden text-white/60 text-xs mt-2 hover:text-white transition-colors flex items-center gap-1"
+              >
+                {expandedVideoId === video.id ? t('player.collapse') : t('player.showMore')}
+                <svg
+                  className={`w-3 h-3 transition-transform ${expandedVideoId === video.id ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+
+              {/* Panneau deroulant synopsis + bouton details (mobile uniquement) */}
+              <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+                expandedVideoId === video.id ? 'max-h-60 opacity-100 mt-3' : 'max-h-0 opacity-0'
+              }`}>
+                {video.description && (
+                  <p className="text-white/80 text-xs leading-relaxed mb-3">
+                    {video.description}
+                  </p>
                 )}
-                {error && (
-                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
-                        {error}
-                    </div>
-                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/videoDetails/${video.id}`);
+                  }}
+                  className="action-btn flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all"
+                >
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-white text-xs font-semibold">{t('player.filmPage')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+
+          {/* Indicateur de progression et statut */}
+          <div className="absolute top-3 left-3 md:top-4 md:left-4 md:right-4 z-10 flex items-center gap-2">
+            <div className="px-2.5 py-1 md:px-3 md:py-1.5 bg-black/50 backdrop-blur-md rounded-full">
+              <span className="text-white text-[10px] md:text-xs font-semibold">
+                {index + 1} / {videos.length}
+              </span>
             </div>
 
-            {!loading && video && (
-                <div className="max-w-5xl mx-auto grid gap-8 lg:grid-cols-[2fr_1fr]">
-                    <div className="space-y-6">
-                        <div className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-                            <div className="p-5 border-b border-white/10">
-                                <h1 className="text-2xl font-bold">{video.title}</h1>
-                                <p className="text-sm text-gray-400">
-                                    par {video.author || 'Auteur inconnu'}
-                                </p>
-                            </div>
-                            <div className="aspect-video bg-black">
-                                {embedUrl ? (
-                                    <iframe
-                                        title="Video player"
-                                        src={embedUrl}
-                                        className="w-full h-full"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    />
-                                ) : (
-                                    <video
-                                        className="w-full h-full object-cover"
-                                        controls
-                                        poster={video.cover || undefined}
-                                    >
-                                        <source src={video.video_url} type="video/mp4" />
-                                        Votre navigateur ne supporte pas la lecture video.
-                                    </video>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                            <div className="text-sm text-gray-400 mb-4">
-                                Statut: {ratingStatus === 'yes'
-                                    ? 'Oui, notation active'
-                                    : ratingStatus === 'discuss'
-                                        ? 'A discuter'
-                                        : 'Non, notation bloquee'}
-                            </div>
-                            <RatingSelector
-                                initialRating={rating}
-                                initialStatus={ratingStatus}
-                                onRatingChange={handleRatingChange}
-                                onStatusChange={handleStatusChange}
-                            />
-                        </div>
-                    </div>
-
-                    <aside className="space-y-6">
-                        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                            <SelectorMemo initialMemo={memo} onMemoChange={setMemo} />
-                            <button
-                                type="button"
-                                onClick={() => handleSaveMemo()}
-                                disabled={saving}
-                                className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 py-2 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-50"
-                            >
-                                {saving ? 'Sauvegarde...' : 'Enregistrer le memo'}
-                            </button>
-                            {statusMessage && (
-                                <div className="mt-3 text-xs text-gray-400">{statusMessage}</div>
-                            )}
-                        </div>
-                        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-gray-400">
-                            <div className="font-semibold text-white mb-2">Resume local</div>
-                            <div>Note: {rating > 0 ? `${rating}/10` : 'Aucune'}</div>
-                            <div>Status: {ratingStatus === 'yes' ? 'Oui' : ratingStatus === 'discuss' ? 'A discuter' : 'Non'}</div>
-                            <div className="mt-2 line-clamp-4">Memo: {memo || 'Vide'}</div>
-                        </div>
-                    </aside>
-                </div>
+            {/* Badge statut de la video */}
+            {statuses[video.id] && (
+              <div className={`w-7 h-7 md:w-10 md:h-10 backdrop-blur-md rounded-full flex items-center justify-center ${
+                statuses[video.id] === 'yes' ? 'bg-green-500/70' :
+                statuses[video.id] === 'discuss' ? 'bg-amber-500/70' :
+                statuses[video.id] === 'no' ? 'bg-red-500/70' :
+                'bg-gray-500/70'
+              }`}>
+                {statuses[video.id] === 'yes' && (
+                  <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {statuses[video.id] === 'discuss' && (
+                  <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {statuses[video.id] === 'no' && (
+                  <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
             )}
+          </div>
+
+          {/* Boutons d'action dans le slide - jury/admin uniquement */}
+          {userId ? (
+            <ActionButtons
+              key={`actions-${video.id}-${index}`}
+              currentStatus={statuses[video.id] || null}
+              rating={ratings[video.id] || 0}
+              onStatusClick={handleStatusClick}
+              onNoteClick={() => setShowNotePanel(true)}
+              onEmailClick={() => setShowEmailPanel(true)}
+              isMuted={isMuted}
+              volume={volume}
+              onToggleMute={handleToggleMute}
+              onVolumeChange={handleVolumeChange}
+              videoId={video.id}
+            />
+          ) : (
+            /* Contrôles minimaux pour visiteurs non connectés */
+            <div className="action-btn absolute right-3 bottom-24 md:right-6 md:bottom-28 z-30 flex flex-col gap-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleToggleMute(); }}
+                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-black/70 transition-all active:scale-95"
+              >
+                {isMuted ? (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 6v12m-3.536-9.536a5 5 0 000 7.072" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Barre de progression video */}
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/20 z-10">
+            <div
+              className="h-full bg-white transition-all duration-100"
+              style={{
+                width: videosRef.current[index]
+                  ? `${(videosRef.current[index].currentTime / videosRef.current[index].duration) * 100}%`
+                  : '0%'
+              }}
+            />
+          </div>
         </div>
-    );
+      ))}
+
+
+      {/* Indicateur "choisissez un statut" */}
+      {showStatusWarning && (
+        <div className="fixed bottom-24 md:bottom-32 left-1/2 -translate-x-1/2 z-[70] animate-bounce max-w-[85vw]">
+          <div className="px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-white/90 backdrop-blur-md shadow-2xl">
+            <span className="text-black text-xs md:text-sm font-bold">{t('player.chooseStatus')}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Banner visiteur non connecté */}
+      {!userId && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] max-w-[90vw]">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-black/80 backdrop-blur-md border border-white/10 shadow-2xl">
+            <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <p className="text-white/60 text-xs">Connectez-vous pour noter et commenter les films</p>
+            <a
+              href="/login"
+              className="text-xs font-bold text-white px-3 py-1 rounded-full bg-mars-primary hover:bg-mars-primary/80 transition-colors flex-shrink-0"
+            >
+              Se connecter
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de notation - jury/admin uniquement */}
+      {userId && videos.length > 0 && (
+        <RatingModal
+          isOpen={showRatingModal}
+          onClose={() => setShowRatingModal(false)}
+          videoData={{
+            title: videos[currentIndex]?.title,
+            author: videos[currentIndex]?.author,
+          }}
+          initialRating={ratings[videos[currentIndex]?.id] || 0}
+          initialNote={memos[videos[currentIndex]?.id] || ''}
+          onSave={handleSaveRating}
+        />
+      )}
+
+      {/* Panel note rapide - jury/admin uniquement */}
+      {userId && videos.length > 0 && (
+        <QuickNotePanel
+          isOpen={showNotePanel}
+          onClose={() => setShowNotePanel(false)}
+          videoData={{
+            title: videos[currentIndex]?.title,
+            author: videos[currentIndex]?.author,
+          }}
+          initialNote={memos[videos[currentIndex]?.id] || ''}
+          onSave={handleSaveQuickNote}
+        />
+      )}
+
+      {/* Panel email - jury/admin uniquement */}
+      {userId && videos.length > 0 && (
+        <EmailPanel
+          isOpen={showEmailPanel}
+          onClose={() => setShowEmailPanel(false)}
+          videoData={{
+            title: videos[currentIndex]?.title,
+            author: videos[currentIndex]?.author,
+            email: videos[currentIndex]?.email,
+          }}
+          onSend={handleSendEmail}
+        />
+      )}
+
+      {/* Feedback visuel central - Grande icône au centre */}
+      {actionFeedback.show && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none">
+          <div className={`transform transition-all duration-500 ease-out ${
+            actionFeedback.show ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
+          }`}>
+            <div className={`w-20 h-20 md:w-32 md:h-32 rounded-full flex items-center justify-center shadow-2xl ${
+              actionFeedback.type === 'success'
+                ? 'bg-green-500'
+                : actionFeedback.type === 'error'
+                ? 'bg-red-500'
+                : 'bg-amber-500'
+            }`}>
+              {actionFeedback.type === 'success' ? (
+                <svg className="w-12 h-12 md:w-20 md:h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-12 h-12 md:w-20 md:h-20 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Toast en haut */}
+      <div className={`fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-[70] transition-all duration-300 max-w-[90vw] ${
+        notification.show ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'
+      }`}>
+        <div className={`px-4 py-2.5 md:px-6 md:py-4 rounded-xl md:rounded-2xl backdrop-blur-md shadow-2xl border md:border-2 ${
+          notification.type === 'success'
+            ? 'bg-green-500/95 border-green-400 text-white'
+            : 'bg-red-500/95 border-red-400 text-white'
+        }`}>
+          <div className="flex items-center gap-2 md:gap-3">
+            {notification.type === 'success' ? (
+              <svg className="w-4 h-4 md:w-6 md:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 md:w-6 md:h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="text-xs md:text-base font-bold">{notification.message}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Player;

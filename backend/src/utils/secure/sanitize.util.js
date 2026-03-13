@@ -1,7 +1,13 @@
-// fonctions pour sanitiser des strings et une fonction anti xss
+import DOMPurify from 'isomorphic-dompurify';
 
-// fonction pour sanittiser une string anti xss
+
+// fonction pour sanitize une string anti xss
 export const sanitizeString = (value) => {
-    if (typeof value !== "string") return value;
-    return value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  };
+  // si la value n'est pas une string return la value directement
+  if (typeof value !== 'string'){
+    return value;
+  }else{
+    // sinon, on sanitize la value, en remplacant les < et > par des &lt; et &gt;
+    return DOMPurify.sanitize(value).trim();
+  }
+}

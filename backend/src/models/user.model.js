@@ -1,6 +1,6 @@
 import pool from '../config/db.js';
 
-export async function registerUser({ email, passwordHash, firstName, lastName }) {
+export async function registerUser({ email, passwordHash, firstName, lastName, role = 'jury' }) {
 
     const connection = await pool.getConnection();
 
@@ -9,8 +9,8 @@ export async function registerUser({ email, passwordHash, firstName, lastName })
         await connection.beginTransaction();
 
         const [result] = await connection.execute(
-            'INSERT INTO user (email, password_hash, name, lastname) VALUES (?, ?, ?, ?)',
-            [email, passwordHash, firstName, lastName]
+            'INSERT INTO user (email, password_hash, name, lastname, role) VALUES (?, ?, ?, ?, ?)',
+            [email, passwordHash, firstName, lastName, role]
         );
 
         await connection.commit();
@@ -18,9 +18,9 @@ export async function registerUser({ email, passwordHash, firstName, lastName })
         return {
             id: result.insertId,
             email,
-            passwordHash,
             firstName,
             lastName,
+            role,
         };
 
     } catch (error) {
@@ -69,9 +69,18 @@ export async function resetLoginAttempts(email) {
     }
 }
 
+export async function getUserById(id) {
+    const [rows] = await pool.execute(
+        'SELECT id, email, role, name, lastname, last_login_at, created_at, updated_at FROM user WHERE id = ?',
+        [id]
+    );
+    return rows[0];
+}
+
 export const userModel = {
     registerUser,
-    getUserByEmail, 
+    getUserByEmail,
+    getUserById,
     incrementLoginAttempts,
     resetLoginAttempts
 };

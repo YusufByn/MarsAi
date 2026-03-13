@@ -1,5 +1,7 @@
 import { juryModel } from '../models/jury.model.js';
 
+// CRUD de base pour ajouter un jury
+
 export const juryController = {
   /**
    * GET /api/jury
@@ -19,7 +21,7 @@ export const juryController = {
 
   /**
    * GET /api/jury/:id
-   * Récupérer un jury par ID
+   * Récupérer un jury par son id
    */
   async getById(req, res, next) {
     try {

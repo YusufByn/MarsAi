@@ -1,4 +1,3 @@
-// middleware/upload.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -7,147 +6,76 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VALID_TYPES = ['video', 'cover', 'still', 'sub'];
+// dossier selon le type (cover, video etc)
+// Chemins absolus relatifs a src/uploads/ pour matcher express.static dans app.js
+const folders = {
+    video: path.join(__dirname, '..', 'uploads', 'videos'),
+    cover: path.join(__dirname, '..', 'uploads', 'covers'),
+    still: path.join(__dirname, '..', 'uploads', 'stills'),
+    srt: path.join(__dirname, '..', 'uploads', 'srt')
+}
 
-/**
- * Crée un middleware d'upload sécurisé pour un type spécifique
- * @param {string} type - File type (video, cover, still, sub)
- * @returns {Array} Tableau de middlewares [setType, multerMiddleware]
- */
-const createUploadMiddleware = (type) => {
-    // Valider le type à la création
-    if (!VALID_TYPES.includes(type)) {
-        throw new Error(`Invalid upload type: ${type}. Allowed types: ${VALID_TYPES.join(', ')}`);
-    }
-    
-    // Middleware pour définir le type dans req
-    const setType = (req, res, next) => {
-        req.uploadType = type;
-        next();
-    };
-
-    // Mapping type → dossier
-    const folders = {
-        video: 'videos',
-        cover: 'covers',
-        still: 'stills',
-        sub: 'srt'
-    };
-    
-    // Configuration du stockage
-    const storage = multer.diskStorage({
-        destination: (req, file, cb) => {
-            try {
-                const uploadPath = path.join(__dirname, '../uploads', folders[type]);
-                
-                // Créer le dossier s'il n'existe pas
-                if (!fs.existsSync(uploadPath)) {
-                    fs.mkdirSync(uploadPath, { recursive: true });
-                }
-                
-                cb(null, uploadPath);
-            } catch (error) {
-                cb(error, null);
-            }
-        },
-        
-        filename: (req, file, cb) => {
-            try {
-                const ext = path.extname(file.originalname).toLowerCase();
-                const timestamp = Date.now();
-                const random = Math.random().toString(36).substring(2, 8);
-                const contentId = req.params.id || req.body.video_id || timestamp;
-                
-                let filename;
-                
-                switch(type) {
-                    case 'video':
-                        filename = `video_${contentId}_${timestamp}_${random}${ext}`;
-                        break;
-                        
-                    case 'cover':
-                        filename = `cover_${contentId}_${timestamp}_${random}${ext}`;
-                        break;
-                        
-                    case 'still':
-                        const index = req.files ? 
-                            (Array.isArray(req.files) ? req.files.indexOf(file) + 1 : 1) : 
-                            1;
-                        filename = `still_${contentId}_${index}_${timestamp}_${random}${ext}`;
-                        break;
-                        
-                    case 'sub':
-                        const lang = req.body.language || req.query.language || 'fr';
-                        filename = `sub_${contentId}_${lang}_${timestamp}${ext}`;
-                        break;
-                        
-                    default:
-                        throw new Error(`File type not handled: ${type}`);
-                }
-                
-                cb(null, filename);
-            } catch (error) {
-                cb(error, null);
-            }
-        }
+// si dossier n'existe pas, on le crée
+const ensureDir = (dir) => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, {
+        recursive : true
     });
-
-    // Validation des types MIME
-    const allowedMimes = {
-        video: ['video/mp4', 'video/quicktime', 'video/x-matroska'],
-        cover: ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
-        still: ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
-        sub: ['text/plain', 'application/x-subrip']
-    };
-    
-    const fileFilter = (req, file, cb) => {
-        try {
-            const isValidMime = allowedMimes[type]?.includes(file.mimetype);
-            const isSrtFile = type === 'sub' && file.originalname.endsWith('.srt');
-            
-            if (isValidMime || isSrtFile) {
-                cb(null, true);
-            } else {
-                cb(new Error(`Unauthorized format for ${type}: ${file.mimetype}`), false);
-            }
-        } catch (error) {
-            cb(error, false);
-        }
-    };
-
-    // Limites de taille selon le type
-    const limits = {
-        video: 200 * 1024 * 1024,  // 200 MB
-        cover: 15 * 1024 * 1024,   // 15 MB
-        still: 5 * 1024 * 1024,    // 5 MB
-        sub: 2 * 1024 * 1024       // 2 MB
-    };
-    
-    // Configuration Multer
-    const upload = multer({
-        storage: storage,
-        fileFilter: fileFilter,
-        limits: {
-            fileSize: limits[type] || 10 * 1024 * 1024
-        }
-    });
-    
-    // Retourner le middleware approprié selon le type
-    const multerMiddleware = type === 'still' 
-        ? upload.array('files', 3)
-        : upload.single('file');
-    
-    // Retourner les deux middlewares dans l'ordre
-    return [setType, multerMiddleware];
 };
 
-/**
- * Export des middlewares pré-configurés par type
- * Usage: upload.video, upload.cover, upload.still, upload.sub
- */
-export default {
-    video: createUploadMiddleware('video'),
-    cover: createUploadMiddleware('cover'),
-    still: createUploadMiddleware('still'),
-    sub: createUploadMiddleware('sub')
+// la ou l'on va stocker les fichiers
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // variable qui permet de stocker le fichier dans le dossier correspondant 
+        let dir = folders.video;
+
+        
+        if (file.fieldname === "cover") dir = folders.cover;
+        if (file.fieldname === "stills") dir = folders.still;
+        if (file.fieldname === "srt") dir = folders.srt;
+
+        ensureDir(dir);
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = {
+        video: ["video/mp4", "video/quicktime", "video/x-matroska", "video/webm", "video/mov"],
+        cover: ["image/jpeg", "image/png", "image/webp", "image/jpg"],
+        stills: ["image/jpeg", "image/png", "image/webp", "image/jpg"],
+        srt: ["text/plain", "application/srt", "application/x-subrip"],
+    };
+
+    if (allowedTypes[file.fieldname]?.includes(file.mimetype)) { 
+        cb(null, true);
+    } else {
+        cb(new Error("File type not supported : " + file.mimetype), false);
+    }
 }
+
+
+export const upload = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 200 * 1024 * 1024 },
+}).fields([
+    { name: "video", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+    { name: "stills", maxCount: 3 },
+    { name: "srt", maxCount: 1 },
+]);
+
+export const uploadCoverOnly = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 15 * 1024 * 1024 },
+}).single('cover');
+
+export const uploadStillsOnly = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 7 * 1024 * 1024 },
+}).array('stills', 3);

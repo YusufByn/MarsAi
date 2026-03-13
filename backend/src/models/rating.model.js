@@ -23,4 +23,11 @@ export const ratingModel = {
 
     return this.getByUserAndVideo(userId, videoId);
   },
+
+  async clearRating(userId, videoId) {
+    await pool.execute(
+      `UPDATE selector_memo SET rating = NULL, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND video_id = ?`,
+      [userId, videoId]
+    );
+  },
 };

@@ -1,12 +1,24 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
-// Configuration du transporteur Nodemailer
+/**
+ * Service d'envoi d'emails générique pour MarsAI
+ * Utilise Nodemailer avec templates HTML cohérents
+ */
+
+// ========================================
+// CONFIGURATION TRANSPORTEUR
+// ========================================
+
+/**
+ * Crée et configure le transporteur Nodemailer
+ * @returns {Object} Transporteur Nodemailer configuré
+ */
 const createTransporter = () => {
   return nodemailer.createTransport({
     host: env.email.host,
     port: env.email.port,
-    secure: env.email.secure, // true pour port 465, false pour autres ports
+    secure: env.email.secure,
     auth: {
       user: env.email.user,
       pass: env.email.password
@@ -14,71 +26,87 @@ const createTransporter = () => {
   });
 };
 
+// ========================================
+// TEMPLATES HTML
+// ========================================
+
 /**
- * Génère le template HTML de l'email de bienvenue
+ * Template de base MarsAI avec design cohérent
+ * @param {string} title - Titre de l'email
+ * @param {string} content - Contenu HTML personnalisé
+ * @param {string} email - Email du destinataire (pour lien désabonnement)
+ * @returns {string} HTML complet
  */
-const generateWelcomeEmailHTML = (email) => {
+const generateBaseTemplate = (title, content, email) => {
+  const websiteUrl = env.websiteUrl || 'http://localhost:5173';
+  const unsubscribeUrl = `${websiteUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
+
   return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenue sur MarsAI</title>
+    <title>${title}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #000000;
-            line-height: 1.5;
+            background: #050505;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            background: #050505;
+            padding: 40px 20px;
         }
         .container {
             max-width: 600px;
             margin: 0 auto;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0f1419 100%);
+            background: #0d0d0d;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        /* Header */
+        .header {
+            background: linear-gradient(160deg, #130a28 0%, #0d1520 60%, #0a0a0a 100%);
+            padding: 48px 48px 40px 48px;
+            text-align: center;
             position: relative;
             overflow: hidden;
         }
-        .glow {
+        .header::before {
+            content: '';
             position: absolute;
+            top: -120px;
+            right: -120px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.25), transparent 70%);
             border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.3;
         }
-        .glow-1 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, #8B5CF6, #D946EF);
-            top: -150px;
-            right: -150px;
-        }
-        .glow-2 {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, #D946EF, #EC4899);
-            bottom: -100px;
-            left: -100px;
-        }
-        .content {
-            position: relative;
-            z-index: 1;
-            padding: 60px 40px;
-            text-align: center;
-            color: #ffffff;
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.15), transparent 70%);
+            border-radius: 50%;
         }
         .logo {
-            font-size: 56px;
+            position: relative;
+            z-index: 1;
+            font-size: 48px;
             font-weight: 900;
-            margin-bottom: 8px;
-            letter-spacing: -0.05em;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 10px;
         }
-        .logo-mars {
-            color: #ffffff;
-        }
+        .logo-mars { color: #ffffff; }
         .logo-ai {
             background: linear-gradient(135deg, #8B5CF6, #EC4899);
             -webkit-background-clip: text;
@@ -86,126 +114,203 @@ const generateWelcomeEmailHTML = (email) => {
             background-clip: text;
         }
         .tagline {
-            font-size: 11px;
-            color: #666666;
-            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+            font-size: 10px;
+            color: #555555;
             font-weight: 600;
-            letter-spacing: 0.3em;
+            letter-spacing: 0.35em;
             text-transform: uppercase;
         }
-        .greeting {
-            font-size: 28px;
+        /* Body */
+        .body {
+            padding: 48px 48px 40px 48px;
+            color: #ffffff;
+        }
+        .heading {
+            font-size: 26px;
             font-weight: 700;
-            margin-bottom: 24px;
             color: #ffffff;
             letter-spacing: -0.02em;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+        .subheading {
+            font-size: 13px;
+            font-weight: 600;
+            color: #8B5CF6;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
         }
         .message {
             font-size: 15px;
-            line-height: 1.7;
-            color: #b0b0b0;
-            margin-bottom: 40px;
+            line-height: 1.85;
+            color: #a0a0a0;
+            margin-bottom: 28px;
             font-weight: 300;
+        }
+        /* Info Card */
+        .info-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+        }
+        .info-card-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .info-card-row:last-child { border-bottom: none; }
+        .info-card-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #555555;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            min-width: 90px;
+            padding-top: 2px;
+        }
+        .info-card-value {
+            font-size: 14px;
+            color: #d0d0d0;
+            font-weight: 400;
+            flex: 1;
+        }
+        /* Message Box */
+        .message-box {
+            background: rgba(139, 92, 246, 0.06);
+            border-left: 3px solid #8B5CF6;
+            border-radius: 0 10px 10px 0;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+        }
+        .message-box-text {
+            font-size: 15px;
+            line-height: 1.85;
+            color: #c0c0c0;
+            font-weight: 300;
+            font-style: italic;
+        }
+        /* CTA */
+        .cta-wrapper {
+            text-align: center;
+            margin: 32px 0;
         }
         .cta-button {
             display: inline-block;
             background: linear-gradient(135deg, #8B5CF6, #EC4899);
             color: #ffffff;
-            padding: 16px 48px;
+            padding: 15px 44px;
             text-decoration: none;
             border-radius: 50px;
             font-weight: 700;
-            font-size: 13px;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-            letter-spacing: 0.15em;
+            font-size: 12px;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
-            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
         }
-        .divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            margin: 50px 0 30px 0;
-        }
-        .footer {
-            padding: 40px 40px 50px 40px;
-            text-align: center;
-            font-size: 11px;
+        .cta-fallback {
+            font-size: 12px;
             color: #555555;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            position: relative;
-            z-index: 1;
+            text-align: center;
+            margin-top: 12px;
+            word-break: break-all;
         }
-        .footer a {
-            color: #8B5CF6;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        .footer a:hover {
-            color: #EC4899;
-        }
-        .social-links {
-            margin: 20px 0;
+        .cta-fallback a { color: #8B5CF6; text-decoration: none; }
+        /* Status Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
             font-size: 11px;
             font-weight: 600;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
         }
-        .social-links a {
-            margin: 0 16px;
+        .badge-success {
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.25);
         }
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            margin: 36px 0;
+        }
+        /* Footer */
+        .footer {
+            background: #0a0a0a;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding: 32px 48px;
+            text-align: center;
+        }
+        .footer-contact {
+            font-size: 12px;
+            color: #555555;
+            margin-bottom: 20px;
+        }
+        .footer-contact a { color: #8B5CF6; text-decoration: none; }
+        .social-links {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        .social-links a {
+            color: #444444;
+            text-decoration: none;
+            margin: 0 12px;
+        }
+        .footer-legal {
+            font-size: 11px;
+            color: #3a3a3a;
+        }
+        .footer-legal a { color: #555555; text-decoration: none; }
         @media (max-width: 600px) {
-            .content {
-                padding: 40px 25px;
-            }
-            .logo {
-                font-size: 42px;
-            }
-            .greeting {
-                font-size: 22px;
-            }
-            .glow-1, .glow-2 {
-                filter: blur(80px);
-                opacity: 0.2;
-            }
+            .wrapper { padding: 0; }
+            .container { border-radius: 0; border: none; }
+            .header { padding: 36px 28px 32px 28px; }
+            .body { padding: 36px 28px 32px 28px; }
+            .footer { padding: 28px; }
+            .logo { font-size: 38px; }
+            .heading { font-size: 22px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Background Glows -->
-        <div class="glow glow-1"></div>
-        <div class="glow glow-2"></div>
+    <div class="wrapper">
+        <div class="container">
 
-        <!-- Main Content -->
-        <div class="content">
-            <div class="logo">
-                <span class="logo-mars">MARS</span><span class="logo-ai">AI</span>
-            </div>
-            <div class="tagline">Festival International de Cinéma Génératif</div>
-
-            <div class="greeting">Bienvenue dans le futur du cinéma 🎬</div>
-            <div class="message">
-                Merci d'avoir rejoint notre communauté. Vous recevrez désormais en avant-première les actualités, annonces exclusives et insights du festival MarsAI directement dans votre boîte mail.
+            <div class="header">
+                <div class="logo">
+                    <span class="logo-mars">MARS</span><span class="logo-ai">AI</span>
+                </div>
+                <div class="tagline">Festival International de Cinéma Génératif</div>
             </div>
 
-            <a href="${env.websiteUrl || 'http://localhost:5173'}" class="cta-button">Découvrir le Festival</a>
-
-            <div class="divider"></div>
-
-            <div class="message" style="font-size: 13px; margin-bottom: 10px;">
-                Des questions ? Contactez-nous à <a href="mailto:contact@marsai.com" style="color: #8B5CF6; text-decoration: none;">contact@marsai.com</a>
+            <div class="body">
+                ${content}
             </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="footer">
-            <div class="social-links">
-                <a href="#">Twitter</a> • 
-                <a href="#">LinkedIn</a> • 
-                <a href="#">Instagram</a>
+            <div class="footer">
+                <div class="social-links">
+                    <a href="#">Twitter</a> &bull;
+                    <a href="#">LinkedIn</a> &bull;
+                    <a href="#">Instagram</a>
+                </div>
+                <div class="footer-legal">
+                    &copy; 2026 MarsAI Protocol &mdash;
+                    <a href="${unsubscribeUrl}">Se désabonner</a>
+                </div>
             </div>
-            <p style="margin-top: 20px; color: #444444;">© 2026 MarsAI Protocol. <a href="${env.websiteUrl || 'http://localhost:5173'}/unsubscribe?email=${encodeURIComponent(email)}">Se désabonner</a></p>
+
         </div>
     </div>
 </body>
@@ -214,242 +319,247 @@ const generateWelcomeEmailHTML = (email) => {
 };
 
 /**
- * Envoie l'email de bienvenue à un nouvel abonné
+ * Template email de bienvenue newsletter
+ * @param {string} email
+ */
+const generateWelcomeEmailContent = (email) => {
+  const websiteUrl = env.websiteUrl || 'http://localhost:5173';
+  const content = `
+    <div class="subheading">Bienvenue</div>
+    <div class="heading">Vous faites désormais partie de l'aventure MarsAI.</div>
+    <div class="message">
+        Merci d'avoir rejoint notre communauté. Vous serez parmi les premiers à recevoir les actualités,
+        les annonces exclusives et les temps forts du festival directement dans votre boîte mail.
+    </div>
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="info-card-label">Email</span>
+            <span class="info-card-value">${email}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Statut</span>
+            <span class="info-card-value"><span class="badge badge-success">Abonné actif</span></span>
+        </div>
+    </div>
+    <div class="cta-wrapper">
+        <a href="${websiteUrl}" class="cta-button">Découvrir le festival</a>
+    </div>
+  `;
+  return generateBaseTemplate('Bienvenue sur MarsAI', content, email);
+};
+
+/**
+ * Template campagne newsletter personnalisée
+ * @param {string} subject
+ * @param {string} message
+ * @param {string} email
+ */
+const generateCustomEmailContent = (subject, message, email) => {
+  const formattedMessage = message.replace(/\n/g, '<br>');
+  const content = `
+    <div class="heading">${subject}</div>
+    <div class="divider"></div>
+    <div class="message">${formattedMessage}</div>
+  `;
+  return generateBaseTemplate(subject, content, email);
+};
+
+/**
+ * Template email de demande de modification de vidéo
+ * @param {Object} videoData
+ * @param {string} editToken
+ * @param {string} realisatorEmail
+ */
+const generateEditRequestEmailContent = (videoData, editToken, realisatorEmail) => {
+  const editUrl = `${env.websiteUrl}/video/edit/${videoData.id}?token=${editToken}`;
+  const content = `
+    <div class="subheading">Action requise</div>
+    <div class="heading">Des modifications sont nécessaires sur votre soumission.</div>
+    <div class="message">
+        Bonjour ${videoData.realisator_name || 'cher réalisateur'},<br><br>
+        Notre équipe a examiné votre soumission et vous demande d'apporter quelques ajustements
+        avant validation. Le lien ci-dessous est valide pendant <strong style="color: #ffffff;">24 heures</strong>.
+    </div>
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="info-card-label">Film</span>
+            <span class="info-card-value">${videoData.title}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Réalisateur</span>
+            <span class="info-card-value">${videoData.realisator_name || ''} ${videoData.realisator_lastname || ''}</span>
+        </div>
+    </div>
+    <div class="cta-wrapper">
+        <a href="${editUrl}" class="cta-button">Modifier ma soumission</a>
+    </div>
+    <p class="cta-fallback">
+        Si le bouton ne fonctionne pas :<br>
+        <a href="${editUrl}">${editUrl}</a>
+    </p>
+  `;
+  return generateBaseTemplate('Modification de votre soumission - MarsAI', content, realisatorEmail);
+};
+
+/**
+ * Template email de confirmation de soumission de vidéo
+ * @param {Object} videoData - { title, realisator_name, realisator_lastname, email }
+ */
+const generateVideoSubmissionEmailContent = (videoData) => {
+  const websiteUrl = env.websiteUrl || 'http://localhost:5173';
+  const submittedAt = new Date().toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+  const content = `
+    <div class="subheading">Soumission reçue</div>
+    <div class="heading">Merci pour votre soumission&nbsp;!</div>
+    <div class="message">
+        Bonjour ${videoData.realisator_name || 'cher réalisateur'},<br><br>
+        Nous avons bien reçu votre film et vous remercions de l'intérêt que vous portez au festival MarsAI.
+        Votre soumission a été enregistrée avec succès et sera examinée par notre équipe dans les meilleurs délais.
+    </div>
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="info-card-label">Film</span>
+            <span class="info-card-value">${videoData.title || 'Sans titre'}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Réalisateur</span>
+            <span class="info-card-value">${[videoData.realisator_name, videoData.realisator_lastname].filter(Boolean).join(' ') || 'Non renseigné'}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Soumis le</span>
+            <span class="info-card-value">${submittedAt}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Statut</span>
+            <span class="info-card-value"><span class="badge badge-success">En cours d'examen</span></span>
+        </div>
+    </div>
+    <div class="message" style="font-size: 13px; color: #666666; margin-top: 0;">
+        Nous reviendrons vers vous si nous avons besoin d'informations complémentaires.
+        Nous vous souhaitons bonne chance dans cette compétition.
+    </div>
+    <div class="cta-wrapper">
+        <a href="${websiteUrl}" class="cta-button">Découvrir le festival</a>
+    </div>
+  `;
+  return generateBaseTemplate('Confirmation de soumission - MarsAI', content, videoData.email);
+};
+
+/**
+ * Template email d'un sélectionneur vers un réalisateur (depuis le player)
+ * @param {string} videoTitle - Titre de la vidéo concernée
+ * @param {string} message - Message du sélectionneur
+ * @param {string} realisatorEmail - Email du réalisateur
+ */
+const generateSelectorEmailContent = (videoTitle, message, realisatorEmail) => {
+  const formattedMessage = message.replace(/\n/g, '<br>');
+  const content = `
+    <div class="subheading">Message d'un sélectionneur</div>
+    <div class="heading">Un membre de l'équipe MarsAI vous a contacté.</div>
+    <div class="message">
+        Un sélectionneur du festival a consulté votre film et souhaite vous transmettre un message.
+    </div>
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="info-card-label">Film</span>
+            <span class="info-card-value">${videoTitle}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Expéditeur</span>
+            <span class="info-card-value">Sélectionneur MarsAI</span>
+        </div>
+    </div>
+    <div class="message-box">
+        <div class="message-box-text">${formattedMessage}</div>
+    </div>
+    <div class="message" style="font-size: 13px; color: #555555;">
+        Pour répondre à ce message, contactez-nous directement à
+        <a href="mailto:contact@marsai.com" style="color: #8B5CF6; text-decoration: none;">contact@marsai.com</a>.
+    </div>
+  `;
+  return generateBaseTemplate(`Message MarsAI - ${videoTitle}`, content, realisatorEmail);
+};
+
+// ========================================
+// FONCTIONS D'ENVOI
+// ========================================
+
+/**
+ * Fonction générique d'envoi d'email
+ */
+const sendEmail = async ({ to, subject, html, text }) => {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"MarsAI Festival" <${env.email.user}>`,
+      to,
+      subject,
+      html,
+      text: text || subject
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[EMAIL] Email envoyé à ${to} - Message ID: ${info.messageId}`);
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      recipient: to
+    };
+  } catch (error) {
+    console.error(`[EMAIL ERROR] Erreur envoi email à ${to}:`, error.message);
+    return {
+      success: false,
+      error: error.message,
+      recipient: to
+    };
+  }
+};
+
+/**
+ * Envoie l'email de bienvenue à un nouvel abonné newsletter
+ * @param {string} email
  */
 export const sendWelcomeEmail = async (email) => {
-  try {
-    const transporter = createTransporter();
+  const html = generateWelcomeEmailContent(email);
+  const text = `Bienvenue sur MarsAI !\n\nMerci d'avoir rejoint notre communauté. Vous serez parmi les premiers à recevoir les actualités du festival.\n\nDécouvrir le festival : ${env.websiteUrl || 'http://localhost:5173'}\n\n© 2026 MarsAI Protocol`;
 
-    const mailOptions = {
-      from: `"MarsAI Festival" <${env.email.user}>`,
-      to: email,
-      subject: 'Welcome to MarsAI - The Generative Cinema Festival',
-      html: generateWelcomeEmailHTML(email),
-      text: `Welcome to MarsAI !\n\nThank you for joining our community. You will now receive early access to news, exclusive announcements and insights from the MarsAI festival.\n\nDiscover the festival : ${env.websiteUrl || 'http://localhost:5173'}\n\n© 2026 MarsAI Protocol`
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Welcome email sent:', info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw new Error('Unable to send confirmation email');
-  }
+  return sendEmail({
+    to: email,
+    subject: 'Bienvenue sur MarsAI - Festival de Cinéma Génératif',
+    html,
+    text
+  });
 };
 
 /**
- * Génère un template HTML personnalisé pour les campagnes newsletter
- */
-const generateCustomEmailHTML = (subject, message, email) => {
-  // Convertir les retours à la ligne en <br>
-  const formattedMessage = message.replace(/\n/g, '<br>');
-  
-  return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${subject}</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #000000;
-            line-height: 1.5;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0f1419 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        .glow {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.3;
-        }
-        .glow-1 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, #8B5CF6, #D946EF);
-            top: -150px;
-            right: -150px;
-        }
-        .glow-2 {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, #D946EF, #EC4899);
-            bottom: -100px;
-            left: -100px;
-        }
-        .content {
-            position: relative;
-            z-index: 1;
-            padding: 60px 40px;
-            color: #ffffff;
-        }
-        .logo {
-            font-size: 56px;
-            font-weight: 900;
-            margin-bottom: 8px;
-            letter-spacing: -0.05em;
-            text-align: center;
-        }
-        .logo-mars {
-            color: #ffffff;
-        }
-        .logo-ai {
-            background: linear-gradient(135deg, #8B5CF6, #EC4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .tagline {
-            font-size: 11px;
-            color: #666666;
-            margin-bottom: 50px;
-            font-weight: 600;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            text-align: center;
-        }
-        .subject {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 30px;
-            color: #ffffff;
-            letter-spacing: -0.02em;
-            text-align: center;
-        }
-        .message {
-            font-size: 15px;
-            line-height: 1.8;
-            color: #b0b0b0;
-            margin-bottom: 40px;
-            font-weight: 300;
-        }
-        .divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            margin: 50px 0 30px 0;
-        }
-        .footer {
-            padding: 40px 40px 50px 40px;
-            text-align: center;
-            font-size: 11px;
-            color: #555555;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            position: relative;
-            z-index: 1;
-        }
-        .footer a {
-            color: #8B5CF6;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        .footer a:hover {
-            color: #EC4899;
-        }
-        .social-links {
-            margin: 20px 0;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-        .social-links a {
-            margin: 0 16px;
-        }
-        @media (max-width: 600px) {
-            .content {
-                padding: 40px 25px;
-            }
-            .logo {
-                font-size: 42px;
-            }
-            .subject {
-                font-size: 22px;
-            }
-            .glow-1, .glow-2 {
-                filter: blur(80px);
-                opacity: 0.2;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Background Glows -->
-        <div class="glow glow-1"></div>
-        <div class="glow glow-2"></div>
-
-        <!-- Main Content -->
-        <div class="content">
-            <div class="logo">
-                <span class="logo-mars">MARS</span><span class="logo-ai">AI</span>
-            </div>
-            <div class="tagline">Festival International de Cinéma Génératif</div>
-
-            <div class="subject">${subject}</div>
-            
-            <div class="message">
-                ${formattedMessage}
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="message" style="font-size: 13px; margin-bottom: 10px; text-align: center;">
-                Une question ? Contactez-nous à <a href="mailto:contact@marsai.com" style="color: #8B5CF6; text-decoration: none;">contact@marsai.com</a>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <div class="social-links">
-                <a href="#">Twitter</a> • 
-                <a href="#">LinkedIn</a> • 
-                <a href="#">Instagram</a>
-            </div>
-            <p style="margin-top: 20px; color: #444444;">© 2026 MarsAI Protocol. <a href="${env.websiteUrl || 'http://localhost:5173'}/unsubscribe?email=${encodeURIComponent(email)}">Se désabonner</a></p>
-        </div>
-    </div>
-</body>
-</html>
-  `;
-};
-
-/**
- * Envoie une campagne newsletter personnalisée
+ * Envoie un email personnalisé (newsletter, campagnes)
+ * @param {string} email
+ * @param {string} subject
+ * @param {string} message
  */
 export const sendCustomEmail = async (email, subject, message) => {
-  try {
-    const transporter = createTransporter();
+  const html = generateCustomEmailContent(subject, message, email);
+  const text = `${subject}\n\n${message}\n\n© 2026 MarsAI Protocol`;
 
-    const mailOptions = {
-      from: `"MarsAI Festival" <${env.email.user}>`,
-      to: email,
-      subject: subject,
-      html: generateCustomEmailHTML(subject, message, email),
-      text: `${subject}\n\n${message}\n\n© 2026 MarsAI Protocol`
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return { success: false, error: error.message };
-  }
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+    text
+  });
 };
 
 /**
  * Envoie une campagne en masse à plusieurs destinataires
+ * @param {Array<string>} emails
+ * @param {string} subject
+ * @param {string} message
  */
 export const sendBulkEmail = async (emails, subject, message) => {
   const results = {
@@ -459,26 +569,151 @@ export const sendBulkEmail = async (emails, subject, message) => {
     errors: []
   };
 
+  console.log(`[EMAIL BULK] Debut envoi en masse : ${emails.length} destinataires`);
+
   for (const email of emails) {
-    try {
-      const result = await sendCustomEmail(email, subject, message);
-      if (result.success) {
-        results.successful++;
-      } else {
-        results.failed++;
-        results.errors.push({ email, error: result.error });
-      }
-    } catch (error) {
+    const result = await sendCustomEmail(email, subject, message);
+
+    if (result.success) {
+      results.successful++;
+    } else {
       results.failed++;
-      results.errors.push({ email, error: error.message });
+      results.errors.push({ email, error: result.error });
     }
   }
 
+  console.log(`[EMAIL BULK] Envoi terminé : ${results.successful} succès / ${results.failed} échecs`);
   return results;
 };
 
+/**
+ * Envoie un email de demande de modification de vidéo au réalisateur
+ * @param {Object} videoData
+ * @param {string} editToken
+ */
+export const sendVideoEditRequestEmail = async (videoData, editToken) => {
+  if (!videoData.email) {
+    throw new Error('Email du réalisateur manquant dans les données vidéo');
+  }
+
+  const html = generateEditRequestEmailContent(videoData, editToken, videoData.email);
+  const editUrl = `${env.websiteUrl}/video/edit/${videoData.id}?token=${editToken}`;
+  const text = `Modification requise pour votre film\n\nBonjour ${videoData.realisator_name || 'cher réalisateur'},\n\nNotre équipe a examiné votre soumission "${videoData.title}" et vous demande d'apporter quelques modifications.\n\nLien (valide 24h) : ${editUrl}\n\n© 2026 MarsAI Protocol`;
+
+  return sendEmail({
+    to: videoData.email,
+    subject: `Modification requise - ${videoData.title} | MarsAI`,
+    html,
+    text
+  });
+};
+
+/**
+ * Envoie un email de confirmation de soumission de vidéo au réalisateur
+ * @param {Object} videoData - { title, realisator_name, realisator_lastname, email }
+ */
+export const sendVideoSubmissionConfirmationEmail = async (videoData) => {
+  if (!videoData.email) {
+    console.log('[EMAIL] Pas d\'email réalisateur, confirmation non envoyée pour :', videoData.title);
+    return { success: false, error: 'Email réalisateur manquant' };
+  }
+
+  const html = generateVideoSubmissionEmailContent(videoData);
+  const text = `Votre film a bien été soumis\n\nBonjour ${videoData.realisator_name || 'cher réalisateur'},\n\nVotre soumission "${videoData.title}" a été enregistrée. Notre équipe va l'examiner prochainement.\n\n© 2026 MarsAI Protocol`;
+
+  return sendEmail({
+    to: videoData.email,
+    subject: `Soumission confirmée - ${videoData.title} | MarsAI`,
+    html,
+    text
+  });
+};
+
+/**
+ * Template email d'invitation jury
+ * @param {string} email
+ * @param {string} inviteLink
+ */
+const generateInvitationEmailContent = (email, inviteLink) => {
+  const content = `
+    <div class="subheading">Invitation</div>
+    <div class="heading">Vous avez été invité à rejoindre MarsAI Festival.</div>
+    <div class="message">
+        Bonjour,<br><br>
+        L'équipe MarsAI vous invite à créer votre compte jury. Ce lien est valable
+        <strong style="color: #ffffff;">24 heures</strong> et ne peut être utilisé qu'une seule fois.
+    </div>
+    <div class="info-card">
+        <div class="info-card-row">
+            <span class="info-card-label">Email</span>
+            <span class="info-card-value">${email}</span>
+        </div>
+        <div class="info-card-row">
+            <span class="info-card-label">Validité</span>
+            <span class="info-card-value">24 heures</span>
+        </div>
+    </div>
+    <div class="cta-wrapper">
+        <a href="${inviteLink}" class="cta-button">Créer mon compte</a>
+    </div>
+    <p class="cta-fallback">
+        Si le bouton ne fonctionne pas :<br>
+        <a href="${inviteLink}">${inviteLink}</a>
+    </p>
+  `;
+  return generateBaseTemplate('Votre invitation MarsAI', content, email);
+};
+
+/**
+ * Envoie un email d'invitation à un futur membre jury
+ * @param {string} email
+ * @param {string} token
+ */
+export const sendInvitationEmail = async (email, token) => {
+  const link = `${env.websiteUrl}/register?token=${token}`;
+  const html = generateInvitationEmailContent(email, link);
+  const text = `Invitation MarsAI Festival\n\nVous avez été invité à créer votre compte jury.\nLien (valide 24h) : ${link}\n\n© 2026 MarsAI Protocol`;
+
+  return sendEmail({
+    to: email,
+    subject: 'Votre invitation MarsAI Festival',
+    html,
+    text
+  });
+};
+
+/**
+ * Envoie un email d'un sélectionneur au réalisateur (depuis le player)
+ * @param {Object} videoData - { title, email }
+ * @param {string} message - Message du sélectionneur
+ */
+export const sendSelectorEmailToCreator = async (videoData, message) => {
+  if (!videoData.email) {
+    throw new Error('Email du réalisateur manquant');
+  }
+
+  const html = generateSelectorEmailContent(videoData.title, message, videoData.email);
+  const text = `Message d'un sélectionneur MarsAI\n\nConcernant votre film : ${videoData.title}\n\n${message}\n\n© 2026 MarsAI Protocol`;
+
+  return sendEmail({
+    to: videoData.email,
+    subject: `Message MarsAI - ${videoData.title}`,
+    html,
+    text
+  });
+};
+
+// ========================================
+// EXPORTS
+// ========================================
+
 export default {
+  sendEmail,
   sendWelcomeEmail,
   sendCustomEmail,
-  sendBulkEmail
+  sendBulkEmail,
+  sendVideoEditRequestEmail,
+  sendVideoSubmissionConfirmationEmail,
+  sendSelectorEmailToCreator,
+  sendInvitationEmail
 };
