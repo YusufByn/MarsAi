@@ -1,6 +1,16 @@
 import { API_URL, authHeaders } from '../config';
 
 export const playerService = {
+  async getAssignedVideos() {
+    const response = await fetch(`${API_URL}/api/player/assigned`, {
+      headers: authHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des videos assignees');
+    }
+    return response.json();
+  },
+
   async getVideoFeed(userId, limit = 10) {
     const response = await fetch(`${API_URL}/api/player/videos?userId=${userId}&limit=${limit}`, {
       headers: authHeaders(),

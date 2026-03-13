@@ -10,6 +10,41 @@ const __dirname = path.dirname(__filename);
 
 const PlayerVideoController = {
 
+  async getAssignedVideos(req, res) {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Utilisateur non authentifié'
+        });
+      }
+
+      const videos = await videoModel.findAssignedToUser(userId);
+
+      const videosWithUrl = videos.map(video => ({
+        ...video,
+        video_url: video.video_file_name ? `/uploads/videos/${video.video_file_name}` : null,
+        author: [video.realisator_name, video.realisator_lastname].filter(Boolean).join(' '),
+        description: video.synopsis || '',
+      }));
+
+      res.json({
+        success: true,
+        data: videosWithUrl,
+        total: videosWithUrl.length
+      });
+    } catch (error) {
+      console.error('[PLAYER ERROR] getAssignedVideos:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la recuperation des videos assignees',
+        error: error.message
+      });
+    }
+  },
+
   /**
    * Recuperer les videos depuis la BDD pour le player
    * GET /api/player/videos?userId=X

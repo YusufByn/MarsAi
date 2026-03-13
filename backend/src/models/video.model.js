@@ -11,12 +11,32 @@ export const videoModel = {
     const [rows] = await pool.execute(
       `SELECT v.id, v.title, v.title_en, v.synopsis, v.video_file_name, v.cover,
               v.duration, v.classification, v.email, v.realisator_name, v.realisator_lastname
-       FROM video v
-       WHERE v.id NOT IN (
-         SELECT sm.video_id FROM selector_memo sm WHERE sm.user_id = ?
-       )
-       -- FUTURE: AND v.id IN (SELECT a.video_id FROM assignation a WHERE a.user_id = ?)
-       ORDER BY v.created_at DESC`,
+       FROM assignation a
+       JOIN video v ON v.id = a.video_id
+       WHERE a.user_id = ?
+         AND v.id NOT IN (
+           SELECT sm.video_id FROM selector_memo sm WHERE sm.user_id = ?
+         )
+       ORDER BY a.assigned_at DESC, v.created_at DESC`,
+      [userId, userId]
+    );
+    return rows;
+  },
+
+  async findAssignedToUser(userId) {
+    const [rows] = await pool.execute(
+      `SELECT v.id, v.title, v.cover, v.youtube_url, v.video_file_name, v.duration,
+              v.classification, v.country, v.synopsis, v.email,
+              v.realisator_name, v.realisator_lastname, v.created_at,
+              a.assigned_at, sm.statut, sm.rating, sm.comment, sm.updated_at
+       FROM assignation a
+       JOIN video v ON v.id = a.video_id
+       LEFT JOIN selector_memo sm ON sm.video_id = v.id AND sm.user_id = a.user_id
+       WHERE a.user_id = ?
+       ORDER BY
+         CASE WHEN sm.statut IS NULL THEN 0 ELSE 1 END,
+         a.assigned_at DESC,
+         v.created_at DESC`,
       [userId]
     );
     return rows;

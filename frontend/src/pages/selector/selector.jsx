@@ -2,14 +2,17 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../../services/userService';
 import { selectorMemoService } from '../../services/selectorMemoService';
+import { playerService } from '../../services/playerService';
 import { API_URL } from '../../config';
 
 const Selector = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [memos, setMemos] = useState([]);
+  const [assignedVideos, setAssignedVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('assigned');
 
   // Filtre actif (null = tous, sinon filtre par statut)
   const [activeFilter, setActiveFilter] = useState(null);
@@ -43,8 +46,12 @@ const Selector = () => {
         setUser(userResponse.data);
 
         // Récupérer tous les memos de cet utilisateur
-        const memosResponse = await selectorMemoService.getAllByUser(authUser.id);
+        const memosResponse = await selectorMemoService.getAllByUser();
         setMemos(memosResponse.data);
+
+        // Récupérer les vidéos assignées à cet utilisateur
+        const assignedResponse = await playerService.getAssignedVideos();
+        setAssignedVideos(assignedResponse.data || []);
 
         setLoading(false);
       } catch (err) {
@@ -78,6 +85,24 @@ const Selector = () => {
       .sort((a, b) => (b.updated_at > a.updated_at ? 1 : -1));
   }, [memos, activeFilter, search]);
 
+  const filteredAssignedVideos = useMemo(() => {
+    const term = search.toLowerCase().trim();
+    return assignedVideos
+      .filter((video) => {
+        if (!term) return true;
+        const title = (video.title || '').toLowerCase();
+        const director = `${video.realisator_name || ''} ${video.realisator_lastname || ''}`.toLowerCase();
+        return title.includes(term) || director.includes(term);
+      })
+      .sort((a, b) => {
+        const aPending = a.statut ? 1 : 0;
+        const bPending = b.statut ? 1 : 0;
+        if (aPending !== bPending) return aPending - bPending;
+        return new Date(b.assigned_at || b.created_at) - new Date(a.assigned_at || a.created_at);
+      });
+  }, [assignedVideos, search]);
+
+  const pendingAssignedCount = assignedVideos.filter((video) => !video.statut).length;
   const totalPages = Math.ceil(filteredMemos.length / PER_PAGE);
   const paginatedMemos = filteredMemos.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
@@ -129,13 +154,52 @@ const Selector = () => {
     },
   ];
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearch('');
+    setActiveFilter(null);
+    setPage(1);
+  };
+
+  const getAssignedStatusBadge = (video) => {
+    if (!video.statut) {
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-bold bg-mars-primary/20 text-mars-primary border border-mars-primary/20">
+          A traiter
+        </span>
+      );
+    }
+
+    if (video.statut === 'yes') {
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400">
+          Evaluée
+        </span>
+      );
+    }
+
+    if (video.statut === 'no') {
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400">
+          Refusée
+        </span>
+      );
+    }
+
+    return (
+      <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400">
+        A discuter
+      </span>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-black text-white px-6 pt-24 pb-10">
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Profil du jury */}
         <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <h1 className="text-3xl font-bold mb-6">Profil Selector</h1>
+          <h1 className="text-3xl font-bold mb-6">Espace Jury</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
@@ -169,6 +233,14 @@ const Selector = () => {
                 </p>
               </div>
               <div>
+                <p className="text-xs text-gray-400">Videos assignees</p>
+                <p className="text-lg font-bold">{assignedVideos.length}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">A traiter</p>
+                <p className="text-lg font-bold text-mars-primary">{pendingAssignedCount}</p>
+              </div>
+              <div>
                 <p className="text-xs text-gray-400">Videos evaluees</p>
                 <p className="text-lg font-bold">{memos.length}</p>
               </div>
@@ -176,136 +248,225 @@ const Selector = () => {
           </div>
         </div>
 
-        {/* Dashboard des memos */}
+        {/* Espace jury */}
         <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <h2 className="text-2xl font-bold mb-6">Mes evaluations</h2>
-
-          {/* Encarts cliquables */}
-          <div className="mb-6 grid grid-cols-3 gap-4">
-            {cards.map(({ key, label, activeClass, inactiveClass, countClass }) => {
-              const count = memos.filter(m => m.statut === key).length;
-              const isActive = activeFilter === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleCardClick(key)}
-                  className={`rounded-xl p-4 text-left transition-all cursor-pointer ${
-                    isActive ? activeClass : inactiveClass
-                  }`}
-                >
-                  <p className="text-xs text-gray-400">{label}</p>
-                  <p className={`text-2xl font-bold ${countClass}`}>{count}</p>
-                </button>
-              );
-            })}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <p className="text-xs font-bold tracking-[0.3em] uppercase text-mars-primary/70 mb-2">
+                Jury Space
+              </p>
+              <h2 className="text-2xl font-bold">
+                {activeTab === 'assigned' ? 'Mes videos assignees' : 'Mes evaluations'}
+              </h2>
+            </div>
+            <div className="flex items-center gap-2 p-1 rounded-2xl border border-white/10 bg-black/30">
+              <button
+                onClick={() => handleTabChange('assigned')}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  activeTab === 'assigned'
+                    ? 'bg-gradient-to-r from-mars-primary to-mars-secondary text-white shadow-lg shadow-mars-primary/20'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                Mes videos assignees
+              </button>
+              <button
+                onClick={() => handleTabChange('reviews')}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  activeTab === 'reviews'
+                    ? 'bg-gradient-to-r from-mars-primary to-mars-secondary text-white shadow-lg shadow-mars-primary/20'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                Mes evaluations
+              </button>
+            </div>
           </div>
 
-          {/* Barre de recherche */}
           <div className="mb-6">
             <input
               type="text"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Rechercher par titre ou realisateur..."
+              placeholder={activeTab === 'assigned' ? 'Rechercher dans mes assignations...' : 'Rechercher par titre ou realisateur...'}
               className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
 
-          {/* Liste des memos filtres */}
-          {filteredMemos.length === 0 ? (
-            <p className="text-center text-gray-400 py-10">Aucune video trouvee</p>
-          ) : (
-            <div className="space-y-4">
-              {paginatedMemos.map((memo) => (
-                <div
-                  key={memo.id}
-                  onClick={() => navigate(`/video/player?videoId=${memo.video_id}`)}
-                  className="rounded-xl border border-white/10 bg-black/40 p-4 hover:border-white/20 transition-colors cursor-pointer"
-                >
-                  <div className="flex flex-col md:flex-row gap-4">
-                    {/* Miniature video */}
-                    {memo.cover && (
-                      <div className="w-full md:w-48 h-28 rounded-lg overflow-hidden flex-shrink-0">
-                        <img
-                          src={`${API_URL}/uploads/covers/${memo.cover}`}
-                          alt={memo.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
+          {activeTab === 'assigned' ? (
+            filteredAssignedVideos.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-8 text-center">
+                <p className="text-gray-400">Aucune video assignee pour le moment.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredAssignedVideos.map((video) => (
+                  <button
+                    key={video.id}
+                    onClick={() => navigate(`/video/player?videoId=${video.id}`)}
+                    className="w-full text-left rounded-2xl border border-white/10 bg-black/40 p-5 hover:border-mars-primary/30 hover:bg-mars-primary/5 transition-colors"
+                  >
+                    <div className="flex flex-col md:flex-row gap-4">
+                      {video.cover && (
+                        <div className="w-full md:w-48 h-28 rounded-xl overflow-hidden flex-shrink-0">
+                          <img
+                            src={`${API_URL}/uploads/covers/${video.cover}`}
+                            alt={video.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
 
-                    {/* Infos video et memo */}
-                    <div className="flex-grow space-y-2">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-bold text-lg">{memo.title || 'Sans titre'}</h3>
-                          <p className="text-xs text-gray-400">
-                            Duree: {memo.duration ? `${Math.floor(memo.duration / 60)}min` : 'N/A'} |
-                            Classification: {memo.classification || 'N/A'}
+                      <div className="flex-grow space-y-3">
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                          <div>
+                            <h3 className="font-bold text-lg">{video.title || 'Sans titre'}</h3>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {`${video.realisator_name || ''} ${video.realisator_lastname || ''}`.trim() || 'Realisateur inconnu'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Duree: {video.duration ? `${Math.floor(video.duration / 60)}min` : 'N/A'} | Classification: {video.classification || 'N/A'}
+                            </p>
+                          </div>
+                          {getAssignedStatusBadge(video)}
+                        </div>
+
+                        {video.description && (
+                          <p className="text-sm text-gray-300 line-clamp-2">
+                            {video.description}
                           </p>
-                        </div>
-
-                        {/* Badge statut */}
-                        {memo.statut && (
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            memo.statut === 'yes' ? 'bg-green-500/20 text-green-400' :
-                            memo.statut === 'no' ? 'bg-red-500/20 text-red-400' :
-                            'bg-yellow-500/20 text-yellow-400'
-                          }`}>
-                            {memo.statut === 'yes' ? 'Oui' : memo.statut === 'no' ? 'Non' : 'A discuter'}
-                          </span>
                         )}
-                      </div>
 
-                      {/* Note */}
-                      {memo.rating && (
-                        <div>
-                          <span className="text-xs text-gray-400">Note: </span>
-                          <span className="text-lg font-bold text-yellow-400">{memo.rating}/10</span>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-gray-500">
+                          <div className="flex flex-wrap gap-4">
+                            <span>Assignee le: {new Date(video.assigned_at || video.created_at).toLocaleDateString('fr-FR')}</span>
+                            {video.updated_at && <span>Derniere action: {new Date(video.updated_at).toLocaleDateString('fr-FR')}</span>}
+                            {video.rating && <span className="text-yellow-400 font-bold">Note: {video.rating}/10</span>}
+                          </div>
+                          <span className="inline-flex items-center gap-2 text-mars-primary font-semibold">
+                            Ouvrir dans le player
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </span>
                         </div>
-                      )}
-
-                      {/* Commentaire */}
-                      {memo.comment && (
-                        <div className="mt-2">
-                          <p className="text-xs text-gray-400">Commentaire:</p>
-                          <p className="text-sm text-gray-300 italic">{memo.comment}</p>
-                        </div>
-                      )}
-
-                      {/* Dates */}
-                      <div className="flex gap-4 text-xs text-gray-500">
-                        <span>Cree: {new Date(memo.created_at).toLocaleDateString('fr-FR')}</span>
-                        <span>Modifie: {new Date(memo.updated_at).toLocaleDateString('fr-FR')}</span>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                ))}
+              </div>
+            )
+          ) : (
+            <>
+              <div className="mb-6 grid grid-cols-3 gap-4">
+                {cards.map(({ key, label, activeClass, inactiveClass, countClass }) => {
+                  const count = memos.filter(m => m.statut === key).length;
+                  const isActive = activeFilter === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleCardClick(key)}
+                      className={`rounded-xl p-4 text-left transition-all cursor-pointer ${
+                        isActive ? activeClass : inactiveClass
+                      }`}
+                    >
+                      <p className="text-xs text-gray-400">{label}</p>
+                      <p className={`text-2xl font-bold ${countClass}`}>{count}</p>
+                    </button>
+                  );
+                })}
+              </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-6">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30 hover:bg-white/20 transition-colors"
-                  >
-                    Precedent
-                  </button>
-                  <span className="text-sm text-gray-400 px-4">
-                    {page} / {totalPages} ({filteredMemos.length} videos)
-                  </span>
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30 hover:bg-white/20 transition-colors"
-                  >
-                    Suivant
-                  </button>
+              {filteredMemos.length === 0 ? (
+                <p className="text-center text-gray-400 py-10">Aucune video trouvee</p>
+              ) : (
+                <div className="space-y-4">
+                  {paginatedMemos.map((memo) => (
+                    <div
+                      key={memo.id}
+                      onClick={() => navigate(`/video/player?videoId=${memo.video_id}`)}
+                      className="rounded-xl border border-white/10 bg-black/40 p-4 hover:border-white/20 transition-colors cursor-pointer"
+                    >
+                      <div className="flex flex-col md:flex-row gap-4">
+                        {memo.cover && (
+                          <div className="w-full md:w-48 h-28 rounded-lg overflow-hidden flex-shrink-0">
+                            <img
+                              src={`${API_URL}/uploads/covers/${memo.cover}`}
+                              alt={memo.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex-grow space-y-2">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h3 className="font-bold text-lg">{memo.title || 'Sans titre'}</h3>
+                              <p className="text-xs text-gray-400">
+                                Duree: {memo.duration ? `${Math.floor(memo.duration / 60)}min` : 'N/A'} |
+                                Classification: {memo.classification || 'N/A'}
+                              </p>
+                            </div>
+
+                            {memo.statut && (
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                memo.statut === 'yes' ? 'bg-green-500/20 text-green-400' :
+                                memo.statut === 'no' ? 'bg-red-500/20 text-red-400' :
+                                'bg-yellow-500/20 text-yellow-400'
+                              }`}>
+                                {memo.statut === 'yes' ? 'Oui' : memo.statut === 'no' ? 'Non' : 'A discuter'}
+                              </span>
+                            )}
+                          </div>
+
+                          {memo.rating && (
+                            <div>
+                              <span className="text-xs text-gray-400">Note: </span>
+                              <span className="text-lg font-bold text-yellow-400">{memo.rating}/10</span>
+                            </div>
+                          )}
+
+                          {memo.comment && (
+                            <div className="mt-2">
+                              <p className="text-xs text-gray-400">Commentaire:</p>
+                              <p className="text-sm text-gray-300 italic">{memo.comment}</p>
+                            </div>
+                          )}
+
+                          <div className="flex gap-4 text-xs text-gray-500">
+                            <span>Cree: {new Date(memo.created_at).toLocaleDateString('fr-FR')}</span>
+                            <span>Modifie: {new Date(memo.updated_at).toLocaleDateString('fr-FR')}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-6">
+                      <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30 hover:bg-white/20 transition-colors"
+                      >
+                        Precedent
+                      </button>
+                      <span className="text-sm text-gray-400 px-4">
+                        {page} / {totalPages} ({filteredMemos.length} videos)
+                      </span>
+                      <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm disabled:opacity-30 hover:bg-white/20 transition-colors"
+                      >
+                        Suivant
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>
