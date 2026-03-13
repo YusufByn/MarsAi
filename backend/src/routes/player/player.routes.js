@@ -11,6 +11,9 @@ const ROLES_PLAYER = ['jury', 'selector', 'admin', 'superadmin'];
 // Liste de toutes les vidéos
 router.get('/videos', playerVideoController.getVideos.bind(playerVideoController));
 
+// Liste des vidéos assignées à l'utilisateur connecté
+router.get('/assigned', checkAuth, restrictTo(...ROLES_PLAYER), playerVideoController.getAssignedVideos.bind(playerVideoController));
+
 // Récupérer une vidéo spécifique par ID
 router.get('/videos/:id', playerVideoController.getVideoById.bind(playerVideoController));
 

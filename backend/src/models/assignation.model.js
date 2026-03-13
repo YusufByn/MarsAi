@@ -2,17 +2,34 @@ import pool from '../config/db.js';
 
 export const assignationModel = {
     async getPanelData() {
-        const [juries] = await pool.execute('SELECT id, name, lastname FROM jury');
+        const [juries] = await pool.execute(`
+            SELECT id, name, lastname, role
+            FROM user
+            WHERE role IN ('jury', 'selector')
+            ORDER BY lastname ASC, name ASC
+        `);
         
         const [videos] = await pool.execute(`
-            SELECT id, title, classification, country, duration, status 
-            FROM video 
-            WHERE status IN ('pending', 'approved')
+            SELECT 
+                v.id,
+                v.title,
+                v.classification,
+                v.country,
+                v.duration,
+                COALESCE(av.statut, 'pending') AS status
+            FROM video v
+            LEFT JOIN admin_video av ON av.video_id = v.id
+            WHERE COALESCE(av.statut, 'pending') IN ('pending', 'validated')
         `);
 
         const [stats] = await pool.execute(`
             SELECT 
-                (SELECT COUNT(*) FROM video WHERE status IN ('pending', 'approved')) as total_videos,
+                (
+                    SELECT COUNT(*)
+                    FROM video v
+                    LEFT JOIN admin_video av ON av.video_id = v.id
+                    WHERE COALESCE(av.statut, 'pending') IN ('pending', 'validated')
+                ) as total_videos,
                 (SELECT COUNT(DISTINCT video_id) FROM assignation) as assigned_videos
         `);
 
@@ -39,17 +56,19 @@ export const assignationModel = {
     },
 
     async assignRandom(juryIds, limit, classification) {
-        let filterQueryy = "WHERE status IN ('pending', 'approved')";
+        let filterQuery = "WHERE COALESCE(av.statut, 'pending') IN ('pending', 'validated')";
         let params = [];
 
         if (classification && classification !== 'all') {
-            filterQueryy += " AND classification = ?";
+            filterQuery += " AND v.classification = ?";
             params.push(classification);
         }
 
         const queryVideos = `
-            SELECT id FROM video 
-            ${filterQueryy} 
+            SELECT v.id
+            FROM video v
+            LEFT JOIN admin_video av ON av.video_id = v.id
+            ${filterQuery}
             ORDER BY RAND() 
             LIMIT ?
         `;
