@@ -3,7 +3,7 @@ import { Search, ChevronLeft, ChevronRight, Trash2, Users, Shuffle, CheckSquare,
 import { adminService } from '../../services/adminService';
 import { uploadCover, uploadStills } from '../../services/api.service';
 import { API_URL } from '../../config';
-import { useAssignation } from '../../hooks/useModeration';
+import { useAssignation } from '../../hooks/use.moderation';
 
 // ─────────────────────────────────────────────
 // Modal Assignation
@@ -363,10 +363,7 @@ export default function AdminFilms() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(null);
   const [uploadingStills, setUploadingStills] = useState(null);
-<<<<<<< HEAD
-=======
   const [showAssignModal, setShowAssignModal] = useState(false); // 👈 nouveau
->>>>>>> origin/auth
   const coverInputRefs = useRef({});
   const stillsInputRefs = useRef({});
 
@@ -464,11 +461,6 @@ export default function AdminFilms() {
 
   return (
     <div className="space-y-6">
-<<<<<<< HEAD
-      <h1 className="text-3xl font-bold">Gestion des Films</h1>
-
-      {/* Filtres */}
-=======
 
       {/* Header — titre + bouton assignation */}
       <div className="flex items-center justify-between">
@@ -484,7 +476,6 @@ export default function AdminFilms() {
       </div>
 
       {/* Filtres — inchangé */}
->>>>>>> origin/auth
       <div className="flex flex-col md:flex-row gap-4">
         <form onSubmit={handleSearchSubmit} className="flex-1 relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -508,17 +499,10 @@ export default function AdminFilms() {
         </select>
       </div>
 
-<<<<<<< HEAD
-      {/* Stats rapides */}
-      <p className="text-sm text-gray-400">{total} film{total > 1 ? 's' : ''} trouve{total > 1 ? 's' : ''}</p>
-
-      {/* Liste */}
-=======
       {/* Stats — inchangé */}
       <p className="text-sm text-gray-400">{total} film{total > 1 ? 's' : ''} trouve{total > 1 ? 's' : ''}</p>
 
       {/* Liste — inchangé */}
->>>>>>> origin/auth
       {loading ? (
         <div className="flex items-center justify-center h-32">
           <p className="text-gray-400">Chargement...</p>
@@ -530,20 +514,11 @@ export default function AdminFilms() {
           {films.map((film) => (
             <div key={film.id} className="rounded-xl border border-white/10 bg-white/5 p-4 hover:border-white/20 transition-colors">
               <div className="flex flex-col md:flex-row gap-4">
-<<<<<<< HEAD
-                {/* Miniature */}
-=======
->>>>>>> origin/auth
                 {getCoverUrl(film.poster_url) && (
                   <div className="w-full md:w-40 h-24 rounded-lg overflow-hidden flex-shrink-0">
                     <img src={getCoverUrl(film.poster_url)} alt={film.title} className="w-full h-full object-cover" />
                   </div>
                 )}
-<<<<<<< HEAD
-
-                {/* Infos */}
-=======
->>>>>>> origin/auth
                 <div className="flex-grow space-y-2">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -555,84 +530,20 @@ export default function AdminFilms() {
                     </div>
                     {statusBadge(film.status)}
                   </div>
-<<<<<<< HEAD
-
-                  {/* Actions */}
-                  <div className="flex gap-2 mt-2">
-                    {film.status !== 'validated' && (
-                      <button
-                        onClick={() => handleStatusChange(film.id, 'validated')}
-                        className="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition-colors"
-                      >
-=======
                   <div className="flex gap-2 mt-2">
                     {film.status !== 'validated' && (
                       <button onClick={() => handleStatusChange(film.id, 'validated')}
                         className="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition-colors">
->>>>>>> origin/auth
                         Valider
                       </button>
                     )}
                     {film.status !== 'rejected' && (
-<<<<<<< HEAD
-                      <button
-                        onClick={() => handleStatusChange(film.id, 'rejected')}
-                        className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors"
-                      >
-=======
                       <button onClick={() => handleStatusChange(film.id, 'rejected')}
                         className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors">
->>>>>>> origin/auth
                         Rejeter
                       </button>
                     )}
                     {film.status !== 'pending' && (
-<<<<<<< HEAD
-                      <button
-                        onClick={() => handleStatusChange(film.id, 'pending')}
-                        className="px-3 py-1 rounded-lg bg-yellow-500/20 text-yellow-400 text-xs font-bold hover:bg-yellow-500/30 transition-colors"
-                      >
-                        En attente
-                      </button>
-                    )}
-                    {/* Upload cover */}
-                    <button
-                      onClick={() => coverInputRefs.current[film.id]?.click()}
-                      disabled={uploadingCover === film.id}
-                      className="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-xs font-bold hover:bg-blue-500/30 transition-colors disabled:opacity-50"
-                    >
-                      {uploadingCover === film.id ? 'Upload...' : 'Cover'}
-                    </button>
-                    <input
-                      ref={el => { coverInputRefs.current[film.id] = el; }}
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png"
-                      className="hidden"
-                      onChange={e => handleCoverUpload(film.id, e.target.files[0])}
-                    />
-
-                    {/* Upload stills */}
-                    <button
-                      onClick={() => stillsInputRefs.current[film.id]?.click()}
-                      disabled={uploadingStills === film.id}
-                      className="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-xs font-bold hover:bg-purple-500/30 transition-colors disabled:opacity-50"
-                    >
-                      {uploadingStills === film.id ? 'Upload...' : 'Stills'}
-                    </button>
-                    <input
-                      ref={el => { stillsInputRefs.current[film.id] = el; }}
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png"
-                      multiple
-                      className="hidden"
-                      onChange={e => handleStillsUpload(film.id, e.target.files)}
-                    />
-
-                    <button
-                      onClick={() => setDeleteConfirm(film.id)}
-                      className="px-3 py-1 rounded-lg bg-red-900/30 text-red-300 text-xs font-bold hover:bg-red-900/50 transition-colors ml-auto"
-                    >
-=======
                       <button onClick={() => handleStatusChange(film.id, 'pending')}
                         className="px-3 py-1 rounded-lg bg-yellow-500/20 text-yellow-400 text-xs font-bold hover:bg-yellow-500/30 transition-colors">
                         En attente
@@ -656,40 +567,21 @@ export default function AdminFilms() {
                       onChange={e => handleStillsUpload(film.id, e.target.files)} />
                     <button onClick={() => setDeleteConfirm(film.id)}
                       className="px-3 py-1 rounded-lg bg-red-900/30 text-red-300 text-xs font-bold hover:bg-red-900/50 transition-colors ml-auto">
->>>>>>> origin/auth
                       <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
               </div>
-<<<<<<< HEAD
-
-              {/* Confirmation suppression */}
-=======
->>>>>>> origin/auth
               {deleteConfirm === film.id && (
                 <div className="mt-3 p-3 rounded-lg bg-red-900/20 border border-red-500/20 flex items-center justify-between">
                   <p className="text-xs text-red-400">Supprimer definitivement ce film ?</p>
                   <div className="flex gap-2">
-<<<<<<< HEAD
-                    <button
-                      onClick={() => handleDelete(film.id)}
-                      className="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700"
-                    >
-                      Confirmer
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(null)}
-                      className="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-bold hover:bg-gray-600"
-                    >
-=======
                     <button onClick={() => handleDelete(film.id)}
                       className="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700">
                       Confirmer
                     </button>
                     <button onClick={() => setDeleteConfirm(null)}
                       className="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-bold hover:bg-gray-600">
->>>>>>> origin/auth
                       Annuler
                     </button>
                   </div>
@@ -700,26 +592,6 @@ export default function AdminFilms() {
         </div>
       )}
 
-<<<<<<< HEAD
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 pt-4">
-          <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-30 hover:bg-white/10 transition-colors"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="text-sm text-gray-400">
-            Page {page} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-30 hover:bg-white/10 transition-colors"
-          >
-=======
       {/* Pagination — inchangé */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-4">
@@ -730,20 +602,13 @@ export default function AdminFilms() {
           <span className="text-sm text-gray-400">Page {page} / {totalPages}</span>
           <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
             className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-30 hover:bg-white/10 transition-colors">
->>>>>>> origin/auth
             <ChevronRight size={16} />
           </button>
         </div>
       )}
-<<<<<<< HEAD
-    </div>
-  );
-}
-=======
 
       {/* Modale assignation */}
       {showAssignModal && <AssignationModal onClose={() => setShowAssignModal(false)} />}
     </div>
   );
 }
->>>>>>> origin/auth
