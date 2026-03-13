@@ -24,7 +24,7 @@ export default function Hero() {
                 </div>
 
                 {/* Titre Principal */}
-                <h1 className="text-[3.6rem] sm:text-7xl md:text-[12rem] font-black tracking-tight md:tracking-tighter mb-4 leading-[0.85] italic uppercase max-w-full break-words">
+                <h1 className="text-[3.2rem] sm:text-6xl md:text-[7rem] lg:text-[9rem] xl:text-[12rem] font-black tracking-tight md:tracking-tighter mb-4 leading-[0.9] italic uppercase max-w-full break-words">
                     Festival mars<span className="mars-text-gradient">AI</span>
                 </h1>
 
