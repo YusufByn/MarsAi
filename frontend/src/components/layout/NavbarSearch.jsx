@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSearchSuggestions } from "@/components/search/useSearchSuggestions";
-import SearchResultsList from "@/components/search/searchResultsList.jsx";
+import SearchResultsList from "@/components/search/SearchResultsList.jsx";
 
 // Nombre max d'éléments affichés par section
 const MAX_ITEMS = 6;

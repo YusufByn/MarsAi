@@ -46,7 +46,7 @@ export default function SearchResultsList({
 
     return (
         <div className="p-2">
-            {loading && <div className="px-3 py-2 text-xs text-white/50 animate-pulse">Recherche…</div>}
+            {loading && <div className="px-3 py-2 text-xs text-white/50 animate-pulse">Recherche...</div>}
 
             {!loading && !hasResults && q.length >= 2 && (
                 <div className="px-3 py-2 text-xs text-white/50">Aucun résultat</div>
@@ -87,7 +87,7 @@ export default function SearchResultsList({
                     <div className="px-3 py-1 text-[10px] tracking-[0.3em] uppercase text-white/40 font-bold">Jury</div>
                     <div className="space-y-1">
                         {jurors.map((j, jIndex) => {
-                            //  l'index global => les jurés viennent après les films 
+                            // l'index global => les jurés viennent après les films
                             const idx = films.length + jIndex;
                             // Nom complet affiché avec fallback si les champs sont absents
                             const fullName = `${j.name ?? ""} ${j.lastname ?? ""}`.trim() || "Jury";
@@ -147,7 +147,7 @@ export default function SearchResultsList({
                         className={`w-full px-3 ${dense ? "py-2 text-xs rounded-xl" : "py-3 text-sm rounded-2xl"} font-semibold transition text-left
                             ${activeIndex === ctaIndex ? "bg-white/10 text-white" : "bg-white/5 hover:bg-white/10 text-white/70"}`}
                     >
-                        Voir tous les résultats pour “{q}”
+                        Voir tous les résultats pour "{q}"
                     </button>
                 </div>
             )}
