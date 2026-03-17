@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useSearchSuggestions } from "@/components/search/useSearchSuggestions";
+import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import SearchResultsList from "@/components/search/searchResultsList.jsx";
 
 // Nombre max d'éléments affichés par section
 const MAX_ITEMS = 6;
+const MIN_QUERY_LENGTH = 2;
 
 // Overlay mobile de recherche => saisie, suggestions et navigation clavier
 export default function MobileSearchOverlay({ open, onClose }) {
@@ -32,9 +33,9 @@ export default function MobileSearchOverlay({ open, onClose }) {
     // Indique s'il existe au moins un résultat dans une des sections
     const hasResults = films.length > 0 || jurors.length > 0 || tags.length > 0;
 
-    // Nrombre total d'éléments navigables => films + jurés + tags + CTA final "voir tous"
+    // Nombre total d'éléments navigables => films + jurés + tags + CTA final "voir tous"
     const totalSelectable = useMemo(() => {
-        return films.length + jurors.length + tags.length + (q ? 1 : 0);
+        return films.length + jurors.length + tags.length + (q.length >= MIN_QUERY_LENGTH ? 1 : 0);
     }, [films.length, jurors.length, tags.length, q]);
 
     // Associe chaque élément affiché à sa ref via son index global
@@ -83,9 +84,9 @@ export default function MobileSearchOverlay({ open, onClose }) {
 
     // Redirige vers la page complète des résultats
     const goToAll = () => {
-        if (!q) return;
+        if (q.length < MIN_QUERY_LENGTH) return;
         closeAndReset();
-        navigate(`/videos?q=${encodeURIComponent(q)}`);
+        navigate(`/search?q=${encodeURIComponent(q)}`);
     };
 
     // Sélectionne un élément selon son index global => 
@@ -220,9 +221,9 @@ export default function MobileSearchOverlay({ open, onClose }) {
                                 onSelectIndex={selectIndex}
                             />
 
-                            {/* Indication affichée tant que le user n'a pas encore saisi 2 caractères */}
-                            {!loading && !hasResults && q.length < 2 && (
-                                <div className="px-5 py-4 text-xs text-white/40">Tape au moins 2 caractères…</div>
+                            {/* Indication affichée tant que le user n'a pas encore saisi assez caractères */}
+                            {!loading && !hasResults && q.length < MIN_QUERY_LENGTH && (
+                                <div className="px-5 py-4 text-xs text-white/40">Tape au moins {MIN_QUERY_LENGTH} caractères…</div>
                             )}
                         </div>
                     </div>

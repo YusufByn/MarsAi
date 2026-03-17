@@ -9,6 +9,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { videoService } from "@/services/videoService";
 import { juryService } from "@/services/juryService";
 
+// Récupère toujours un tableau, même si la réponse ne renvoie pas le même format selon les routes (endpoints)
+// ça évite de casser le front si le format varie en fonction de l'endpoint
+function extractList(payload) {
+    if (Array.isArray(payload)) return payload;     //  tableau direct
+    if (Array.isArray(payload?.data)) return payload.data;      // un objet avec data
+    if (Array.isArray(payload?.rows)) return payload.rows;      // objet paginé avec rows
+    return [];
+}
+
 export function useSearchSuggestions({ enabled, query, maxItems = 6, debounceMs = 250 }) {
     // Requête nettoyée => supprime les espaces inutiles au début et à la fin
     const q = useMemo(() => String(query ?? "").trim(), [query]);
@@ -59,12 +68,14 @@ export function useSearchSuggestions({ enabled, query, maxItems = 6, debounceMs 
                 });
 
                 // Met à jour uniquement si cette requête est toujours la plus récente
-                if (requestIdRef.current === myRequestId) setFilms(filmRes?.data ?? []);
+                if (requestIdRef.current === myRequestId) {
+                    setFilms(extractList(filmRes));
+                }
 
                 // Jury (charge une fois, puis filtre côté client)
                 if (!juryCacheRef.current) {
                     const juryRes = await juryService.getAll();
-                    juryCacheRef.current = juryRes?.data ?? [];
+                    juryCacheRef.current = extractList(juryRes);
                 }
 
                 const filteredJurors = (juryCacheRef.current || [])
@@ -76,7 +87,7 @@ export function useSearchSuggestions({ enabled, query, maxItems = 6, debounceMs 
                 // Tags (charge une fois, puis filtre côté client)
                 if (!tagCacheRef.current) {
                     const tagRes = await videoService.getAllTags();
-                    tagCacheRef.current = tagRes?.data ?? tagRes ?? [];
+                    tagCacheRef.current = extractList(tagRes);
                 }
 
                 const filteredTags = (tagCacheRef.current || [])

@@ -4,6 +4,9 @@
 import React from "react";
 import { formatAuthor, getCoverUrl, Highlight, JuryAvatar, TagAvatar } from "./searchUtils";
 
+// Nombre minimum de caractères pour afficher le CTA et les états de recherche
+const MIN_QUERY_LENGTH = 2;
+
 // Ligne de résultat réutilisable (film/jury/tag)
 function Row({ img, title, subtitle, onClick, active, rowRef, onMouseEnter, rounded = "rounded-xl" }) {
     return (
@@ -48,7 +51,7 @@ export default function SearchResultsList({
         <div className="p-2">
             {loading && <div className="px-3 py-2 text-xs text-white/50 animate-pulse">Recherche…</div>}
 
-            {!loading && !hasResults && q.length >= 2 && (
+            {!loading && !hasResults && q.length >= MIN_QUERY_LENGTH && (
                 <div className="px-3 py-2 text-xs text-white/50">Aucun résultat</div>
             )}
 
@@ -138,7 +141,7 @@ export default function SearchResultsList({
             )}
 
             {/* CTA => bouton final pour afficher la page complète des résultats */}
-            {!loading && q && (
+            {!loading && q.length >= MIN_QUERY_LENGTH && (
                 <div className="mt-2 pt-2 border-t border-white/10">
                     <button
                         ref={setRowRef(ctaIndex)}

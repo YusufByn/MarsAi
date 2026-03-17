@@ -16,6 +16,7 @@ const Register           = lazy(() => import('./pages/auth/Register'));
 const FormDirector       = lazy(() => import('./pages/user/FormDirector'));
 const EditVideo          = lazy(() => import('./pages/EditVideo'));
 const Selector           = lazy(() => import('./pages/selector/selector'));
+const AllSearchResults   = lazy(() => import('./pages/search/AllSearchResults'));
 const Videos             = lazy(() => import('./pages/Videos'));
 const VideoDetails       = lazy(() => import('./pages/VideoDetails'));
 const CGU                = lazy(() => import('./pages/CGU'));
@@ -65,6 +66,7 @@ function AppContent() {
             <Route path="/video/edit/:id" element={<EditVideo />} />
             <Route path="/selector" element={<Selector />} />
             <Route path="/videos" element={<Videos />} />
+            <Route path='search' element={<AllSearchResults />} />
             <Route path="/videoDetails/:id" element={<VideoDetails />} />
             <Route path="/mentions" element={<CGU />} />
             <Route path="/events" element={<EventsPage />} />

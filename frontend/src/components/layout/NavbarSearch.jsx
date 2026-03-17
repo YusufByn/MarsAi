@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useSearchSuggestions } from "@/components/search/useSearchSuggestions";
+import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import SearchResultsList from "@/components/search/searchResultsList.jsx";
 
 // Nombre max d'éléments affichés par section
 const MAX_ITEMS = 6;
+const MIN_QUERY_LENGTH = 2;
 
 // Barre de recherche desktop dans la navbar
 // Gère l'ouverture, la saisie, les suggestions, et la navigation clavier
@@ -40,7 +41,7 @@ export default function NavbarSearch({ onAfterNavigate }) {
     // Nombre total d'éléments navigables au clavier
     // (films + jurés + tags + CTA final)
     const totalSelectable = useMemo(() => {
-        return films.length + jurors.length + tags.length + (q ? 1 : 0);
+        return films.length + jurors.length + tags.length + (q.length >= MIN_QUERY_LENGTH ? 1 : 0);
     }, [films.length, jurors.length, tags.length, q]);
 
     // Associe chaque ligne affichée à sa ref via son index global
@@ -73,10 +74,10 @@ export default function NavbarSearch({ onAfterNavigate }) {
 
     // Redirige vers la page complète des résultats
     const goToAll = () => {
-        if (!q) return;
+        if (q.length < MIN_QUERY_LENGTH) return;
         setOpen(false);
         setQuery("");
-        navigate(`/videos?q=${encodeURIComponent(q)}`);
+        navigate(`/search?q=${encodeURIComponent(q)}`);
         onAfterNavigate?.();
     };
 
@@ -178,7 +179,7 @@ export default function NavbarSearch({ onAfterNavigate }) {
                     </div>
 
                     {/* Dropdown des suggestions */}
-                    {(loading || hasResults || q.length >= 2) && (
+                    {(loading || hasResults || q.length >= MIN_QUERY_LENGTH) && (
                         <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[360px] rounded-2xl border border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl overflow-hidden z-[200]">
                             <div className="max-h-[360px] overflow-auto">
                                 <SearchResultsList
