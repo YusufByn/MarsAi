@@ -303,7 +303,7 @@ const Selector = () => {
                 {filteredAssignedVideos.map((video) => (
                   <button
                     key={video.id}
-                    onClick={() => navigate(`/video/player?videoId=${video.id}`)}
+                    onClick={() => navigate(`/video/player?videoid=${video.id}`)}
                     className="w-full text-left rounded-2xl border border-white/10 bg-black/40 p-5 hover:border-mars-primary/30 hover:bg-mars-primary/5 transition-colors"
                   >
                     <div className="flex flex-col md:flex-row gap-4">
@@ -385,7 +385,7 @@ const Selector = () => {
                   {paginatedMemos.map((memo) => (
                     <div
                       key={memo.id}
-                      onClick={() => navigate(`/video/player?videoId=${memo.video_id}`)}
+                      onClick={() => navigate(`/video/player?videoid=${memo.video_id}`)}
                       className="rounded-xl border border-white/10 bg-black/40 p-4 hover:border-white/20 transition-colors cursor-pointer"
                     >
                       <div className="flex flex-col md:flex-row gap-4">

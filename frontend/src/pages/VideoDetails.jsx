@@ -256,7 +256,7 @@ const VideoDetails = () => {
             {/* CTA - mobile uniquement */}
             <div className="lg:hidden pt-2">
               <button
-                onClick={() => navigate(`/video/player?id=${video.id}`)}
+                onClick={() => navigate(`/video/player?videoid=${video.id}`)}
                 className="w-full px-8 py-4 rounded-2xl bg-mars-primary text-white font-bold text-lg hover:bg-mars-primary/90 transition"
               >
                 Voir dans le player
@@ -337,7 +337,7 @@ const VideoDetails = () => {
 
             {/* CTA - desktop */}
             <button
-              onClick={() => navigate(`/video/player?id=${video.id}`)}
+              onClick={() => navigate(`/video/player?videoid=${video.id}`)}
               className="w-full px-8 py-4 rounded-2xl bg-mars-primary text-white font-bold text-lg hover:bg-mars-primary/90 transition"
             >
               Voir dans le player

@@ -12,7 +12,7 @@ const Player = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const targetVideoId = searchParams.get('videoId');
+  const targetVideoId = searchParams.get('videoid');
   const [videos, setVideos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
