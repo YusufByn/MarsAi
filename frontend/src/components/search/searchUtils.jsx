@@ -38,7 +38,7 @@ export function Highlight({ text, query }) {
                 // Vérifie si le morceau courant correspond à la recherche
                 const isMatch = part.toLowerCase() === q.toLowerCase();
                 return isMatch ? (
-                    <span key={i} className='text-white bg-mars-primary/25 px-1 rounded-md'>
+                    <span key={i} className='text-white bg-mars-primary/15 rounded-sm'>
                         {part}
                     </span>
                 ) : (
