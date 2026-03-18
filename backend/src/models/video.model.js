@@ -15,7 +15,7 @@ export const videoModel = {
        JOIN video v ON v.id = a.video_id
        WHERE a.user_id = ?
          AND v.id NOT IN (
-           SELECT sm.video_id FROM selector_memo sm WHERE sm.user_id = ?
+           SELECT sm.video_id FROM selector_memo sm WHERE sm.user_id = ? AND sm.statut IS NOT NULL
          )
        ORDER BY a.assigned_at DESC, v.created_at DESC`,
       [userId, userId]

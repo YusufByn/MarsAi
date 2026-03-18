@@ -145,22 +145,8 @@ const Player = () => {
 
         let videosWithFullUrl = Array.isArray(videoList) ? videoList.map(buildVideoData) : [];
 
-        // Si on arrive avec un videoId cible (depuis le selector), charger cette vidéo si absente
-        if (targetVideoId) {
-          const alreadyInList = videosWithFullUrl.some(v => v.id === parseInt(targetVideoId));
-          if (!alreadyInList) {
-            try {
-              const targetResponse = await fetch(`${API_URL}/api/player/videos/${targetVideoId}`);
-              if (targetResponse.ok) {
-                const targetResult = await targetResponse.json();
-                const targetVideo = buildVideoData(targetResult.data || targetResult);
-                videosWithFullUrl = [targetVideo, ...videosWithFullUrl];
-              }
-            } catch (err) {
-              console.log('[PLAYER] Could not load target video:', err.message);
-            }
-          }
-        }
+        // Si on arrive avec un videoId cible (depuis le selector), vérifier qu'elle est bien dans la liste (sans statut)
+        // Ne pas forcer l'ajout d'une vidéo déjà évaluée
 
         setVideos(videosWithFullUrl);
 
